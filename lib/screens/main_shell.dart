@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/workout.dart';
+import '../services/workout_controller.dart';
 import '../widgets/valimai_bottom_nav.dart';
 import 'home_screen.dart';
 import 'workouts_screen.dart';
@@ -29,6 +31,10 @@ class _MainShellState extends State<MainShell> {
         builder: (_) => ActiveWorkoutScreen(
           workoutTitle: title,
           onFinish: () {
+            WorkoutController.instance.markWorkoutCompleted(
+              WorkoutController.instance.selectedDate,
+              true,
+            );
             _onTabSelected(3); // Switch to History tab to see new records
           },
         ),
@@ -40,6 +46,7 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       HomeScreen(
+        onStartWorkoutWithData: (workout) => _launchLiveWorkout(workout.name),
         onStartWorkout: () => _launchLiveWorkout('Chest & Triceps Hypertrophy'),
         onNavigateTab: _onTabSelected,
       ),

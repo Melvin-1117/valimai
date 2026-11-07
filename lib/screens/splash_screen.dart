@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/profile_controller.dart';
+import '../services/workout_controller.dart';
 import '../theme/app_theme.dart';
 import 'profile_setup_screen.dart';
 import 'main_shell.dart';
@@ -21,8 +22,11 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkAppEntryFlow() async {
     final startTime = DateTime.now();
 
-    // Initialize profile controller and load from persistent storage
-    await ProfileController.instance.initialize();
+    // Initialize controllers and load from persistent storage
+    await Future.wait([
+      ProfileController.instance.initialize(),
+      WorkoutController.instance.initialize(),
+    ]);
 
     // Ensure smooth minimum presentation duration (800ms)
     final elapsed = DateTime.now().difference(startTime);

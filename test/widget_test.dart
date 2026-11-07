@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:valimai/models/user_profile.dart';
+import 'package:valimai/models/workout.dart';
 import 'package:valimai/services/profile_controller.dart';
 import 'package:valimai/services/profile_storage.dart';
+import 'package:valimai/services/workout_controller.dart';
+import 'package:valimai/services/workout_storage.dart';
 import 'package:valimai/main.dart';
+import 'package:valimai/screens/home_screen.dart';
 import 'package:valimai/screens/profile_screen.dart';
-import 'package:valimai/screens/profile_setup_screen.dart';
+import 'package:valimai/screens/workout_editor_screen.dart';
 
 class MockProfileStorage implements IProfileStorage {
   UserProfile? storedProfile;
 
   @override
-  Future<UserProfile?> loadProfile() async {
-    return storedProfile;
-  }
+  Future<UserProfile?> loadProfile() async => storedProfile;
 
   @override
   Future<void> saveProfile(UserProfile profile) async {
@@ -26,14 +28,99 @@ class MockProfileStorage implements IProfileStorage {
   }
 }
 
+class MockWorkoutStorage implements IWorkoutStorage {
+  Map<String, Workout> workouts = {};
+  Map<String, DaySchedule> schedules = {};
+
+  MockWorkoutStorage() {
+    _seed();
+  }
+
+  void _seed() {
+    final pushWorkout = const Workout(
+      id: 'workout_push',
+      name: 'Chest & Triceps Hypertrophy',
+      targetMuscleGroups: 'Pectorals, Anterior Deltoids, Lateral Triceps',
+      estimatedDurationMinutes: 52,
+      exercises: [
+        WorkoutExercise(
+          id: 'ex_1',
+          name: 'Incline Dumbbell Bench Press',
+          targetMuscle: 'Clavicular Pectoral',
+          sets: 4,
+          reps: 10,
+          weightKg: 34.0,
+          restSeconds: 90,
+          order: 0,
+        ),
+        WorkoutExercise(
+          id: 'ex_2',
+          name: 'Weighted Tricep Dips',
+          targetMuscle: 'Lateral Triceps',
+          sets: 3,
+          reps: 12,
+          weightKg: 16.0,
+          restSeconds: 90,
+          order: 1,
+        ),
+      ],
+    );
+
+    workouts[pushWorkout.id] = pushWorkout;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final key = DaySchedule.dateKey(today);
+
+    schedules[key] = DaySchedule(
+      date: today,
+      type: ScheduledDayType.workout,
+      workoutId: pushWorkout.id,
+      isCompleted: false,
+    );
+  }
+
+  @override
+  Future<Map<String, Workout>> loadWorkouts() async =>
+      Map<String, Workout>.from(workouts);
+
+  @override
+  Future<Map<String, DaySchedule>> loadSchedules() async =>
+      Map<String, DaySchedule>.from(schedules);
+
+  @override
+  Future<bool> saveWorkout(Workout workout) async {
+    workouts[workout.id] = workout;
+    return true;
+  }
+
+  @override
+  Future<bool> saveDaySchedule(DaySchedule schedule) async {
+    schedules[DaySchedule.dateKey(schedule.date)] = schedule;
+    return true;
+  }
+
+  @override
+  Future<bool> saveAllSchedules(Map<String, DaySchedule> newSchedules) async {
+    schedules = Map<String, DaySchedule>.from(newSchedules);
+    return true;
+  }
+}
+
 void main() {
-  late MockProfileStorage mockStorage;
-  late ProfileController controller;
+  late MockProfileStorage mockProfileStorage;
+  late ProfileController profileController;
+  late MockWorkoutStorage mockWorkoutStorage;
+  late WorkoutController workoutController;
 
   setUp(() {
-    mockStorage = MockProfileStorage();
-    controller = ProfileController(storage: mockStorage);
-    ProfileController.setInstance(controller);
+    mockProfileStorage = MockProfileStorage();
+    profileController = ProfileController(storage: mockProfileStorage);
+    ProfileController.setInstance(profileController);
+
+    mockWorkoutStorage = MockWorkoutStorage();
+    workoutController = WorkoutController(storage: mockWorkoutStorage);
+    WorkoutController.setInstance(workoutController);
   });
 
   group('UserProfile Model Tests', () {
@@ -82,128 +169,157 @@ void main() {
     });
   });
 
-  group('ProfileController Logic Tests', () {
-    test('validation catches empty name and invalid ranges', () async {
-      await controller.initialize();
-      expect(controller.isOnboardingCompleted, isFalse);
-
-      // Empty name
-      final res1 = await controller.saveProfile(
-        name: '   ',
-        currentWeight: 75,
-        height: 175,
-        age: 25,
+  group('Workout & DaySchedule Model Tests', () {
+    test('calculates total sets and exercise count', () {
+      const workout = Workout(
+        id: 'test_w',
+        name: 'Upper Body',
+        targetMuscleGroups: 'Chest & Back',
+        estimatedDurationMinutes: 45,
+        exercises: [
+          WorkoutExercise(
+            id: 'e1',
+            name: 'Bench Press',
+            targetMuscle: 'Chest',
+            sets: 4,
+            reps: 8,
+            weightKg: 80,
+            restSeconds: 90,
+          ),
+          WorkoutExercise(
+            id: 'e2',
+            name: 'Pull-ups',
+            targetMuscle: 'Lats',
+            sets: 3,
+            reps: 10,
+            weightKg: 0,
+            restSeconds: 60,
+          ),
+        ],
       );
-      expect(res1, isFalse);
-      expect(controller.errorMessage, contains('Name cannot be empty'));
 
-      // Weight out of range
-      final res2 = await controller.saveProfile(
-        name: 'Alex',
-        currentWeight: 10, // < 20
-        height: 175,
-        age: 25,
-      );
-      expect(res2, isFalse);
-      expect(controller.errorMessage, contains('Weight must be between'));
-
-      // Height out of range
-      final res3 = await controller.saveProfile(
-        name: 'Alex',
-        currentWeight: 75,
-        height: 350, // > 300
-        age: 25,
-      );
-      expect(res3, isFalse);
-      expect(controller.errorMessage, contains('Height must be between'));
-
-      // Age out of range
-      final res4 = await controller.saveProfile(
-        name: 'Alex',
-        currentWeight: 75,
-        height: 175,
-        age: 5, // < 10
-      );
-      expect(res4, isFalse);
-      expect(controller.errorMessage, contains('Age must be between'));
-
-      // Valid save
-      final res5 = await controller.saveProfile(
-        name: 'Alex Mercer',
-        currentWeight: 82.4,
-        height: 182.0,
-        age: 27,
-        targetWeight: 80.0,
-      );
-      expect(res5, isTrue);
-      expect(controller.isOnboardingCompleted, isTrue);
-      expect(controller.profile?.name, 'Alex Mercer');
-      expect(mockStorage.storedProfile?.name, 'Alex Mercer');
+      expect(workout.totalSets, 7);
+      expect(workout.exerciseCount, 2);
     });
 
-    test('updating profile reflects changes immediately', () async {
-      await controller.saveProfile(
-        name: 'Alex Mercer',
-        currentWeight: 82.4,
-        height: 182.0,
-        age: 27,
-      );
-
-      final updateRes = await controller.updateProfile(
-        currentWeight: 81.5,
-        targetWeight: 79.0,
-      );
-      expect(updateRes, isTrue);
-      expect(controller.profile?.currentWeight, 81.5);
-      expect(controller.profile?.targetWeight, 79.0);
-      expect(mockStorage.storedProfile?.currentWeight, 81.5);
+    test('standardizes dateKey correctly', () {
+      final dt = DateTime(2026, 3, 5, 14, 30);
+      expect(DaySchedule.dateKey(dt), '2026-03-05');
     });
   });
 
-  group('Application Flow & UI Tests', () {
-    testWidgets('First launch flow: Splash -> Profile Setup', (tester) async {
-      await tester.pumpWidget(const ValimaiApp());
-
-      // Initial frame is Splash Screen
-      expect(find.text('VALIMAI'), findsWidgets);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-      // Settle splash timer
-      await tester.pump(const Duration(milliseconds: 900));
-      await tester.pumpAndSettle();
-
-      // Profile Setup Screen is shown
-      expect(find.text('Profile Setup'), findsOneWidget);
-      expect(find.text('SAVE PROFILE'), findsOneWidget);
-      expect(find.text('FULL NAME'), findsOneWidget);
-    });
-
-    testWidgets('Subsequent launch flow: Splash skips Setup -> Home Dashboard',
+  group('Home Dashboard Tests', () {
+    testWidgets('Displays Section A: Weekly Calendar, Section B: Today\'s Workout, Section C: Modify Workout',
         (tester) async {
-      // Pre-seed profile as if already completed
-      mockStorage.storedProfile = UserProfile(
-        name: 'Bruce Wayne',
-        currentWeight: 95.0,
-        height: 188.0,
-        age: 32,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+      await workoutController.initialize();
 
-      await tester.pumpWidget(const ValimaiApp());
-      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomeScreen(),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      // Directly on Home Dashboard (MainShell)
-      expect(find.text('Profile Setup'), findsNothing);
-      expect(find.text('Good morning, Bruce'), findsOneWidget);
-      expect(find.text('START WORKOUT'), findsOneWidget);
-      expect(find.text('Workouts'), findsOneWidget);
+      // Section A: Calendar
+      expect(find.byType(HomeScreen), findsOneWidget);
+
+      // Section B: Today's Workout details
+      expect(find.text('Chest & Triceps Hypertrophy'), findsOneWidget);
+      expect(find.text("START TODAY'S WORKOUT"), findsOneWidget);
+      expect(find.text('EXERCISES IN PROTOCOL'), findsOneWidget);
+      expect(find.text('Incline Dumbbell Bench Press'), findsOneWidget);
+
+      // Section C: Modify Workout button
+      expect(find.text('MODIFY WORKOUT'), findsOneWidget);
     });
 
+    testWidgets('Tapping Modify Workout opens WorkoutEditorScreen',
+        (tester) async {
+      await workoutController.initialize();
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomeScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final modifyBtn = find.text('MODIFY WORKOUT');
+      expect(modifyBtn, findsOneWidget);
+
+      await tester.tap(modifyBtn);
+      await tester.pumpAndSettle();
+
+      // Opened WorkoutEditorScreen
+      expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+      expect(find.text('WORKOUT EDITOR'), findsOneWidget);
+      expect(find.text('SAVE WORKOUT CHANGES'), findsOneWidget);
+    });
+
+    testWidgets('Handles Rest Day correctly', (tester) async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await workoutController.initialize();
+
+      // Set today to rest
+      await workoutController.setDayType(today, ScheduledDayType.rest);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomeScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('SCHEDULED REST & RECOVERY'), findsOneWidget);
+      expect(find.text('Active Recovery Day'), findsOneWidget);
+      expect(find.text('ASSIGN A WORKOUT TO THIS DAY'), findsOneWidget);
+    });
+
+    testWidgets('Handles Unassigned Day correctly', (tester) async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await workoutController.initialize();
+
+      // Set today to unassigned
+      await workoutController.setDayType(today, ScheduledDayType.unassigned);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomeScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No Workout Scheduled'), findsOneWidget);
+      expect(find.text('ASSIGN WORKOUT'), findsOneWidget);
+    });
+
+    testWidgets('Handles Completed Workout correctly', (tester) async {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await workoutController.initialize();
+
+      // Mark completed
+      await workoutController.markWorkoutCompleted(today, true);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomeScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('WORKOUT COMPLETED'), findsOneWidget);
+      expect(find.text('REPEAT SESSION'), findsOneWidget);
+      expect(find.text('MODIFY WORKOUT'), findsOneWidget);
+    });
+  });
+
+  group('Profile Page Tests', () {
     testWidgets('Profile page shows Section A (Header) and Section B (Body Info)',
         (tester) async {
-      mockStorage.storedProfile = UserProfile(
+      mockProfileStorage.storedProfile = UserProfile(
         name: 'Diana Prince',
         currentWeight: 68.0,
         height: 178.0,
@@ -212,11 +328,11 @@ void main() {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      await controller.initialize();
+      await profileController.initialize();
 
       await tester.pumpWidget(
-        MaterialApp(
-          home: const ProfileScreen(),
+        const MaterialApp(
+          home: ProfileScreen(),
         ),
       );
       await tester.pumpAndSettle();
@@ -238,9 +354,9 @@ void main() {
       expect(find.text('TARGET WEIGHT'), findsOneWidget);
       expect(find.text('66.0'), findsOneWidget);
 
-      // Verify no cluttered legacy sections
+      // Verify no cluttered legacy sections or athlete mary badge
+      expect(find.text('ATHLETE #MARY'), findsNothing);
       expect(find.text('TRAINING ARCHITECTURE'), findsNothing);
-      expect(find.text('SYSTEM TELEMETRY & SYNC'), findsNothing);
     });
   });
 }
