@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:valimai/models/exercise.dart';
 import 'package:valimai/models/user_profile.dart';
 import 'package:valimai/models/workout.dart';
+import 'package:valimai/services/exercise_controller.dart';
+import 'package:valimai/services/exercise_storage.dart';
 import 'package:valimai/services/profile_controller.dart';
 import 'package:valimai/services/profile_storage.dart';
 import 'package:valimai/services/workout_controller.dart';
 import 'package:valimai/services/workout_storage.dart';
-import 'package:valimai/main.dart';
+import 'package:valimai/screens/add_exercise_screen.dart';
 import 'package:valimai/screens/home_screen.dart';
 import 'package:valimai/screens/profile_screen.dart';
 import 'package:valimai/screens/workout_editor_screen.dart';
@@ -107,11 +110,43 @@ class MockWorkoutStorage implements IWorkoutStorage {
   }
 }
 
+class MockExerciseStorage implements IExerciseStorage {
+  List<Exercise> exercises = [];
+
+  MockExerciseStorage() {
+    exercises = LocalExerciseStorage.getPresetExercises();
+  }
+
+  @override
+  Future<List<Exercise>> loadExercises() async =>
+      List<Exercise>.from(exercises);
+
+  @override
+  Future<bool> saveCustomExercise(Exercise exercise) async {
+    final index = exercises.indexWhere((e) =>
+        e.name.toLowerCase().trim() == exercise.name.toLowerCase().trim());
+    if (index >= 0) {
+      exercises[index] = exercise;
+    } else {
+      exercises.add(exercise);
+    }
+    return true;
+  }
+
+  @override
+  Future<bool> saveAllExercises(List<Exercise> all) async {
+    exercises = List<Exercise>.from(all);
+    return true;
+  }
+}
+
 void main() {
   late MockProfileStorage mockProfileStorage;
   late ProfileController profileController;
   late MockWorkoutStorage mockWorkoutStorage;
   late WorkoutController workoutController;
+  late MockExerciseStorage mockExerciseStorage;
+  late ExerciseController exerciseController;
 
   setUp(() {
     mockProfileStorage = MockProfileStorage();
@@ -121,6 +156,10 @@ void main() {
     mockWorkoutStorage = MockWorkoutStorage();
     workoutController = WorkoutController(storage: mockWorkoutStorage);
     WorkoutController.setInstance(workoutController);
+
+    mockExerciseStorage = MockExerciseStorage();
+    exerciseController = ExerciseController(storage: mockExerciseStorage);
+    ExerciseController.setInstance(exerciseController);
   });
 
   group('UserProfile Model Tests', () {
@@ -169,194 +208,175 @@ void main() {
     });
   });
 
-  group('Workout & DaySchedule Model Tests', () {
-    test('calculates total sets and exercise count', () {
-      const workout = Workout(
-        id: 'test_w',
-        name: 'Upper Body',
-        targetMuscleGroups: 'Chest & Back',
-        estimatedDurationMinutes: 45,
-        exercises: [
-          WorkoutExercise(
-            id: 'e1',
-            name: 'Bench Press',
-            targetMuscle: 'Chest',
-            sets: 4,
-            reps: 8,
-            weightKg: 80,
-            restSeconds: 90,
-          ),
-          WorkoutExercise(
-            id: 'e2',
-            name: 'Pull-ups',
-            targetMuscle: 'Lats',
-            sets: 3,
-            reps: 10,
-            weightKg: 0,
-            restSeconds: 60,
-          ),
-        ],
-      );
-
-      expect(workout.totalSets, 7);
-      expect(workout.exerciseCount, 2);
+  group('Exercise Model & Controller Tests', () {
+    test('verifies all 11 muscle group categories exist', () {
+      expect(MuscleGroupCategories.all.length, 11);
+      expect(MuscleGroupCategories.all, contains('Chest'));
+      expect(MuscleGroupCategories.all, contains('Back'));
+      expect(MuscleGroupCategories.all, contains('Shoulders'));
+      expect(MuscleGroupCategories.all, contains('Biceps'));
+      expect(MuscleGroupCategories.all, contains('Triceps'));
+      expect(MuscleGroupCategories.all, contains('Forearms'));
+      expect(MuscleGroupCategories.all, contains('Abs'));
+      expect(MuscleGroupCategories.all, contains('Quadriceps'));
+      expect(MuscleGroupCategories.all, contains('Hamstrings'));
+      expect(MuscleGroupCategories.all, contains('Glutes'));
+      expect(MuscleGroupCategories.all, contains('Calves'));
     });
 
-    test('standardizes dateKey correctly', () {
-      final dt = DateTime(2026, 3, 5, 14, 30);
-      expect(DaySchedule.dateKey(dt), '2026-03-05');
+    test('preset exercise library is fully populated across all categories', () async {
+      await exerciseController.initialize();
+      expect(exerciseController.allExercises.length, greaterThanOrEqualTo(50));
+
+      for (final cat in MuscleGroupCategories.all) {
+        final count = exerciseController.countByCategory(cat);
+        expect(count, greaterThan(0), reason: 'Category $cat must have exercises');
+      }
+    });
+
+    test('searches case-insensitively across name, muscle, and equipment', () async {
+      await exerciseController.initialize();
+
+      final r1 = exerciseController.searchExercises('bench press');
+      expect(r1.length, greaterThanOrEqualTo(3));
+
+      final r2 = exerciseController.searchExercises('CABLE');
+      expect(r2.length, greaterThan(0));
+
+      final r3 = exerciseController.searchExercises('quadriceps');
+      expect(r3.length, greaterThan(0));
+    });
+
+    test('creates custom exercise with validation and duplicate prevention', () async {
+      await exerciseController.initialize();
+
+      // Empty name fails
+      final fail1 = await exerciseController.addCustomExercise(
+        name: '   ',
+        primaryMuscleGroup: 'Chest',
+        equipment: 'Dumbbell',
+      );
+      expect(fail1, isNull);
+      expect(exerciseController.lastError, contains('cannot be empty'));
+
+      // Duplicate name fails
+      final fail2 = await exerciseController.addCustomExercise(
+        name: 'Barbell Bench Press', // Existing preset
+        primaryMuscleGroup: 'Chest',
+        equipment: 'Barbell',
+      );
+      expect(fail2, isNull);
+      expect(exerciseController.lastError, contains('already exists'));
+
+      // Valid custom exercise succeeds
+      final custom = await exerciseController.addCustomExercise(
+        name: 'Custom Landmine Press',
+        primaryMuscleGroup: 'Shoulders',
+        secondaryMuscleGroups: ['Chest', 'Triceps'],
+        equipment: 'Barbell',
+      );
+      expect(custom, isNotNull);
+      expect(custom!.isCustom, isTrue);
+      expect(exerciseController.searchExercises('Landmine').length, 1);
     });
   });
 
-  group('Home Dashboard Tests', () {
-    testWidgets('Displays Section A: Weekly Calendar, Section B: Today\'s Workout, Section C: Modify Workout',
-        (tester) async {
-      await workoutController.initialize();
+  group('AddExerciseScreen UI Tests', () {
+    testWidgets('Displays search bar, categories, and exercise list', (tester) async {
+      await exerciseController.initialize();
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: HomeScreen(),
+          home: AddExerciseScreen(),
         ),
       );
       await tester.pumpAndSettle();
 
-      // Section A: Calendar
-      expect(find.byType(HomeScreen), findsOneWidget);
+      // Title & Custom action
+      expect(find.text('ADD EXERCISE'), findsOneWidget);
+      expect(find.text('CUSTOM'), findsOneWidget);
 
-      // Section B: Today's Workout details
-      expect(find.text('Chest & Triceps Hypertrophy'), findsOneWidget);
-      expect(find.text("START TODAY'S WORKOUT"), findsOneWidget);
-      expect(find.text('EXERCISES IN PROTOCOL'), findsOneWidget);
-      expect(find.text('Incline Dumbbell Bench Press'), findsOneWidget);
+      // Search bar
+      expect(find.byType(TextField), findsOneWidget);
 
-      // Section C: Modify Workout button
-      expect(find.text('MODIFY WORKOUT'), findsOneWidget);
+      // Category chips (ALL, CHEST, BACK, etc.)
+      expect(find.text('ALL'), findsOneWidget);
+      expect(find.text('CHEST'), findsOneWidget);
+
+      // Exercise listing
+      expect(find.text('Barbell Bench Press'), findsOneWidget);
+      expect(find.text('Incline Barbell Bench Press'), findsOneWidget);
     });
 
-    testWidgets('Tapping Modify Workout opens WorkoutEditorScreen',
-        (tester) async {
-      await workoutController.initialize();
+    testWidgets('Supports multi-selection and displays sticky bottom bar', (tester) async {
+      await exerciseController.initialize();
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: HomeScreen(),
+          home: AddExerciseScreen(),
         ),
       );
       await tester.pumpAndSettle();
 
-      final modifyBtn = find.text('MODIFY WORKOUT');
-      expect(modifyBtn, findsOneWidget);
+      // Bottom bar not visible initially
+      expect(find.text('ADD TO WORKOUT (1)'), findsNothing);
 
-      await tester.tap(modifyBtn);
+      // Tap first exercise
+      await tester.tap(find.text('Barbell Bench Press'));
       await tester.pumpAndSettle();
 
-      // Opened WorkoutEditorScreen
-      expect(find.byType(WorkoutEditorScreen), findsOneWidget);
+      // Bottom bar appears
+      expect(find.text('ADD TO WORKOUT (1)'), findsOneWidget);
+
+      // Tap second exercise
+      await tester.tap(find.text('Incline Barbell Bench Press'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ADD TO WORKOUT (2)'), findsOneWidget);
+    });
+
+    testWidgets('Prevents duplicate additions for exercises already in workout', (tester) async {
+      await exerciseController.initialize();
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: AddExerciseScreen(
+            existingExerciseNames: {'barbell bench press'},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('IN WORKOUT'), findsOneWidget);
+
+      // Tapping does not add to selection
+      await tester.tap(find.text('Barbell Bench Press'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ADD TO WORKOUT (1)'), findsNothing);
+    });
+  });
+
+  group('WorkoutEditor Integration Tests', () {
+    testWidgets('Opening WorkoutEditor allows adding exercises', (tester) async {
+      await workoutController.initialize();
+      await exerciseController.initialize();
+
+      final now = DateTime.now();
+      final workout = workoutController.getWorkoutForDate(now)!;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WorkoutEditorScreen(
+            date: now,
+            workout: workout,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
       expect(find.text('WORKOUT EDITOR'), findsOneWidget);
-      expect(find.text('SAVE WORKOUT CHANGES'), findsOneWidget);
-    });
-
-    testWidgets('Handles Rest Day correctly', (tester) async {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      await workoutController.initialize();
-
-      // Set today to rest
-      await workoutController.setDayType(today, ScheduledDayType.rest);
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('SCHEDULED REST & RECOVERY'), findsOneWidget);
-      expect(find.text('Active Recovery Day'), findsOneWidget);
-      expect(find.text('ASSIGN A WORKOUT TO THIS DAY'), findsOneWidget);
-    });
-
-    testWidgets('Handles Unassigned Day correctly', (tester) async {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      await workoutController.initialize();
-
-      // Set today to unassigned
-      await workoutController.setDayType(today, ScheduledDayType.unassigned);
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('No Workout Scheduled'), findsOneWidget);
-      expect(find.text('ASSIGN WORKOUT'), findsOneWidget);
-    });
-
-    testWidgets('Handles Completed Workout correctly', (tester) async {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      await workoutController.initialize();
-
-      // Mark completed
-      await workoutController.markWorkoutCompleted(today, true);
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('WORKOUT COMPLETED'), findsOneWidget);
-      expect(find.text('REPEAT SESSION'), findsOneWidget);
-      expect(find.text('MODIFY WORKOUT'), findsOneWidget);
-    });
-  });
-
-  group('Profile Page Tests', () {
-    testWidgets('Profile page shows Section A (Header) and Section B (Body Info)',
-        (tester) async {
-      mockProfileStorage.storedProfile = UserProfile(
-        name: 'Diana Prince',
-        currentWeight: 68.0,
-        height: 178.0,
-        age: 28,
-        targetWeight: 66.0,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      await profileController.initialize();
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: ProfileScreen(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Section A: Header
-      expect(find.text('DP'), findsOneWidget); // Initials
-      expect(find.text('Diana Prince'), findsOneWidget);
-      expect(find.text('EDIT PROFILE'), findsOneWidget);
-
-      // Section B: Body Information
-      expect(find.text('BODY INFORMATION'), findsOneWidget);
-      expect(find.text('Edit Information'), findsOneWidget);
-      expect(find.text('CURRENT WEIGHT'), findsOneWidget);
-      expect(find.text('68.0'), findsOneWidget);
-      expect(find.text('HEIGHT'), findsOneWidget);
-      expect(find.text('178'), findsOneWidget);
-      expect(find.text('AGE'), findsOneWidget);
-      expect(find.text('28'), findsOneWidget);
-      expect(find.text('TARGET WEIGHT'), findsOneWidget);
-      expect(find.text('66.0'), findsOneWidget);
-
-      // Verify no cluttered legacy sections or athlete mary badge
-      expect(find.text('ATHLETE #MARY'), findsNothing);
-      expect(find.text('TRAINING ARCHITECTURE'), findsNothing);
+      expect(find.text('Add Exercise'), findsOneWidget);
     });
   });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/exercise_controller.dart';
 import '../services/profile_controller.dart';
 import '../services/workout_controller.dart';
 import '../theme/app_theme.dart';
@@ -26,6 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.wait([
       ProfileController.instance.initialize(),
       WorkoutController.instance.initialize(),
+      ExerciseController.instance.initialize(),
     ]);
 
     // Ensure smooth minimum presentation duration (800ms)

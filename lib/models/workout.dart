@@ -21,6 +21,7 @@ enum ScheduledDayType {
 /// An individual exercise within a workout
 class WorkoutExercise {
   final String id;
+  final String? exerciseId;
   final String name;
   final String targetMuscle;
   final int sets;
@@ -31,6 +32,7 @@ class WorkoutExercise {
 
   const WorkoutExercise({
     required this.id,
+    this.exerciseId,
     required this.name,
     required this.targetMuscle,
     required this.sets,
@@ -42,6 +44,7 @@ class WorkoutExercise {
 
   WorkoutExercise copyWith({
     String? id,
+    String? exerciseId,
     String? name,
     String? targetMuscle,
     int? sets,
@@ -52,6 +55,7 @@ class WorkoutExercise {
   }) {
     return WorkoutExercise(
       id: id ?? this.id,
+      exerciseId: exerciseId ?? this.exerciseId,
       name: name ?? this.name,
       targetMuscle: targetMuscle ?? this.targetMuscle,
       sets: sets ?? this.sets,
@@ -65,6 +69,7 @@ class WorkoutExercise {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'exerciseId': exerciseId,
       'name': name,
       'targetMuscle': targetMuscle,
       'sets': sets,
@@ -78,6 +83,7 @@ class WorkoutExercise {
   factory WorkoutExercise.fromJson(Map<String, dynamic> json) {
     return WorkoutExercise(
       id: json['id'] as String? ?? 'ex_${DateTime.now().millisecondsSinceEpoch}',
+      exerciseId: json['exerciseId'] as String?,
       name: json['name'] as String? ?? 'Exercise',
       targetMuscle: json['targetMuscle'] as String? ?? 'General',
       sets: (json['sets'] as num?)?.toInt() ?? 3,

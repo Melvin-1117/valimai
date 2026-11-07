@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/workout_controller.dart';
 import '../theme/app_theme.dart';
+import 'add_exercise_screen.dart';
 
 class WorkoutEditorScreen extends StatefulWidget {
   final DateTime date;
@@ -56,199 +58,46 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     });
   }
 
-  void _addExercise() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: ValimaiColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  Future<void> _openAddExerciseScreen() async {
+    final Set<String> existingNames =
+        _exercises.map((e) => e.name.toLowerCase().trim()).toSet();
+
+    final List<Exercise>? selected =
+        await Navigator.of(context).push<List<Exercise>>(
+      MaterialPageRoute(
+        builder: (_) => AddExerciseScreen(
+          existingExerciseNames: existingNames,
+        ),
       ),
-      isScrollControlled: true,
-      builder: (ctx) {
-        final nameCtrl = TextEditingController();
-        final muscleCtrl = TextEditingController();
-        int sets = 4;
-        int reps = 10;
-        double weight = 30.0;
-        int rest = 90;
+    );
 
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'ADD EXERCISE',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                          color: ValimaiColors.onSurface,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: ValimaiColors.secondary),
-                        onPressed: () => Navigator.pop(ctx),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildInputLabel('EXERCISE NAME'),
-                  const SizedBox(height: 6),
-                  _buildTextField(nameCtrl, 'e.g. Incline Dumbbell Press'),
-                  const SizedBox(height: 12),
-                  _buildInputLabel('TARGET MUSCLE'),
-                  const SizedBox(height: 6),
-                  _buildTextField(muscleCtrl, 'e.g. Upper Chest'),
-                  const SizedBox(height: 16),
+    if (selected != null && selected.isNotEmpty) {
+      setState(() {
+        for (final ex in selected) {
+          final exNameLower = ex.name.toLowerCase().trim();
+          // Ensure no duplicates
+          if (!_exercises
+              .any((e) => e.name.toLowerCase().trim() == exNameLower)) {
+            final defaultWeight =
+                ex.equipment == EquipmentTypes.bodyweight ? 0.0 : 20.0;
 
-                  // Sets & Reps row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildInputLabel('SETS'),
-                            const SizedBox(height: 6),
-                            _buildStepper(
-                              value: sets.toString(),
-                              onDecrement: () {
-                                if (sets > 1) setSheetState(() => sets--);
-                              },
-                              onIncrement: () => setSheetState(() => sets++),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildInputLabel('REPS'),
-                            const SizedBox(height: 6),
-                            _buildStepper(
-                              value: reps.toString(),
-                              onDecrement: () {
-                                if (reps > 1) setSheetState(() => reps--);
-                              },
-                              onIncrement: () => setSheetState(() => reps++),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Weight & Rest
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildInputLabel('LOAD (KG)'),
-                            const SizedBox(height: 6),
-                            _buildStepper(
-                              value: weight.toStringAsFixed(1),
-                              onDecrement: () {
-                                if (weight > 0) {
-                                  setSheetState(() => weight -= 2.5);
-                                }
-                              },
-                              onIncrement: () =>
-                                  setSheetState(() => weight += 2.5),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildInputLabel('REST (SEC)'),
-                            const SizedBox(height: 6),
-                            _buildStepper(
-                              value: '${rest}s',
-                              onDecrement: () {
-                                if (rest > 15) {
-                                  setSheetState(() => rest -= 15);
-                                }
-                              },
-                              onIncrement: () =>
-                                  setSheetState(() => rest += 15),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final name = nameCtrl.text.trim();
-                        if (name.isEmpty) return;
-                        final newEx = WorkoutExercise(
-                          id: 'ex_${DateTime.now().millisecondsSinceEpoch}',
-                          name: name,
-                          targetMuscle: muscleCtrl.text.trim().isEmpty
-                              ? 'General'
-                              : muscleCtrl.text.trim(),
-                          sets: sets,
-                          reps: reps,
-                          weightKg: weight,
-                          restSeconds: rest,
-                          order: _exercises.length,
-                        );
-                        setState(() {
-                          _exercises.add(newEx);
-                        });
-                        Navigator.pop(ctx);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ValimaiColors.primaryContainer,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'ADD TO WORKOUT',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            _exercises.add(
+              WorkoutExercise(
+                id: 'ex_${DateTime.now().millisecondsSinceEpoch}_${_exercises.length}',
+                exerciseId: ex.id,
+                name: ex.name,
+                targetMuscle: ex.primaryMuscleGroup,
+                sets: 3,
+                reps: 10,
+                weightKg: defaultWeight,
+                restSeconds: 90,
+                order: _exercises.length,
               ),
             );
-          },
-        );
-      },
-    );
+          }
+        }
+      });
+    }
   }
 
   void _removeExercise(int index) {
@@ -449,7 +298,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                   ],
                 ),
                 TextButton.icon(
-                  onPressed: _addExercise,
+                  onPressed: _openAddExerciseScreen,
                   icon: const Icon(Icons.add,
                       size: 16, color: ValimaiColors.primaryContainer),
                   label: const Text(
@@ -477,21 +326,25 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
             // EXERCISE CARDS
             if (_exercises.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: ValimaiColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: ValimaiColors.cardBorder, width: 1),
-                ),
-                child: const Center(
-                  child: Text(
-                    'No exercises in this workout. Tap "+ Add Exercise" to add one.',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 12,
-                      color: ValimaiColors.secondary,
+              GestureDetector(
+                onTap: _openAddExerciseScreen,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: ValimaiColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        Border.all(color: ValimaiColors.cardBorder, width: 1),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'No exercises in this workout. Tap "+ Add Exercise" to add one.',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 12,
+                        color: ValimaiColors.secondary,
+                      ),
                     ),
                   ),
                 ),
