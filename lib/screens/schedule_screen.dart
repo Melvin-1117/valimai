@@ -39,7 +39,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     const Text(
                       'October 2024',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: ValimaiColors.onSurface,
@@ -71,7 +71,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           child: Text(
                             _views[index],
                             style: TextStyle(
-                              fontFamily: 'Manrope',
+                              fontFamily: 'Montserrat',
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.6,
@@ -114,7 +114,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           const Text(
                             'HYPERTROPHY MESO · WEEK 6',
                             style: TextStyle(
-                              fontFamily: 'Manrope',
+                              fontFamily: 'Montserrat',
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.6,
@@ -126,7 +126,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       const Text(
                         'High Volume Microcycle',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 11,
                           color: ValimaiColors.secondary,
                         ),
@@ -159,7 +159,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       Text(
                         'Day 4 of 7 completed',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 11,
                           color: ValimaiColors.secondary,
                         ),
@@ -167,7 +167,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       Text(
                         'Deload in 9 days',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: ValimaiColors.onSurfaceVariant,
@@ -187,7 +187,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 Text(
                   'MICROCYCLE 6 (OCT 21 – 27)',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
@@ -197,7 +197,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 Text(
                   '5 / 6 Completed',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: ValimaiColors.primaryContainer,
@@ -228,7 +228,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 Text(
                   'SCHEDULED SESSIONS',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
@@ -238,7 +238,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 Text(
                   'Auto-synced',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     color: ValimaiColors.secondary,
                   ),
@@ -267,7 +267,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             const Text(
               'SCHEDULE MODIFIERS',
               style: TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.8,
@@ -356,7 +356,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               const Text(
                 'T',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
@@ -366,7 +366,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               const Text(
                 '24',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
@@ -411,7 +411,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             Text(
               dayLabel,
               style: const TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: ValimaiColors.secondary,
@@ -421,7 +421,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             Text(
               dayNum,
               style: const TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: ValimaiColors.onSurface,
@@ -506,7 +506,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           child: const Text(
                             'TODAY · OCT 24',
                             style: TextStyle(
-                              fontFamily: 'Manrope',
+                              fontFamily: 'Montserrat',
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.6,
@@ -518,7 +518,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         const Text(
                           '17:30 LIFT',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.6,
@@ -538,7 +538,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 const Text(
                   'Chest & Triceps Hypertrophy',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: ValimaiColors.onSurface,
@@ -548,7 +548,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 const Text(
                   'Focus: Pec Minor Accents, Close-grip Press & Flyes',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     color: ValimaiColors.secondary,
                   ),
@@ -570,7 +570,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             const Text(
                               'EST DURATION',
                               style: TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.secondary,
@@ -583,7 +583,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   TextSpan(
                                     text: '52 ',
                                     style: TextStyle(
-                                      fontFamily: 'Manrope',
+                                      fontFamily: 'Montserrat',
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
                                       color: ValimaiColors.onSurface,
@@ -592,7 +592,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   TextSpan(
                                     text: 'MIN',
                                     style: TextStyle(
-                                      fontFamily: 'Manrope',
+                                      fontFamily: 'Montserrat',
                                       fontSize: 10,
                                       color: ValimaiColors.secondary,
                                     ),
@@ -614,7 +614,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             const Text(
                               'VOLUME LOAD',
                               style: TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.secondary,
@@ -627,7 +627,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   TextSpan(
                                     text: '18 ',
                                     style: TextStyle(
-                                      fontFamily: 'Manrope',
+                                      fontFamily: 'Montserrat',
                                       fontSize: 16,
                                       fontWeight: FontWeight.w800,
                                       color: ValimaiColors.onSurface,
@@ -636,7 +636,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   TextSpan(
                                     text: 'SETS',
                                     style: TextStyle(
-                                      fontFamily: 'Manrope',
+                                      fontFamily: 'Montserrat',
                                       fontSize: 10,
                                       color: ValimaiColors.secondary,
                                     ),
@@ -658,7 +658,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             const Text(
                               'READINESS',
                               style: TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.secondary,
@@ -677,7 +677,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 Text(
                                   '96% PEAK',
                                   style: TextStyle(
-                                    fontFamily: 'Manrope',
+                                    fontFamily: 'Montserrat',
                                     fontSize: 11,
                                     fontWeight: FontWeight.w800,
                                     color: ValimaiColors.primaryContainer,
@@ -720,7 +720,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               Text(
                                 'Start Session',
                                 style: TextStyle(
-                                  fontFamily: 'Manrope',
+                                  fontFamily: 'Montserrat',
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -773,7 +773,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     'TOMORROW · OCT 25',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
@@ -784,7 +784,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     '07:00 AM',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       color: ValimaiColors.primaryContainer,
@@ -799,7 +799,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           const Text(
             'Legs: Quad Dominant & Calves',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: ValimaiColors.onSurface,
@@ -809,7 +809,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           const Text(
             'Primary: Heavy Barbell Back Squats & Hack Squat Wave',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 11,
               color: ValimaiColors.secondary,
             ),
@@ -834,7 +834,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     Text(
                       'SQUAT ACCELERATION',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         color: ValimaiColors.onSurfaceVariant,
@@ -869,7 +869,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     'SATURDAY · OCT 26',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
@@ -880,7 +880,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     '10:00 AM',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: ValimaiColors.secondary,
@@ -907,7 +907,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           const Text(
             'Active Recovery & Mobility Flow',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: ValimaiColors.onSurface,
@@ -917,7 +917,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
           const Text(
             'Thoracic rotation, hip capsule opening & Zone 2 spin',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 11,
               color: ValimaiColors.secondary,
             ),
@@ -954,7 +954,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               Text(
                 'SUNDAY · OCT 27',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
@@ -968,7 +968,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     'SLEEP TARGET: 8.5 HRS',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                       color: ValimaiColors.onSurfaceVariant,
@@ -988,7 +988,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     'Scheduled Full Rest Day',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: ValimaiColors.onSurface,
@@ -998,7 +998,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     'Complete muscle glycogen refeed & neurological down-regulation',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 11,
                       color: ValimaiColors.secondary,
                     ),
@@ -1044,7 +1044,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: ValimaiColors.onSurface,
@@ -1053,7 +1053,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 10,
                     color: ValimaiColors.secondary,
                   ),
@@ -1100,7 +1100,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     'Insert Unscheduled Rest Day',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: ValimaiColors.onSurface,
@@ -1109,7 +1109,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   Text(
                     'Shifts remaining Microcycle sessions forward',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       color: ValimaiColors.secondary,
                     ),
@@ -1134,7 +1134,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       child: Text(
         text,
         style: const TextStyle(
-          fontFamily: 'Manrope',
+          fontFamily: 'Montserrat',
           fontSize: 9,
           fontWeight: FontWeight.w700,
           color: ValimaiColors.secondary,

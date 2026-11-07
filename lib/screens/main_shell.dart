@@ -5,6 +5,7 @@ import 'workouts_screen.dart';
 import 'schedule_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
+import 'active_workout_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -22,18 +23,31 @@ class _MainShellState extends State<MainShell> {
     });
   }
 
+  void _launchLiveWorkout([String title = 'Chest & Triceps Hypertrophy']) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ActiveWorkoutScreen(
+          workoutTitle: title,
+          onFinish: () {
+            _onTabSelected(3); // Switch to History tab to see new records
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       HomeScreen(
-        onStartWorkout: () => _onTabSelected(1),
+        onStartWorkout: () => _launchLiveWorkout('Chest & Triceps Hypertrophy'),
         onNavigateTab: _onTabSelected,
       ),
       WorkoutsScreen(
-        onStartSession: () {},
+        onStartSession: () => _launchLiveWorkout('Push Focus: Chest & Triceps'),
       ),
       ScheduleScreen(
-        onStartTodaySession: () => _onTabSelected(1),
+        onStartTodaySession: () => _launchLiveWorkout('Chest & Triceps Hypertrophy'),
       ),
       const HistoryScreen(),
       const ProfileScreen(),
@@ -51,4 +65,3 @@ class _MainShellState extends State<MainShell> {
     );
   }
 }
-

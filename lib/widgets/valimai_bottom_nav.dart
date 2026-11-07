@@ -67,7 +67,7 @@ class ValimaiBottomNav extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: color,

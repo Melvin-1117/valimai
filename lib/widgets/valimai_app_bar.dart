@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/profile_controller.dart';
 import '../theme/app_theme.dart';
 
 class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -76,7 +77,7 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
                   const Text(
                     'VALIMAI',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.5,
@@ -86,7 +87,7 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: ValimaiColors.onSurface,
@@ -121,22 +122,34 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: onProfileTap,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: ValimaiColors.primaryContainer.withOpacity(0.6),
-                      width: 1.5,
-                    ),
-                    image: const DecorationImage(
-                      image: NetworkImage(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuAVte0Vompy9v1DefwcmsL9qs9JVvjgiQ-RENHoBmr1jl0-CHzslxuooE3wg4bUlSmnyqqK80FXUmA05gxPse-WskvXlZBKZxX7MF93XpwkjIp44nJ_vkcM7-GiG5tsJb010T_BKqzbyfI6uNxfxeEfgcwSiIlgQ5whigEfDlNufMm5OyKDbhmJtUMR57Noxvq-oM0khbOWkIlawX401n3GsGPU_K_jvyNEXMblRDQ',
+                child: ListenableBuilder(
+                  listenable: ProfileController.instance,
+                  builder: (context, _) {
+                    final initials = ProfileController.instance.profile?.initials ?? 'V';
+                    return Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: ValimaiColors.surfaceContainerHigh,
+                        border: Border.all(
+                          color: ValimaiColors.primaryContainer,
+                          width: 1.5,
+                        ),
                       ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                      child: Center(
+                        child: Text(
+                          initials,
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],

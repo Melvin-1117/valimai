@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/profile_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/valimai_app_bar.dart';
 
@@ -99,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text(
               'THURSDAY, OCT 24',
               style: TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
@@ -109,22 +110,29 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 4),
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
-            Text(
-              'Good morning, Alex',
-              style: TextStyle(
-                fontFamily: 'Manrope',
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: ValimaiColors.onSurface,
-                letterSpacing: -0.5,
-              ),
+            ListenableBuilder(
+              listenable: ProfileController.instance,
+              builder: (context, _) {
+                final name = ProfileController.instance.profile?.name ?? 'Alex';
+                final firstName = name.trim().split(RegExp(r'\s+')).first;
+                return Text(
+                  'Good morning, $firstName',
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    color: ValimaiColors.onSurface,
+                    letterSpacing: -0.5,
+                  ),
+                );
+              },
             ),
-            Icon(
+            const Icon(
               Icons.bolt,
               color: ValimaiColors.secondary,
               size: 22,
@@ -135,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const Text(
           'Ready to push past your limits today?',
           style: TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: 'Montserrat',
             fontSize: 14,
             fontWeight: FontWeight.w400,
             color: ValimaiColors.secondary,
@@ -178,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     'RECOVERY MATRIX',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
@@ -189,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     '92% • Peak Readiness Zone',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: ValimaiColors.onSurface,
@@ -219,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text(
                   'PR READY',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.8,
@@ -251,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 'WEEKLY OUTPUT',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.0,
@@ -261,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 '4 OF 5 SESSIONS HIT',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: ValimaiColors.primaryContainer,
@@ -339,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               dayLabel,
               style: const TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: ValimaiColors.primaryContainer,
@@ -349,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               dayNum,
               style: const TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 color: ValimaiColors.onSurface,
@@ -381,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             dayLabel,
             style: const TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: ValimaiColors.secondary,
@@ -391,7 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             dayNum,
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: isRest ? ValimaiColors.secondary : ValimaiColors.onSurface,
@@ -408,7 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text(
               'REST',
               style: TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 8,
                 fontWeight: FontWeight.w700,
                 color: ValimaiColors.secondary,
@@ -465,7 +473,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       "TODAY'S PROGRAM • DAY 24",
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
@@ -484,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Text(
                   'HYPERTROPHY PHASE',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
@@ -500,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const Text(
             'CHEST & TRICEPS HYPERTROPHY',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: ValimaiColors.onSurface,
@@ -516,7 +524,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   'Target: Pectorals (Sternocostal & Clavicular), Anterior Deltoids, Lateral Triceps',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 12,
                     color: ValimaiColors.secondary,
                   ),
@@ -558,7 +566,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Text(
                 'CORE SEQUENCE (TOP 3 OF 6)',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
@@ -574,7 +582,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: const Text(
                   'View All 6',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: ValimaiColors.primaryContainer,
@@ -645,7 +653,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? 'LOADED • ENTERING LOCKER'
                             : 'START WORKOUT',
                     style: const TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
@@ -682,7 +690,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     'Modify Workout or Swap Rest Day',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -709,7 +717,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             label,
             style: const TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 9,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
@@ -720,7 +728,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             value,
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: isAccent ? ValimaiColors.primaryContainer : ValimaiColors.onSurface,
@@ -730,7 +738,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             sub,
             style: const TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 10,
               color: ValimaiColors.secondary,
             ),
@@ -759,7 +767,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   index,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: ValimaiColors.secondary,
@@ -773,7 +781,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: ValimaiColors.onSurface,
@@ -783,7 +791,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     target,
                     style: const TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 11,
                       color: ValimaiColors.secondary,
                     ),
@@ -801,7 +809,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               sets,
               style: const TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.5,
@@ -850,7 +858,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Consistency & Streak',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: ValimaiColors.onSurface,
@@ -859,7 +867,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'High adherence phase',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 12,
                           color: ValimaiColors.secondary,
                         ),
@@ -875,7 +883,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     '14',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: ValimaiColors.primaryContainer,
@@ -885,7 +893,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     'DAYS',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
@@ -913,7 +921,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'Monthly Block Adherence',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 13,
                         color: ValimaiColors.onSurface,
                       ),
@@ -921,7 +929,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       '18 / 20 Sessions',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: ValimaiColors.onSurface,
@@ -955,7 +963,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       '94% MONTHLY TARGET',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
@@ -965,7 +973,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       '+2 AHEAD OF SCHEDULE',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
@@ -1003,7 +1011,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           'CUMULATIVE LOAD',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.8,
@@ -1014,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           '32,450 kg Lifted',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: ValimaiColors.onSurface,
@@ -1041,7 +1049,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         '+8% VS LW',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           color: ValimaiColors.primaryContainer,

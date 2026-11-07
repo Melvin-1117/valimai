@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'theme/app_theme.dart';
-import 'screens/main_shell.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,7 +9,7 @@ void main() {
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: ValimaiColors.surfaceContainer,
+      systemNavigationBarColor: ValimaiColors.surface,
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
@@ -25,7 +25,7 @@ class ValimaiApp extends StatelessWidget {
       title: 'VALIMAI',
       debugShowCheckedModeBanner: false,
       theme: ValimaiTheme.darkTheme,
-      home: const MainShell(),
+      home: const SplashScreen(),
     );
   }
 }

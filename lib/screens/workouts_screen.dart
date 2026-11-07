@@ -81,7 +81,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     Text(
                       'DAILY ROUTINES',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
@@ -95,7 +95,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     const Text(
                       'SORT: ',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 11,
                         color: ValimaiColors.secondary,
                         fontWeight: FontWeight.w700,
@@ -108,7 +108,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                           Text(
                             'FREQUENCY',
                             style: TextStyle(
-                              fontFamily: 'Manrope',
+                              fontFamily: 'Montserrat',
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
                               color: ValimaiColors.onSurface,
@@ -203,7 +203,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
             const Text(
               'WORKSHOP & NETWORK',
               style: TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.0,
@@ -249,14 +249,14 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           Expanded(
             child: TextField(
               style: TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 14,
                 color: ValimaiColors.onSurface,
               ),
               decoration: InputDecoration(
                 hintText: 'Search protocols, movements, splits...',
                 hintStyle: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 14,
                   color: ValimaiColors.secondary,
                 ),
@@ -299,7 +299,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 child: Text(
                   _categories[index],
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
@@ -355,7 +355,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     const Text(
                       'ACTIVE CYCLE',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
@@ -368,7 +368,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               const Text(
                 'PHASE 02 // OVERLOAD',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.8,
@@ -381,7 +381,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           const Text(
             'VALIMAI KINETIC HYPERTROPHY',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 20,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.3,
@@ -392,7 +392,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           const Text(
             '5-Day Periodized Split • Block 2: Mechanical Tension',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 12,
               color: ValimaiColors.secondary,
             ),
@@ -422,7 +422,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         Text(
                           'Week 06 of 12',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: ValimaiColors.onSurface,
@@ -433,7 +433,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     Text(
                       '50% COMPLETED',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
@@ -468,7 +468,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     Text(
                       'NEXT: SESSION 28 • PUSH',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
@@ -478,7 +478,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     Text(
                       '72 HRS TILL DELOAD',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
@@ -524,7 +524,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   Text(
                     _isContinuing ? 'INITIALIZING LOG...' : 'CONTINUE PROTOCOL',
                     style: const TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
@@ -589,7 +589,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         Text(
                           blockTag,
                           style: const TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.8,
@@ -609,7 +609,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         Text(
                           intensityTag,
                           style: const TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: ValimaiColors.secondary,
@@ -628,7 +628,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: ValimaiColors.onSurface,
@@ -652,7 +652,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             const Text(
                               'MOVEMENTS',
                               style: TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.secondary,
@@ -662,7 +662,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             Text(
                               movements,
                               style: const TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.onSurface,
@@ -678,7 +678,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             const Text(
                               'VOLUME',
                               style: TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.secondary,
@@ -688,7 +688,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             Text(
                               volume,
                               style: const TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.onSurface,
@@ -704,7 +704,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             Text(
                               thirdMetricLabel,
                               style: const TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.secondary,
@@ -714,7 +714,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             Text(
                               thirdMetricValue,
                               style: const TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                                 color: ValimaiColors.primaryContainer,
@@ -743,7 +743,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         child: Text(
                           badge,
                           style: const TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 11,
                             color: ValimaiColors.onSurface,
                           ),
@@ -756,7 +756,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   const Text(
                     'SEQUENCE PREVIEW',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
+                      fontFamily: 'Montserrat',
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.6,
@@ -789,7 +789,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             Text(
                               chip,
                               style: const TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Montserrat',
                                 fontSize: 11,
                                 color: ValimaiColors.onSurface,
                               ),
@@ -817,7 +817,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         Text(
                           durationText,
                           style: const TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 11,
                             color: ValimaiColors.secondary,
                           ),
@@ -829,7 +829,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         Text(
                           'START SESSION',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.6,
@@ -895,7 +895,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: ValimaiColors.onSurface,
@@ -905,7 +905,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 11,
                         color: ValimaiColors.secondary,
                       ),

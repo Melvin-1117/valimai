@@ -63,7 +63,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const Text(
                           'PERFORMANCE ARCHIVE',
                           style: TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.0,
@@ -76,7 +76,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const Text(
                       'MESO 04 : HYPERTROPHY',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: ValimaiColors.onSurface,
@@ -122,7 +122,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: Text(
                           _timeframes[index].toUpperCase(),
                           style: TextStyle(
-                            fontFamily: 'Manrope',
+                            fontFamily: 'Montserrat',
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.6,
@@ -209,7 +209,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Text(
                         'WEEKLY DENSITY DELTA',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.8,
@@ -219,7 +219,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Text(
                         'PEAK LOAD',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           color: ValimaiColors.primaryContainer,
@@ -255,7 +255,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       'Personal Records',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: ValimaiColors.onSurface,
@@ -266,7 +266,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Text(
                   'LATEST 30D',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
@@ -332,7 +332,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       'Execution Log',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: ValimaiColors.onSurface,
@@ -343,7 +343,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Text(
                   'OCTOBER 2024',
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,
@@ -430,7 +430,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Text(
                         'HISTORICAL VAULT',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.8,
@@ -441,7 +441,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Text(
                         'Looking for Mesocycles 01-03?',
                         style: TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Montserrat',
                           fontSize: 12,
                           color: ValimaiColors.onSurface,
                         ),
@@ -462,7 +462,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     child: const Text(
                       'QUERY VAULT',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
@@ -509,7 +509,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Text(
                 title,
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
@@ -535,7 +535,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Text(
                 value,
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   color: isPrCard
@@ -548,7 +548,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Text(
                   unit,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: ValimaiColors.secondary,
@@ -561,7 +561,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text(
             delta,
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: deltaPositive
@@ -609,7 +609,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Text(
                   tag,
                   style: TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
                     color: isRedTag ? Colors.white : ValimaiColors.onSurface,
@@ -620,7 +620,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Text(
                 date,
                 style: const TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 11,
                   color: ValimaiColors.secondary,
                 ),
@@ -631,7 +631,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           Text(
             title,
             style: const TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Montserrat',
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: ValimaiColors.onSurface,
@@ -647,7 +647,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Text(
                 weight,
                 style: const TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: ValimaiColors.onSurface,
@@ -657,7 +657,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               const Text(
                 'KG',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: ValimaiColors.secondary,
@@ -667,7 +667,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Text(
                 reps,
                 style: const TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Montserrat',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: ValimaiColors.secondary,
@@ -688,7 +688,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Text(
                   progression,
                   style: const TextStyle(
-                    fontFamily: 'Manrope',
+                    fontFamily: 'Montserrat',
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: ValimaiColors.primaryContainer,
@@ -739,7 +739,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       timeLabel,
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
@@ -759,7 +759,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       dateLabel,
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 11,
                         color: ValimaiColors.secondary,
                       ),
@@ -785,7 +785,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Text(
               title,
               style: const TextStyle(
-                fontFamily: 'Manrope',
+                fontFamily: 'Montserrat',
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
                 color: ValimaiColors.onSurface,
@@ -827,7 +827,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       highlight,
                       style: const TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: ValimaiColors.secondary,
@@ -840,7 +840,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const Text(
                       'BREAKDOWN',
                       style: TextStyle(
-                        fontFamily: 'Manrope',
+                        fontFamily: 'Montserrat',
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
@@ -877,7 +877,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Text(
                             parts[0].trim(),
                             style: const TextStyle(
-                              fontFamily: 'Manrope',
+                              fontFamily: 'Montserrat',
                               fontSize: 11,
                               color: ValimaiColors.secondary,
                             ),
@@ -885,7 +885,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Text(
                             parts.length > 1 ? parts[1].trim() : '',
                             style: const TextStyle(
-                              fontFamily: 'Manrope',
+                              fontFamily: 'Montserrat',
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: ValimaiColors.onSurface,
@@ -910,7 +910,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         Text(
           label,
           style: const TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: 'Montserrat',
             fontSize: 9,
             fontWeight: FontWeight.w700,
             color: ValimaiColors.secondary,
@@ -920,7 +920,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         Text(
           value,
           style: TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: 'Montserrat',
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: isAccent ? ValimaiColors.primaryContainer : ValimaiColors.onSurface,

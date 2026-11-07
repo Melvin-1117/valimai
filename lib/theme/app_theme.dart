@@ -3,32 +3,32 @@ import 'package:flutter/material.dart';
 class ValimaiColors {
   ValimaiColors._();
 
-  static const Color background = Color(0xFF121318);
-  static const Color surface = Color(0xFF121318);
-  static const Color surfaceDim = Color(0xFF121318);
-  static const Color surfaceBright = Color(0xFF38393E);
-  static const Color surfaceContainerLowest = Color(0xFF0D0E12);
-  static const Color surfaceContainerLow = Color(0xFF1A1B20);
-  static const Color surfaceContainer = Color(0xFF1E1F24);
-  static const Color surfaceContainerHigh = Color(0xFF282A2F);
-  static const Color surfaceContainerHighest = Color(0xFF333539);
+  static const Color background = Color(0xFF101012); // Deep Black
+  static const Color surface = Color(0xFF25252B); // Charcoal
+  static const Color surfaceDim = Color(0xFF101012);
+  static const Color surfaceBright = Color(0xFF35353D);
+  static const Color surfaceContainerLowest = Color(0xFF0A0A0C);
+  static const Color surfaceContainerLow = Color(0xFF1A1A1E);
+  static const Color surfaceContainer = Color(0xFF25252B);
+  static const Color surfaceContainerHigh = Color(0xFF303038);
+  static const Color surfaceContainerHighest = Color(0xFF383842);
 
-  static const Color primary = Color(0xFFFFB3AE);
-  static const Color primaryContainer = Color(0xFFFF5352); // Kinetic Red
+  static const Color primary = Color(0xFFF02D36); // Bright Red
+  static const Color primaryContainer = Color(0xFFF02D36); // Bright Red Accent
   static const Color kineticRed = Color(0xFFF02D36);
-  static const Color onPrimary = Color(0xFF68000B);
-  static const Color onPrimaryContainer = Color(0xFF5C0008);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color onPrimaryContainer = Color(0xFFFFFFFF);
 
   static const Color secondary = Color(0xFFA4A4AA); // Cool Grey
   static const Color secondaryLight = Color(0xFFC8C5CD);
-  static const Color secondaryContainer = Color(0xFF46464D);
-  static const Color onSecondary = Color(0xFF303036);
-  static const Color onSecondaryContainer = Color(0xFFB6B4BC);
+  static const Color secondaryContainer = Color(0xFF3A3A42);
+  static const Color onSecondary = Color(0xFF101012);
+  static const Color onSecondaryContainer = Color(0xFFE2E2E8);
 
   static const Color tertiary = Color(0xFFFFB3B2);
   static const Color tertiaryContainer = Color(0xFFF95961);
 
-  static const Color onSurface = Color(0xFFE2E2E8);
+  static const Color onSurface = Color(0xFFFFFFFF); // Primary text: White
   static const Color onSurfaceVariant = Color(0xFFE6BDB9);
   static const Color outline = Color(0xFFAD8885);
   static const Color outlineVariant = Color(0xFF5D3F3D);
@@ -59,7 +59,8 @@ class ValimaiTheme {
         error: Color(0xFFFFB4AB),
         onError: Color(0xFF690005),
       ),
-      fontFamily: 'Manrope',
+      fontFamily: 'Montserrat',
+      fontFamilyFallback: const ['sans-serif'],
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 56,
