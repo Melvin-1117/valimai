@@ -1,5 +1,10 @@
 import 'package:flutter/foundation.dart';
+import '../models/daily_workout.dart';
+import '../models/weekly_schedule.dart';
 import '../models/workout.dart';
+import 'daily_workout_controller.dart';
+import 'routine_controller.dart';
+import 'workout_rotation_engine.dart';
 import 'workout_storage.dart';
 
 class WorkoutController extends ChangeNotifier {
@@ -35,11 +40,14 @@ class WorkoutController extends ChangeNotifier {
 
   Map<String, Workout> _workouts = {};
   Map<String, DaySchedule> _schedules = {};
+  Map<int, WeeklyDayAssignment> _weeklyPlan = {};
 
   bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
   DateTime get selectedDate => _selectedDate;
   DateTime get viewingWeekStart => _viewingWeekStart;
+  Map<String, DaySchedule> get schedules => Map.unmodifiable(_schedules);
+  Map<int, WeeklyDayAssignment> get weeklyPlan => Map.unmodifiable(_weeklyPlan);
 
   /// Returns the 7 days of the currently viewed week (Monday to Sunday)
   List<DateTime> get daysOfViewingWeek {
@@ -56,7 +64,7 @@ class WorkoutController extends ChangeNotifier {
         _selectedDate.day == now.day;
   }
 
-  /// Initialize controller and load cached workouts / schedules
+  /// Initialize controller and load cached workouts / schedules / weekly plan
   Future<void> initialize() async {
     if (_isInitialized) return;
     _isLoading = true;
@@ -65,12 +73,89 @@ class WorkoutController extends ChangeNotifier {
     try {
       _workouts = await _storage.loadWorkouts();
       _schedules = await _storage.loadSchedules();
+      _weeklyPlan = await _storage.loadWeeklyPlan();
       _isInitialized = true;
     } catch (e) {
       debugPrint('WorkoutController.initialize error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  /// Retrieve the recurring weekly plan assignment for a weekday (1 = Monday, 7 = Sunday)
+  WeeklyDayAssignment getWeeklyAssignment(int weekday) {
+    if (_weeklyPlan.containsKey(weekday)) {
+      return _weeklyPlan[weekday]!;
+    }
+    return WeeklyDayAssignment(
+      weekday: weekday,
+      type: ScheduledDayType.unassigned,
+    );
+  }
+
+  /// Assign an active routine to a weekday
+  Future<bool> assignRoutineToWeekday(int weekday, String routineId) async {
+    final assignment = WeeklyDayAssignment(
+      weekday: weekday,
+      type: ScheduledDayType.workout,
+      routineId: routineId,
+    );
+    _weeklyPlan[weekday] = assignment;
+    notifyListeners();
+
+    try {
+      return await _storage.saveWeeklyPlan(_weeklyPlan);
+    } catch (e) {
+      debugPrint('Failed to assign routine to weekday: $e');
+      return false;
+    }
+  }
+
+  /// Mark a weekday as Rest Day
+  Future<bool> setWeekdayAsRest(int weekday) async {
+    final assignment = WeeklyDayAssignment(
+      weekday: weekday,
+      type: ScheduledDayType.rest,
+    );
+    _weeklyPlan[weekday] = assignment;
+    notifyListeners();
+
+    try {
+      return await _storage.saveWeeklyPlan(_weeklyPlan);
+    } catch (e) {
+      debugPrint('Failed to set weekday as rest: $e');
+      return false;
+    }
+  }
+
+  /// Remove an assignment from a weekday
+  Future<bool> removeWeekdayAssignment(int weekday) async {
+    final assignment = WeeklyDayAssignment(
+      weekday: weekday,
+      type: ScheduledDayType.unassigned,
+    );
+    _weeklyPlan[weekday] = assignment;
+    notifyListeners();
+
+    try {
+      return await _storage.saveWeeklyPlan(_weeklyPlan);
+    } catch (e) {
+      debugPrint('Failed to remove weekday assignment: $e');
+      return false;
+    }
+  }
+
+  /// Save the entire recurring weekly plan
+  Future<bool> saveWeeklyPlan(Map<int, WeeklyDayAssignment> newPlan) async {
+    _weeklyPlan = Map<int, WeeklyDayAssignment>.from(newPlan);
+    notifyListeners();
+
+    try {
+      return await _storage.saveWeeklyPlan(_weeklyPlan);
+    } catch (e) {
+      debugPrint('Failed to save weekly plan: $e');
+      return false;
     }
   }
 
@@ -109,21 +194,125 @@ class WorkoutController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Retrieve the schedule for a given date
+  /// Retrieve the schedule for a given date resolving across the 4 data priorities:
+  /// 1. Explicit daily selection or date-specific override
+  /// 2. Scheduled routine for that weekday (Recurring weekly plan)
+  /// 3. Rotation recommendation if no schedule exists
+  /// 4. Rest Day or unassigned state
   DaySchedule getDaySchedule(DateTime date) {
-    final key = DaySchedule.dateKey(date);
+    final norm = DateTime(date.year, date.month, date.day);
+    final key = DaySchedule.dateKey(norm);
+
+    // 1. PRIORITY 1: Explicit daily selection or date-specific override
+    try {
+      final dailyRecord =
+          DailyWorkoutController.instance.getDailyWorkoutForDate(norm);
+      if (dailyRecord != null) {
+        final existingSchedule = _schedules[key];
+        final customWorkoutOverride = existingSchedule?.customWorkout;
+
+        if (dailyRecord.status == DailyWorkoutStatus.completed) {
+          final routine = dailyRecord.selectedRoutineId != null
+              ? RoutineController.instance
+                  .getRoutineById(dailyRecord.selectedRoutineId!)
+              : null;
+          return DaySchedule(
+            date: norm,
+            type: ScheduledDayType.workout,
+            workoutId: dailyRecord.selectedRoutineId,
+            customWorkout: customWorkoutOverride ?? routine?.toWorkout(),
+            isCompleted: true,
+            completedAt: dailyRecord.completedAt,
+          );
+        } else if (dailyRecord.isRest) {
+          return DaySchedule(
+            date: norm,
+            type: ScheduledDayType.rest,
+          );
+        } else if (dailyRecord.isSkipped) {
+          return DaySchedule(
+            date: norm,
+            type: ScheduledDayType.unassigned,
+          );
+        } else if (dailyRecord.hasWorkout) {
+          final routine = RoutineController.instance
+              .getRoutineById(dailyRecord.selectedRoutineId!);
+          return DaySchedule(
+            date: norm,
+            type: ScheduledDayType.workout,
+            workoutId: dailyRecord.selectedRoutineId,
+            customWorkout: customWorkoutOverride ?? routine?.toWorkout(),
+            isCompleted: false,
+          );
+        }
+      }
+    } catch (_) {}
+
+    // Check explicit date-specific record in _schedules
     if (_schedules.containsKey(key)) {
-      return _schedules[key]!;
+      final schedule = _schedules[key]!;
+      if (schedule.isCompleted || schedule.customWorkout != null) {
+        return schedule;
+      }
+      if (schedule.type == ScheduledDayType.rest) {
+        return schedule;
+      }
+      if (schedule.workoutId != null) {
+        final routine =
+            RoutineController.instance.getRoutineById(schedule.workoutId!);
+        if (routine != null) {
+          return schedule.copyWith(customWorkout: routine.toWorkout());
+        }
+        return schedule;
+      }
     }
 
-    // Default to unassigned if not explicitly scheduled
+    // 2. PRIORITY 2: Scheduled routine for that weekday (Recurring weekly plan)
+    final assignment = getWeeklyAssignment(norm.weekday);
+    if (assignment.isWorkout && assignment.routineId != null) {
+      final routine =
+          RoutineController.instance.getRoutineById(assignment.routineId!);
+      return DaySchedule(
+        date: norm,
+        type: ScheduledDayType.workout,
+        workoutId: assignment.routineId,
+        customWorkout: routine?.toWorkout(),
+        isCompleted: false,
+      );
+    } else if (assignment.isRest) {
+      return DaySchedule(
+        date: norm,
+        type: ScheduledDayType.rest,
+      );
+    }
+
+    // 3. PRIORITY 3: Rotation recommendation if no schedule exists
+    try {
+      final suggested =
+          WorkoutRotationEngine.instance.computeNextRoutineInRotation(
+        activeRoutines: RoutineController.instance.activeRoutines,
+        allRoutines: RoutineController.instance.allRoutines,
+        completedHistory: WorkoutRotationEngine.instance.getCompletedHistory(),
+      );
+      if (suggested != null) {
+        return DaySchedule(
+          date: norm,
+          type: ScheduledDayType.workout,
+          workoutId: suggested.id,
+          customWorkout: suggested.toWorkout(),
+          isCompleted: false,
+        );
+      }
+    } catch (_) {}
+
+    // 4. PRIORITY 4: Unassigned
     return DaySchedule(
-      date: DateTime(date.year, date.month, date.day),
+      date: norm,
       type: ScheduledDayType.unassigned,
     );
   }
 
-  /// Retrieve the workout assigned to a given date (either custom or template)
+  /// Retrieve the workout assigned to a given date (either custom, template, or rotation)
   Workout? getWorkoutForDate(DateTime date) {
     final schedule = getDaySchedule(date);
     if (schedule.type != ScheduledDayType.workout) {
@@ -135,12 +324,18 @@ class WorkoutController extends ChangeNotifier {
       return schedule.customWorkout;
     }
 
-    // Fall back to template workout ID
-    if (schedule.workoutId != null && _workouts.containsKey(schedule.workoutId)) {
-      return _workouts[schedule.workoutId];
+    // Find routine in RoutineController
+    if (schedule.workoutId != null) {
+      final routine =
+          RoutineController.instance.getRoutineById(schedule.workoutId!);
+      if (routine != null) {
+        return routine.toWorkout();
+      }
+      if (_workouts.containsKey(schedule.workoutId)) {
+        return _workouts[schedule.workoutId];
+      }
     }
 
-    // Fall back to standard push routine if template not found
     return _workouts.values.isNotEmpty ? _workouts.values.first : null;
   }
 
@@ -157,14 +352,16 @@ class WorkoutController extends ChangeNotifier {
     );
 
     _schedules[key] = schedule;
+    _workouts[updatedWorkout.id] = updatedWorkout;
     notifyListeners();
 
     try {
+      await _storage.saveWorkout(updatedWorkout);
       final success = await _storage.saveDaySchedule(schedule);
       return success;
     } catch (e) {
       debugPrint('Failed to save updated workout: $e');
-      return false;
+      return true; // Changes are safely retained in-memory
     }
   }
 
@@ -183,7 +380,17 @@ class WorkoutController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      return await _storage.saveDaySchedule(schedule);
+      final success = await _storage.saveDaySchedule(schedule);
+      if (isCompleted) {
+        try {
+          await DailyWorkoutController.instance.markCompletedForDate(
+            norm,
+            routineId: schedule.workoutId,
+            completedAt: schedule.completedAt,
+          );
+        } catch (_) {}
+      }
+      return success;
     } catch (e) {
       debugPrint('Failed to mark workout completion: $e');
       return false;

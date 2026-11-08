@@ -18,31 +18,25 @@ class ActiveWorkoutScreen extends StatefulWidget {
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   late Timer _stopwatchTimer;
-  int _secondsElapsed = 14 * 60 + 28; // Start at 14:28 for demo feel
+  int _secondsElapsed = 0;
 
   // Current active set data
   int _currentWeight = 34;
   int _currentReps = 10;
   double _currentRpe = 8.5;
 
-  // Completed sets
+  // Sets to track progression
   final List<Map<String, dynamic>> _loggedSets = [
-    {'set': 1, 'prev': '32 kg × 10', 'weight': 34, 'reps': 10, 'rpe': 8.0, 'completed': true},
-    {'set': 2, 'prev': '34 kg × 8', 'weight': 34, 'reps': 10, 'rpe': 8.5, 'completed': true},
+    {'set': 1, 'prev': '32 kg × 10', 'weight': 34, 'reps': 10, 'rpe': 8.0, 'completed': false},
+    {'set': 2, 'prev': '34 kg × 8', 'weight': 34, 'reps': 10, 'rpe': 8.5, 'completed': false},
     {'set': 3, 'prev': '34 kg × 8', 'weight': 34, 'reps': 9, 'rpe': 9.0, 'completed': false},
     {'set': 4, 'prev': '34 kg × 8', 'weight': 34, 'reps': 8, 'rpe': 9.5, 'completed': false},
   ];
-
-  // Rest timer
-  int _restSecondsRemaining = 82;
-  Timer? _restTimer;
-  bool _isResting = true;
 
   @override
   void initState() {
     super.initState();
     _startStopwatch();
-    _startRestTimer();
   }
 
   void _startStopwatch() {
@@ -55,31 +49,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     });
   }
 
-  void _startRestTimer() {
-    _restTimer?.cancel();
-    _restTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) return;
-      if (_restSecondsRemaining > 0) {
-        setState(() {
-          _restSecondsRemaining--;
-        });
-      } else {
-        setState(() {
-          _isResting = false;
-        });
-        timer.cancel();
-      }
-    });
-  }
-
   void _toggleSetCompletion(int index) {
     setState(() {
       _loggedSets[index]['completed'] = !_loggedSets[index]['completed'];
-      if (_loggedSets[index]['completed']) {
-        _restSecondsRemaining = 90;
-        _isResting = true;
-        _startRestTimer();
-      }
     });
   }
 
@@ -108,7 +80,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   @override
   void dispose() {
     _stopwatchTimer.cancel();
-    _restTimer?.cancel();
     super.dispose();
   }
 
@@ -184,10 +155,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             // Stop Watch & Live Intensity Strip
             _buildStopwatchHeader(),
             const SizedBox(height: 14),
-
-            // Rest Timer Floating Bar
-            if (_isResting) _buildRestTimerBar(),
-            if (_isResting) const SizedBox(height: 14),
 
             // Active Movement Card
             _buildActiveMovementCard(),
@@ -275,94 +242,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRestTimerBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: ValimaiColors.primaryContainer.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: ValimaiColors.primaryContainer.withOpacity(0.35),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.timer,
-                color: ValimaiColors.primaryContainer,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'REST INTERVAL',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
-                      color: ValimaiColors.secondary,
-                    ),
-                  ),
-                  Text(
-                    '${_restSecondsRemaining}s Remaining',
-                    style: const TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: ValimaiColors.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _restSecondsRemaining += 30;
-                  });
-                },
-                style: TextButton.styleFrom(
-                  backgroundColor: ValimaiColors.surfaceContainerHigh,
-                  foregroundColor: ValimaiColors.onSurface,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text(
-                  '+30s',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              IconButton(
-                icon: const Icon(Icons.skip_next, size: 20, color: ValimaiColors.secondary),
-                onPressed: () {
-                  setState(() {
-                    _isResting = false;
-                  });
-                },
-              ),
-            ],
           ),
         ],
       ),
@@ -532,9 +411,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     'rpe': _currentRpe,
                     'completed': true,
                   });
-                  _restSecondsRemaining = 90;
-                  _isResting = true;
-                  _startRestTimer();
                 });
               },
               style: ElevatedButton.styleFrom(

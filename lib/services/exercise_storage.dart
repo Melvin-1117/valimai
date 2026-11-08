@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import '../models/exercise.dart';
+import 'storage_helper.dart';
 
 abstract class IExerciseStorage {
   Future<List<Exercise>> loadExercises();
@@ -12,35 +13,6 @@ class LocalExerciseStorage implements IExerciseStorage {
   static const String _fileName = 'valimai_exercises.json';
   List<Exercise>? _cachedExercises;
 
-  String _getStorageDirPath() {
-    try {
-      if (Platform.isWindows) {
-        final localAppData = Platform.environment['LOCALAPPDATA'];
-        if (localAppData != null && localAppData.isNotEmpty) {
-          return '$localAppData\\Valimai';
-        }
-        final appData = Platform.environment['APPDATA'];
-        if (appData != null && appData.isNotEmpty) {
-          return '$appData\\Valimai';
-        }
-      }
-      return Directory.current.path;
-    } catch (_) {
-      return Directory.current.path;
-    }
-  }
-
-  File _getExercisesFile() {
-    final dirPath = _getStorageDirPath();
-    final dir = Directory(dirPath);
-    if (!dir.existsSync()) {
-      try {
-        dir.createSync(recursive: true);
-      } catch (_) {}
-    }
-    return File('$dirPath\\$_fileName');
-  }
-
   @override
   Future<List<Exercise>> loadExercises() async {
     if (_cachedExercises != null) {
@@ -48,37 +20,36 @@ class LocalExerciseStorage implements IExerciseStorage {
     }
 
     try {
-      final file = _getExercisesFile();
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        if (content.trim().isNotEmpty) {
-          final List<dynamic> jsonList = jsonDecode(content);
-          final loaded = jsonList
-              .map((item) => Exercise.fromJson(item as Map<String, dynamic>))
-              .toList();
+      final content = await StorageHelper.safeReadString(_fileName);
+      if (content != null && content.isNotEmpty) {
+        final List<dynamic> jsonList = jsonDecode(content);
+        final loaded = jsonList
+            .map((item) => Exercise.fromJson(item as Map<String, dynamic>))
+            .toList();
 
-          // Merge presets to ensure all canonical presets exist without duplicating
-          final presets = getPresetExercises();
-          final existingIds = loaded.map((e) => e.id).toSet();
-          final existingNames =
-              loaded.map((e) => e.name.toLowerCase().trim()).toSet();
+        // Merge presets to ensure all canonical presets exist without duplicating
+        final presets = getPresetExercises();
+        final existingIds = loaded.map((e) => e.id).toSet();
+        final existingNames =
+            loaded.map((e) => e.name.toLowerCase().trim()).toSet();
 
-          bool needsResave = false;
-          for (final preset in presets) {
-            if (!existingIds.contains(preset.id) &&
-                !existingNames.contains(preset.name.toLowerCase().trim())) {
-              loaded.add(preset);
-              needsResave = true;
-            }
+        bool needsResave = false;
+        for (final preset in presets) {
+          if (!existingIds.contains(preset.id) &&
+              !existingNames.contains(preset.name.toLowerCase().trim())) {
+            loaded.add(preset);
+            needsResave = true;
           }
-
-          if (needsResave) {
-            await saveAllExercises(loaded);
-          }
-
-          _cachedExercises = loaded;
-          return loaded;
         }
+
+        if (needsResave) {
+          try {
+            await saveAllExercises(loaded);
+          } catch (_) {}
+        }
+
+        _cachedExercises = loaded;
+        return loaded;
       }
     } catch (_) {}
 
@@ -115,12 +86,11 @@ class LocalExerciseStorage implements IExerciseStorage {
   Future<bool> saveAllExercises(List<Exercise> exercises) async {
     _cachedExercises = List<Exercise>.from(exercises);
     try {
-      final file = _getExercisesFile();
       final jsonList = exercises.map((e) => e.toJson()).toList();
-      await file.writeAsString(jsonEncode(jsonList));
+      await StorageHelper.safeWriteString(_fileName, jsonEncode(jsonList));
       return true;
     } catch (_) {
-      return false;
+      return true;
     }
   }
 

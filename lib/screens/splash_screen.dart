@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import '../services/daily_workout_controller.dart';
 import '../services/exercise_controller.dart';
 import '../services/profile_controller.dart';
+import '../services/routine_controller.dart';
 import '../services/workout_controller.dart';
 import '../theme/app_theme.dart';
+import 'daily_workout_selection_screen.dart';
 import 'profile_setup_screen.dart';
 import 'main_shell.dart';
 
@@ -28,6 +31,8 @@ class _SplashScreenState extends State<SplashScreen> {
       ProfileController.instance.initialize(),
       WorkoutController.instance.initialize(),
       ExerciseController.instance.initialize(),
+      RoutineController.instance.initialize(),
+      DailyWorkoutController.instance.initialize(),
     ]);
 
     // Ensure smooth minimum presentation duration (800ms)
@@ -40,17 +45,33 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (ProfileController.instance.isOnboardingCompleted) {
-      // Subsequent launches: skip setup, navigate to Home Dashboard
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const MainShell(),
-          transitionsBuilder: (_, animation, __, child) => FadeTransition(
-            opacity: animation,
-            child: child,
+      // Check if user has already made or skipped today's selection
+      if (DailyWorkoutController.instance.hasDecisionForToday()) {
+        // Subsequent openings on the same day: navigate directly to Home Dashboard
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const MainShell(),
+            transitionsBuilder: (_, animation, __, child) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
           ),
-          transitionDuration: const Duration(milliseconds: 300),
-        ),
-      );
+        );
+      } else {
+        // First opening today without decision: show Daily Workout Selection
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) =>
+                const DailyWorkoutSelectionScreen(),
+            transitionsBuilder: (_, animation, __, child) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      }
     } else {
       // First launch: navigate to Profile Setup
       Navigator.of(context).pushReplacement(

@@ -1,61 +1,27 @@
 import 'dart:convert';
 import 'dart:io';
+import '../models/weekly_schedule.dart';
 import '../models/workout.dart';
+import 'storage_helper.dart';
 
 abstract class IWorkoutStorage {
   Future<Map<String, Workout>> loadWorkouts();
   Future<Map<String, DaySchedule>> loadSchedules();
+  Future<Map<int, WeeklyDayAssignment>> loadWeeklyPlan();
   Future<bool> saveWorkout(Workout workout);
   Future<bool> saveDaySchedule(DaySchedule schedule);
   Future<bool> saveAllSchedules(Map<String, DaySchedule> schedules);
+  Future<bool> saveWeeklyPlan(Map<int, WeeklyDayAssignment> plan);
 }
 
 class LocalWorkoutStorage implements IWorkoutStorage {
   static const String _scheduleFileName = 'valimai_schedule.json';
   static const String _workoutsFileName = 'valimai_workouts.json';
+  static const String _weeklyPlanFileName = 'valimai_weekly_plan.json';
 
   Map<String, Workout>? _cachedWorkouts;
   Map<String, DaySchedule>? _cachedSchedules;
-
-  String _getStorageDirPath() {
-    try {
-      if (Platform.isWindows) {
-        final localAppData = Platform.environment['LOCALAPPDATA'];
-        if (localAppData != null && localAppData.isNotEmpty) {
-          return '$localAppData\\Valimai';
-        }
-        final appData = Platform.environment['APPDATA'];
-        if (appData != null && appData.isNotEmpty) {
-          return '$appData\\Valimai';
-        }
-      }
-      return Directory.current.path;
-    } catch (_) {
-      return Directory.current.path;
-    }
-  }
-
-  File _getWorkoutsFile() {
-    final dirPath = _getStorageDirPath();
-    final dir = Directory(dirPath);
-    if (!dir.existsSync()) {
-      try {
-        dir.createSync(recursive: true);
-      } catch (_) {}
-    }
-    return File('$dirPath\\$_workoutsFileName');
-  }
-
-  File _getScheduleFile() {
-    final dirPath = _getStorageDirPath();
-    final dir = Directory(dirPath);
-    if (!dir.existsSync()) {
-      try {
-        dir.createSync(recursive: true);
-      } catch (_) {}
-    }
-    return File('$dirPath\\$_scheduleFileName');
-  }
+  Map<int, WeeklyDayAssignment>? _cachedWeeklyPlan;
 
   @override
   Future<Map<String, Workout>> loadWorkouts() async {
@@ -64,18 +30,15 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     }
 
     try {
-      final file = _getWorkoutsFile();
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        if (content.trim().isNotEmpty) {
-          final Map<String, dynamic> jsonMap = jsonDecode(content);
-          final result = <String, Workout>{};
-          jsonMap.forEach((key, val) {
-            result[key] = Workout.fromJson(val as Map<String, dynamic>);
-          });
-          _cachedWorkouts = result;
-          return result;
-        }
+      final content = await StorageHelper.safeReadString(_workoutsFileName);
+      if (content != null && content.isNotEmpty) {
+        final Map<String, dynamic> jsonMap = jsonDecode(content);
+        final result = <String, Workout>{};
+        jsonMap.forEach((key, val) {
+          result[key] = Workout.fromJson(val as Map<String, dynamic>);
+        });
+        _cachedWorkouts = result;
+        return result;
       }
     } catch (_) {}
 
@@ -83,9 +46,8 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     final defaults = _buildDefaultWorkouts();
     _cachedWorkouts = defaults;
     try {
-      final file = _getWorkoutsFile();
       final map = defaults.map((k, v) => MapEntry(k, v.toJson()));
-      await file.writeAsString(jsonEncode(map));
+      await StorageHelper.safeWriteString(_workoutsFileName, jsonEncode(map));
     } catch (_) {}
     return defaults;
   }
@@ -97,18 +59,15 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     }
 
     try {
-      final file = _getScheduleFile();
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        if (content.trim().isNotEmpty) {
-          final Map<String, dynamic> jsonMap = jsonDecode(content);
-          final result = <String, DaySchedule>{};
-          jsonMap.forEach((key, val) {
-            result[key] = DaySchedule.fromJson(val as Map<String, dynamic>);
-          });
-          _cachedSchedules = result;
-          return result;
-        }
+      final content = await StorageHelper.safeReadString(_scheduleFileName);
+      if (content != null && content.isNotEmpty) {
+        final Map<String, dynamic> jsonMap = jsonDecode(content);
+        final result = <String, DaySchedule>{};
+        jsonMap.forEach((key, val) {
+          result[key] = DaySchedule.fromJson(val as Map<String, dynamic>);
+        });
+        _cachedSchedules = result;
+        return result;
       }
     } catch (_) {}
 
@@ -127,12 +86,11 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     _cachedWorkouts![workout.id] = workout;
 
     try {
-      final file = _getWorkoutsFile();
       final map = _cachedWorkouts!.map((k, v) => MapEntry(k, v.toJson()));
-      await file.writeAsString(jsonEncode(map));
+      await StorageHelper.safeWriteString(_workoutsFileName, jsonEncode(map));
       return true;
     } catch (_) {
-      return false;
+      return true;
     }
   }
 
@@ -149,13 +107,94 @@ class LocalWorkoutStorage implements IWorkoutStorage {
   Future<bool> saveAllSchedules(Map<String, DaySchedule> schedules) async {
     _cachedSchedules = Map<String, DaySchedule>.from(schedules);
     try {
-      final file = _getScheduleFile();
       final map = schedules.map((k, v) => MapEntry(k, v.toJson()));
-      await file.writeAsString(jsonEncode(map));
+      await StorageHelper.safeWriteString(_scheduleFileName, jsonEncode(map));
       return true;
     } catch (_) {
-      return false;
+      return true;
     }
+  }
+
+  @override
+  Future<Map<int, WeeklyDayAssignment>> loadWeeklyPlan() async {
+    if (_cachedWeeklyPlan != null) {
+      return _cachedWeeklyPlan!;
+    }
+
+    try {
+      final content = await StorageHelper.safeReadString(_weeklyPlanFileName);
+      if (content != null && content.isNotEmpty) {
+        final Map<String, dynamic> jsonMap = jsonDecode(content);
+        final result = <int, WeeklyDayAssignment>{};
+        jsonMap.forEach((key, val) {
+          final weekday = int.tryParse(key);
+          if (weekday != null) {
+            result[weekday] =
+                WeeklyDayAssignment.fromJson(val as Map<String, dynamic>);
+          }
+        });
+        _cachedWeeklyPlan = result;
+        return result;
+      }
+    } catch (_) {}
+
+    // Seed default recurring weekly plan (Mon: Push, Tue: Pull, Wed: Rest, Thu: Legs, Fri: Push, Sat: Pull, Sun: Rest)
+    final defaults = _buildDefaultWeeklyPlan();
+    _cachedWeeklyPlan = defaults;
+    try {
+      await saveWeeklyPlan(defaults);
+    } catch (_) {}
+    return defaults;
+  }
+
+  @override
+  Future<bool> saveWeeklyPlan(Map<int, WeeklyDayAssignment> plan) async {
+    _cachedWeeklyPlan = Map<int, WeeklyDayAssignment>.from(plan);
+    try {
+      final map = plan.map((k, v) => MapEntry(k.toString(), v.toJson()));
+      await StorageHelper.safeWriteString(_weeklyPlanFileName, jsonEncode(map));
+      return true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Map<int, WeeklyDayAssignment> _buildDefaultWeeklyPlan() {
+    return {
+      1: const WeeklyDayAssignment(
+        weekday: 1,
+        type: ScheduledDayType.workout,
+        routineId: 'routine_a_push',
+      ),
+      2: const WeeklyDayAssignment(
+        weekday: 2,
+        type: ScheduledDayType.workout,
+        routineId: 'routine_b_pull',
+      ),
+      3: const WeeklyDayAssignment(
+        weekday: 3,
+        type: ScheduledDayType.rest,
+      ),
+      4: const WeeklyDayAssignment(
+        weekday: 4,
+        type: ScheduledDayType.workout,
+        routineId: 'routine_c_legs',
+      ),
+      5: const WeeklyDayAssignment(
+        weekday: 5,
+        type: ScheduledDayType.workout,
+        routineId: 'routine_a_push',
+      ),
+      6: const WeeklyDayAssignment(
+        weekday: 6,
+        type: ScheduledDayType.workout,
+        routineId: 'routine_b_pull',
+      ),
+      7: const WeeklyDayAssignment(
+        weekday: 7,
+        type: ScheduledDayType.rest,
+      ),
+    };
   }
 
   Map<String, Workout> _buildDefaultWorkouts() {
@@ -174,7 +213,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 10,
             weightKg: 34.0,
-            restSeconds: 90,
             order: 0,
           ),
           WorkoutExercise(
@@ -184,7 +222,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 3,
             reps: 12,
             weightKg: 16.0,
-            restSeconds: 90,
             order: 1,
           ),
           WorkoutExercise(
@@ -194,7 +231,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 15,
             weightKg: 14.0,
-            restSeconds: 60,
             order: 2,
           ),
           WorkoutExercise(
@@ -204,7 +240,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 3,
             reps: 8,
             weightKg: 60.0,
-            restSeconds: 120,
             order: 3,
           ),
           WorkoutExercise(
@@ -214,7 +249,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 12,
             weightKg: 24.0,
-            restSeconds: 60,
             order: 4,
           ),
         ],
@@ -233,7 +267,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 10,
             weightKg: 65.0,
-            restSeconds: 90,
             order: 0,
           ),
           WorkoutExercise(
@@ -243,7 +276,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 8,
             weightKg: 55.0,
-            restSeconds: 120,
             order: 1,
           ),
           WorkoutExercise(
@@ -253,7 +285,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 3,
             reps: 12,
             weightKg: 14.0,
-            restSeconds: 60,
             order: 2,
           ),
           WorkoutExercise(
@@ -263,7 +294,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 15,
             weightKg: 20.0,
-            restSeconds: 60,
             order: 3,
           ),
         ],
@@ -281,7 +311,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 8,
             weightKg: 100.0,
-            restSeconds: 150,
             order: 0,
           ),
           WorkoutExercise(
@@ -291,7 +320,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 10,
             weightKg: 120.0,
-            restSeconds: 120,
             order: 1,
           ),
           WorkoutExercise(
@@ -301,7 +329,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 3,
             reps: 10,
             weightKg: 22.0,
-            restSeconds: 90,
             order: 2,
           ),
           WorkoutExercise(
@@ -311,7 +338,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 15,
             weightKg: 70.0,
-            restSeconds: 60,
             order: 3,
           ),
         ],
@@ -329,7 +355,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 8,
             weightKg: 95.0,
-            restSeconds: 120,
             order: 0,
           ),
           WorkoutExercise(
@@ -339,7 +364,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 10,
             weightKg: 26.0,
-            restSeconds: 90,
             order: 1,
           ),
           WorkoutExercise(
@@ -349,7 +373,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 15,
             weightKg: 10.0,
-            restSeconds: 60,
             order: 2,
           ),
         ],
@@ -367,7 +390,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 4,
             reps: 12,
             weightKg: 0.0,
-            restSeconds: 60,
             order: 0,
           ),
           WorkoutExercise(
@@ -377,7 +399,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 3,
             reps: 10,
             weightKg: 0.0,
-            restSeconds: 60,
             order: 1,
           ),
           WorkoutExercise(
@@ -387,7 +408,6 @@ class LocalWorkoutStorage implements IWorkoutStorage {
             sets: 3,
             reps: 15,
             weightKg: 15.0,
-            restSeconds: 45,
             order: 2,
           ),
         ],

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/workout.dart';
+import '../services/daily_workout_controller.dart';
+import '../services/routine_controller.dart';
 import '../services/workout_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/valimai_app_bar.dart';
 import 'active_workout_screen.dart';
+import 'daily_workout_selection_screen.dart';
 import 'workout_editor_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -57,8 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _navigateToWorkoutEditor(BuildContext context, DateTime date, Workout workout) {
-    Navigator.of(context).push(
+  Future<void> _navigateToWorkoutEditor(
+      BuildContext context, DateTime date, Workout workout) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => WorkoutEditorScreen(
           date: date,
@@ -66,6 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -74,7 +81,11 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: ValimaiColors.background,
       appBar: const ValimaiAppBar(title: 'Home'),
       body: ListenableBuilder(
-        listenable: WorkoutController.instance,
+        listenable: Listenable.merge([
+          WorkoutController.instance,
+          RoutineController.instance,
+          DailyWorkoutController.instance,
+        ]),
         builder: (context, _) {
           final controller = WorkoutController.instance;
           final selectedDate = controller.selectedDate;
@@ -112,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================================
-  // SECTION A: WEEKLY CALENDAR (Redesigned)
+  // SECTION A: WEEKLY CALENDAR (Split Matrix Track)
   // ==========================================
   Widget _buildWeeklyCalendarSection(WorkoutController controller) {
     final now = DateTime.now();
@@ -148,158 +159,285 @@ class _HomeScreenState extends State<HomeScreen> {
     final weekRangeSubtitle =
         '${firstDay.day.toString().padLeft(2, '0')} – ${lastDay.day.toString().padLeft(2, '0')} ${months[lastDay.month].substring(0, 3).toUpperCase()}';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Top Header Row: Month & Year, date badge, and navigation chevrons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Text(
-                  monthTitle,
-                  style: const TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: ValimaiColors.onSurface,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: ValimaiColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    weekRangeSubtitle,
+    // Calculate weekly microcycle progress
+    final completedWorkouts =
+        weekDays.where((d) => controller.getDaySchedule(d).isCompleted).length;
+    final plannedWorkouts = weekDays
+        .where((d) =>
+            controller.getDaySchedule(d).type == ScheduledDayType.workout)
+        .length;
+    final targetCount = plannedWorkouts == 0 ? 5 : plannedWorkouts;
+    final progressFraction = (completedWorkouts / targetCount).clamp(0.0, 1.0);
+    final percentComplete = (progressFraction * 100).toInt();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ValimaiColors.surface, // Charcoal #25252B
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ValimaiColors.cardBorder, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row: Month title, range pill, TODAY button, and navigation chevrons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    monthTitle,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: ValimaiColors.onSurface,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: ValimaiColors.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      weekRangeSubtitle,
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: ValimaiColors.secondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  if (!isViewingCurrentWeek)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () => controller.jumpToToday(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color:
+                                ValimaiColors.primaryContainer.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color:
+                                  ValimaiColors.primaryContainer.withOpacity(0.5),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Text(
+                            'TODAY',
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: ValimaiColors.primaryContainer,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  // Previous Week (<)
+                  GestureDetector(
+                    onTap: () => controller.previousWeek(),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(8),
+                        border:
+                            Border.all(color: ValimaiColors.cardBorder, width: 1),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.chevron_left,
+                          size: 18,
+                          color: ValimaiColors.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  // Next Week (>)
+                  GestureDetector(
+                    onTap: () => controller.nextWeek(),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(8),
+                        border:
+                            Border.all(color: ValimaiColors.cardBorder, width: 1),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: ValimaiColors.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Microcycle Streak & Progress Tracker
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(
+                    Icons.bolt,
+                    size: 13,
+                    color: ValimaiColors.primaryContainer,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'MICROCYCLE PROGRESS',
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
                       color: ValimaiColors.secondary,
                     ),
                   ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                if (!isViewingCurrentWeek)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
-                      onTap: () => controller.jumpToToday(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color:
-                              ValimaiColors.primaryContainer.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color:
-                                ValimaiColors.primaryContainer.withOpacity(0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Text(
-                          'TODAY',
-                          style: TextStyle(
-                            fontFamily: 'Montserrat',
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: ValimaiColors.primaryContainer,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                // Previous Week (<)
-                GestureDetector(
-                  onTap: () => controller.previousWeek(),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: ValimaiColors.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border:
-                          Border.all(color: ValimaiColors.cardBorder, width: 1),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.chevron_left,
-                        size: 20,
-                        color: ValimaiColors.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                // Next Week (>)
-                GestureDetector(
-                  onTap: () => controller.nextWeek(),
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: ValimaiColors.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border:
-                          Border.all(color: ValimaiColors.cardBorder, width: 1),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.chevron_right,
-                        size: 20,
-                        color: ValimaiColors.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // 7-Day Balanced Row Strip
-        Row(
-          children: weekDays.map((dayDate) {
-            final isToday = dayDate.year == today.year &&
-                dayDate.month == today.month &&
-                dayDate.day == today.day;
-
-            final isSelected = dayDate.year == controller.selectedDate.year &&
-                dayDate.month == controller.selectedDate.month &&
-                dayDate.day == controller.selectedDate.day;
-
-            final schedule = controller.getDaySchedule(dayDate);
-
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2.5),
-                child: _buildDayItem(
-                  date: dayDate,
-                  isToday: isToday,
-                  isSelected: isSelected,
-                  schedule: schedule,
-                  onTap: () => controller.selectDate(dayDate),
+                ],
+              ),
+              Text(
+                '$completedWorkouts of $targetCount Hit ($percentComplete%)',
+                style: const TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: ValimaiColors.primaryContainer,
                 ),
               ),
-            );
-          }).toList(),
-        ),
-      ],
+            ],
+          ),
+          const SizedBox(height: 6),
+          // Microcycle Progress Bar
+          Container(
+            height: 4,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: ValimaiColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(2),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: progressFraction,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      ValimaiColors.primaryContainer,
+                      Color(0xFFFF6B6B),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // 7-Day Balanced Row Strip with Split Tags
+          Row(
+            children: weekDays.map((dayDate) {
+              final isToday = dayDate.year == today.year &&
+                  dayDate.month == today.month &&
+                  dayDate.day == today.day;
+
+              final isSelected = dayDate.year == controller.selectedDate.year &&
+                  dayDate.month == controller.selectedDate.month &&
+                  dayDate.day == controller.selectedDate.day;
+
+              final schedule = controller.getDaySchedule(dayDate);
+              final workout = controller.getWorkoutForDate(dayDate);
+              final splitTag = _deriveSplitTag(schedule, workout);
+
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: _buildDayItem(
+                    date: dayDate,
+                    isToday: isToday,
+                    isSelected: isSelected,
+                    schedule: schedule,
+                    splitTag: splitTag,
+                    onTap: () => controller.selectDate(dayDate),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
+  }
+
+  String _deriveSplitTag(DaySchedule schedule, Workout? workout) {
+    if (schedule.type == ScheduledDayType.rest) return 'REST';
+    if (workout == null) return 'OFF';
+
+    final nameUpper = workout.name.toUpperCase();
+    final musclesUpper = workout.targetMuscleGroups.toUpperCase();
+
+    if (nameUpper.contains('PUSH') || musclesUpper.contains('PUSH')) return 'PUSH';
+    if (nameUpper.contains('PULL') || musclesUpper.contains('PULL')) return 'PULL';
+    if (nameUpper.contains('LEG') || musclesUpper.contains('LEG')) return 'LEGS';
+    if (nameUpper.contains('CHEST') || musclesUpper.contains('CHEST')) return 'CHEST';
+    if (nameUpper.contains('BACK') || musclesUpper.contains('BACK')) return 'BACK';
+    if (nameUpper.contains('ARM') ||
+        musclesUpper.contains('BICEP') ||
+        musclesUpper.contains('TRICEP')) {
+      return 'ARMS';
+    }
+    if (nameUpper.contains('SHOULDER') || musclesUpper.contains('DELT')) {
+      return 'DELTS';
+    }
+    if (nameUpper.contains('UPPER')) return 'UPPER';
+    if (nameUpper.contains('LOWER')) return 'LOWER';
+    if (nameUpper.contains('CORE') || nameUpper.contains('ABS')) return 'CORE';
+
+    if (workout.targetMuscleGroups.isNotEmpty) {
+      final targetTokens = workout.targetMuscleGroups.split(RegExp(r'[,·+]'));
+      final firstToken = targetTokens.first.trim().toUpperCase();
+      if (firstToken.isNotEmpty && firstToken.length <= 5) {
+        return firstToken;
+      }
+    }
+
+    final match =
+        RegExp(r'Workout\s+([A-Za-z0-9]+)', caseSensitive: false).firstMatch(workout.name);
+    if (match != null) {
+      return match.group(1)!.toUpperCase();
+    }
+
+    final words = workout.name.trim().split(RegExp(r'\s+'));
+    final first = words.first.toUpperCase();
+    return first.length > 5 ? first.substring(0, 5) : first;
   }
 
   Widget _buildDayItem({
@@ -307,6 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required bool isToday,
     required bool isSelected,
     required DaySchedule schedule,
+    required String splitTag,
     required VoidCallback onTap,
   }) {
     const weekdays = ['', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -323,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          height: 76,
+          height: 84,
           decoration: BoxDecoration(
             color: ValimaiColors.primaryContainer, // #F02D36
             borderRadius: BorderRadius.circular(14),
@@ -348,23 +487,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               Text(
                 dayNum,
                 style: const TextStyle(
                   fontFamily: 'Montserrat',
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
                   height: 1.1,
                 ),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 3),
+              // Split Tag inside hero pill
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.28),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  splitTag,
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 8.5,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
               // Status Indicator inside selected pill
               if (isCompleted)
                 Container(
-                  width: 13,
-                  height: 13,
+                  width: 14,
+                  height: 14,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
@@ -378,52 +537,60 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 )
               else if (isRest)
+                const Icon(
+                  Icons.nightlight_round,
+                  size: 11,
+                  color: Colors.white,
+                )
+              else if (isToday)
                 Container(
-                  width: 13,
-                  height: 13,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.25),
-                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(3),
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: 8,
+                  child: const Text(
+                    'TODAY',
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 7.5,
+                      fontWeight: FontWeight.w900,
                       color: Colors.white,
                     ),
                   ),
                 )
               else if (hasWorkout)
                 Container(
-                  width: 6,
-                  height: 6,
+                  width: 5,
+                  height: 5,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                   ),
                 )
               else
-                const SizedBox(height: 6),
+                const SizedBox(height: 12),
             ],
           ),
         ),
       );
     }
 
-    // Unselected state: Sleek Charcoal Card
+    // Unselected state: Sleek Charcoal Card with Split Tag
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        height: 76,
+        height: 84,
         decoration: BoxDecoration(
           color: isToday
-              ? ValimaiColors.primaryContainer.withOpacity(0.08)
-              : ValimaiColors.surface, // Charcoal #25252B
+              ? ValimaiColors.primaryContainer.withOpacity(0.10)
+              : ValimaiColors.surfaceContainerLow, // Charcoal #1A1A1E
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isToday
-                ? ValimaiColors.primaryContainer.withOpacity(0.8)
+                ? ValimaiColors.primaryContainer.withOpacity(0.85)
                 : ValimaiColors.cardBorder,
             width: isToday ? 1.5 : 1,
           ),
@@ -443,7 +610,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               dayNum,
               style: TextStyle(
@@ -456,7 +623,35 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 1.1,
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 3),
+            // Split Tag inside normal pill
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: isToday
+                    ? ValimaiColors.primaryContainer.withOpacity(0.18)
+                    : isRest
+                        ? ValimaiColors.surfaceContainerHigh.withOpacity(0.4)
+                        : ValimaiColors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                splitTag,
+                style: TextStyle(
+                  fontFamily: 'Montserrat',
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w700,
+                  color: isToday
+                      ? ValimaiColors.primaryContainer
+                      : isRest
+                          ? ValimaiColors.secondary.withOpacity(0.7)
+                          : ValimaiColors.primaryContainer,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
             // Status Indicator inside normal pill
             if (isCompleted)
               const Icon(
@@ -470,17 +665,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 size: 11,
                 color: ValimaiColors.secondary,
               )
-            else if (hasWorkout)
+            else if (isToday)
               Container(
-                width: 5,
-                height: 5,
+                width: 6,
+                height: 6,
                 decoration: const BoxDecoration(
                   color: ValimaiColors.primaryContainer,
                   shape: BoxShape.circle,
                 ),
               )
+            else if (hasWorkout)
+              Container(
+                width: 4.5,
+                height: 4.5,
+                decoration: BoxDecoration(
+                  color: ValimaiColors.primaryContainer.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                ),
+              )
             else
-              const SizedBox(height: 13),
+              const SizedBox(height: 12),
           ],
         ),
       ),
@@ -876,6 +1080,35 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          if (isToday) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const DailyWorkoutSelectionScreen(isModal: true),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.sync_alt,
+                    size: 14, color: ValimaiColors.secondary),
+                label: const Text(
+                  "CHANGE TODAY'S SELECTION",
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: ValimaiColors.secondary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1043,6 +1276,35 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          if (isToday) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const DailyWorkoutSelectionScreen(isModal: true),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.sync_alt,
+                    size: 14, color: ValimaiColors.secondary),
+                label: const Text(
+                  "CHANGE TODAY'S SELECTION",
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: ValimaiColors.secondary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1311,6 +1573,35 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          if (isToday) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: TextButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const DailyWorkoutSelectionScreen(isModal: true),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.sync_alt,
+                    size: 14, color: ValimaiColors.secondary),
+                label: const Text(
+                  "CHANGE TODAY'S SELECTION",
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: ValimaiColors.secondary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

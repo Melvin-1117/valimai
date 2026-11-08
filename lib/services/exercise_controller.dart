@@ -96,6 +96,27 @@ class ExerciseController extends ChangeNotifier {
     }).toList();
   }
 
+  /// Find an exercise by its unique id
+  Exercise? getExerciseById(String id) {
+    try {
+      return _exercises.firstWhere((e) => e.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Find an exercise by its name (case-insensitive)
+  Exercise? getExerciseByName(String name) {
+    final lower = name.toLowerCase().trim();
+    try {
+      return _exercises.firstWhere(
+        (e) => e.name.toLowerCase().trim() == lower,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Add a new custom exercise with validation
   Future<Exercise?> addCustomExercise({
     required String name,

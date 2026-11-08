@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/user_profile.dart';
+import '../services/daily_workout_controller.dart';
 import '../services/profile_controller.dart';
 import '../theme/app_theme.dart';
+import 'daily_workout_selection_screen.dart';
 import 'main_shell.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
@@ -71,17 +73,31 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     });
 
     if (success) {
-      // Navigate to Home Dashboard
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const MainShell(),
-          transitionsBuilder: (_, animation, __, child) => FadeTransition(
-            opacity: animation,
-            child: child,
+      if (!DailyWorkoutController.instance.hasDecisionForToday()) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) =>
+                const DailyWorkoutSelectionScreen(),
+            transitionsBuilder: (_, animation, __, child) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
           ),
-          transitionDuration: const Duration(milliseconds: 300),
-        ),
-      );
+        );
+      } else {
+        // Navigate to Home Dashboard
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const MainShell(),
+            transitionsBuilder: (_, animation, __, child) => FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      }
     } else {
       setState(() {
         _generalError = ProfileController.instance.errorMessage ??

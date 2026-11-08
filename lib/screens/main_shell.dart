@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/workout.dart';
 import '../services/workout_controller.dart';
 import '../widgets/valimai_bottom_nav.dart';
 import 'home_screen.dart';

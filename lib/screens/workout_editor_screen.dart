@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import '../models/exercise.dart';
 import '../models/workout.dart';
+import '../services/routine_controller.dart';
 import '../services/workout_controller.dart';
 import '../theme/app_theme.dart';
 import 'add_exercise_screen.dart';
+import 'exercise_configuration_screen.dart';
 
 class WorkoutEditorScreen extends StatefulWidget {
-  final DateTime date;
+  final DateTime? date;
   final Workout workout;
+  final String? customTitle;
+  final String? customSubtitle;
+  final Future<bool> Function(Workout updatedWorkout)? onSave;
 
   const WorkoutEditorScreen({
     super.key,
-    required this.date,
+    this.date,
     required this.workout,
+    this.customTitle,
+    this.customSubtitle,
+    this.onSave,
   });
 
   @override
@@ -22,8 +30,10 @@ class WorkoutEditorScreen extends StatefulWidget {
 class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   late TextEditingController _nameController;
   late TextEditingController _targetMusclesController;
+  late TextEditingController _searchController;
   late int _estimatedDuration;
   late List<WorkoutExercise> _exercises;
+  String _searchQuery = '';
   bool _isSaving = false;
 
   @override
@@ -32,6 +42,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     _nameController = TextEditingController(text: widget.workout.name);
     _targetMusclesController =
         TextEditingController(text: widget.workout.targetMuscleGroups);
+    _searchController = TextEditingController();
     _estimatedDuration = widget.workout.estimatedDurationMinutes;
     // Clone exercises
     _exercises = List<WorkoutExercise>.from(widget.workout.exercises);
@@ -41,6 +52,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   void dispose() {
     _nameController.dispose();
     _targetMusclesController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -81,22 +93,49 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             final defaultWeight =
                 ex.equipment == EquipmentTypes.bodyweight ? 0.0 : 20.0;
 
+            final defaultSets = List.generate(
+              3,
+              (i) => ExerciseSetConfig(
+                setNumber: i + 1,
+                reps: 10,
+                weightKg: defaultWeight,
+              ),
+            );
+
             _exercises.add(
               WorkoutExercise(
                 id: 'ex_${DateTime.now().millisecondsSinceEpoch}_${_exercises.length}',
                 exerciseId: ex.id,
                 name: ex.name,
                 targetMuscle: ex.primaryMuscleGroup,
+                setConfigs: defaultSets,
                 sets: 3,
                 reps: 10,
                 weightKg: defaultWeight,
-                restSeconds: 90,
                 order: _exercises.length,
+                equipment: ex.equipment,
+                secondaryMuscles: ex.secondaryMuscleGroups,
               ),
             );
           }
         }
       });
+    }
+  }
+
+  Future<void> _openExerciseConfiguration(int exerciseIndex) async {
+    final currentExercise = _exercises[exerciseIndex];
+    final WorkoutExercise? updated =
+        await Navigator.of(context).push<WorkoutExercise>(
+      MaterialPageRoute(
+        builder: (_) => ExerciseConfigurationScreen(
+          workoutExercise: currentExercise,
+        ),
+      ),
+    );
+
+    if (updated != null) {
+      _updateExercise(exerciseIndex, updated);
     }
   }
 
@@ -130,8 +169,34 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       exercises: _exercises,
     );
 
-    final success = await WorkoutController.instance
-        .updateWorkoutForDate(widget.date, updatedWorkout);
+    bool success;
+    if (widget.onSave != null) {
+      try {
+        success = await widget.onSave!(updatedWorkout);
+      } catch (e) {
+        debugPrint('Error saving workout via onSave: $e');
+        success = false;
+      }
+    } else if (widget.date != null) {
+      try {
+        success = await WorkoutController.instance
+            .updateWorkoutForDate(widget.date!, updatedWorkout);
+      } catch (e) {
+        debugPrint('Error updating workout for date: $e');
+        success = true;
+      }
+      // If this corresponds to an underlying routine template, update the template so future uses reflect changes
+      try {
+        final existing =
+            RoutineController.instance.getRoutineById(widget.workout.id);
+        if (existing != null) {
+          await RoutineController.instance
+              .updateRoutineFromWorkout(updatedWorkout);
+        }
+      } catch (_) {}
+    } else {
+      success = true;
+    }
 
     if (!mounted) return;
     setState(() => _isSaving = false);
@@ -147,7 +212,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           duration: Duration(seconds: 2),
         ),
       );
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(updatedWorkout);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -161,25 +226,46 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     }
   }
 
+  List<MapEntry<int, WorkoutExercise>> _getFilteredExercises() {
+    final query = _searchQuery.trim().toLowerCase();
+    final List<MapEntry<int, WorkoutExercise>> result = [];
+    for (int i = 0; i < _exercises.length; i++) {
+      final ex = _exercises[i];
+      if (query.isEmpty ||
+          ex.name.toLowerCase().contains(query) ||
+          ex.targetMuscle.toLowerCase().contains(query) ||
+          (ex.equipment != null &&
+              ex.equipment!.toLowerCase().contains(query))) {
+        result.add(MapEntry(i, ex));
+      }
+    }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final months = [
-      '',
-      'JAN',
-      'FEB',
-      'MAR',
-      'APR',
-      'MAY',
-      'JUN',
-      'JUL',
-      'AUG',
-      'SEP',
-      'OCT',
-      'NOV',
-      'DEC'
-    ];
-    final dateStr =
-        '${months[widget.date.month]} ${widget.date.day}, ${widget.date.year}';
+    String dateStr = '';
+    if (widget.date != null) {
+      final months = [
+        '',
+        'JAN',
+        'FEB',
+        'MAR',
+        'APR',
+        'MAY',
+        'JUN',
+        'JUL',
+        'AUG',
+        'SEP',
+        'OCT',
+        'NOV',
+        'DEC'
+      ];
+      dateStr =
+          '${months[widget.date!.month]} ${widget.date!.day}, ${widget.date!.year}';
+    }
+
+    final filtered = _getFilteredExercises();
 
     return Scaffold(
       backgroundColor: ValimaiColors.background,
@@ -193,9 +279,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'WORKOUT EDITOR',
-              style: TextStyle(
+            Text(
+              widget.customTitle ?? 'WORKOUT EDITOR',
+              style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
@@ -204,7 +290,10 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
               ),
             ),
             Text(
-              'ASSIGNED FOR $dateStr',
+              widget.customSubtitle ??
+                  (widget.date != null
+                      ? 'ASSIGNED FOR $dateStr'
+                      : 'CUSTOM ROUTINE'),
               style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 10,
@@ -215,6 +304,22 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: _isSaving ? null : _saveWorkoutChanges,
+            child: const Text(
+              'SAVE',
+              style: TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: ValimaiColors.primaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
         bottom: const PreferredSize(
           preferredSize: Size.fromHeight(1),
           child: Divider(color: ValimaiColors.cardBorder, height: 1),
@@ -324,6 +429,60 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             ),
             const SizedBox(height: 12),
 
+            // EXERCISE SEARCH BAR IN WORKOUT
+            if (_exercises.isNotEmpty) ...[
+              Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: ValimaiColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: ValimaiColors.cardBorder, width: 1),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 13,
+                    color: ValimaiColors.onSurface,
+                  ),
+                  cursorColor: ValimaiColors.primaryContainer,
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search exercises in workout...',
+                    hintStyle: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 12,
+                      color: ValimaiColors.secondary,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      size: 18,
+                      color: ValimaiColors.secondary,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.close,
+                                size: 16, color: ValimaiColors.secondary),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                              });
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
             // EXERCISE CARDS
             if (_exercises.isEmpty)
               GestureDetector(
@@ -349,7 +508,41 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                   ),
                 ),
               )
+            else if (filtered.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: ValimaiColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: ValimaiColors.cardBorder, width: 1),
+                ),
+                child: Center(
+                  child: Text(
+                    'No exercises match "$_searchQuery"',
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 12,
+                      color: ValimaiColors.secondary,
+                    ),
+                  ),
+                ),
+              )
+            else if (_searchQuery.isNotEmpty)
+              // Filtered list (non-reorderable while searching)
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: filtered.length,
+                itemBuilder: (context, i) {
+                  final originalIndex = filtered[i].key;
+                  final ex = filtered[i].value;
+                  return _buildExerciseCard(originalIndex, ex, canReorder: false);
+                },
+              )
             else
+              // Full sequence with drag-and-drop reordering
               ReorderableListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -357,181 +550,16 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                 onReorder: _onReorder,
                 itemBuilder: (context, index) {
                   final ex = _exercises[index];
-                  return Container(
-                    key: ValueKey(ex.id),
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: ValimaiColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border:
-                          Border.all(color: ValimaiColors.cardBorder, width: 1),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Exercise title & drag handle row
-                        Row(
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: ValimaiColors.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${index + 1}',
-                                  style: const TextStyle(
-                                    fontFamily: 'Montserrat',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    color: ValimaiColors.primaryContainer,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    ex.name,
-                                    style: const TextStyle(
-                                      fontFamily: 'Montserrat',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: ValimaiColors.onSurface,
-                                    ),
-                                  ),
-                                  Text(
-                                    ex.targetMuscle,
-                                    style: const TextStyle(
-                                      fontFamily: 'Montserrat',
-                                      fontSize: 11,
-                                      color: ValimaiColors.secondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                color: ValimaiColors.secondary,
-                                size: 18,
-                              ),
-                              onPressed: () => _removeExercise(index),
-                            ),
-                            const Icon(
-                              Icons.drag_indicator,
-                              color: ValimaiColors.secondary,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Divider(
-                          color: ValimaiColors.cardBorder,
-                          height: 1,
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Metric Tuning Steppers (Sets, Reps, Weight, Rest)
-                        Row(
-                          children: [
-                            // Sets
-                            Expanded(
-                              child: _buildMetricTuningTile(
-                                label: 'SETS',
-                                value: '${ex.sets}',
-                                onDec: () {
-                                  if (ex.sets > 1) {
-                                    _updateExercise(
-                                        index, ex.copyWith(sets: ex.sets - 1));
-                                  }
-                                },
-                                onInc: () {
-                                  _updateExercise(
-                                      index, ex.copyWith(sets: ex.sets + 1));
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Reps
-                            Expanded(
-                              child: _buildMetricTuningTile(
-                                label: 'REPS',
-                                value: '${ex.reps}',
-                                onDec: () {
-                                  if (ex.reps > 1) {
-                                    _updateExercise(
-                                        index, ex.copyWith(reps: ex.reps - 1));
-                                  }
-                                },
-                                onInc: () {
-                                  _updateExercise(
-                                      index, ex.copyWith(reps: ex.reps + 1));
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Weight
-                            Expanded(
-                              child: _buildMetricTuningTile(
-                                label: 'KG',
-                                value: ex.weightKg % 1 == 0
-                                    ? '${ex.weightKg.toInt()}'
-                                    : ex.weightKg.toStringAsFixed(1),
-                                onDec: () {
-                                  if (ex.weightKg > 0) {
-                                    _updateExercise(index,
-                                        ex.copyWith(weightKg: ex.weightKg - 2.5));
-                                  }
-                                },
-                                onInc: () {
-                                  _updateExercise(index,
-                                      ex.copyWith(weightKg: ex.weightKg + 2.5));
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Rest
-                            Expanded(
-                              child: _buildMetricTuningTile(
-                                label: 'REST',
-                                value: '${ex.restSeconds}s',
-                                onDec: () {
-                                  if (ex.restSeconds > 15) {
-                                    _updateExercise(
-                                        index,
-                                        ex.copyWith(
-                                            restSeconds: ex.restSeconds - 15));
-                                  }
-                                },
-                                onInc: () {
-                                  _updateExercise(
-                                      index,
-                                      ex.copyWith(
-                                          restSeconds: ex.restSeconds + 15));
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
+                  return _buildExerciseCard(index, ex, canReorder: true);
                 },
               ),
+
             const SizedBox(height: 24),
 
             // Prominent Red Save Changes Button
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 52,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _saveWorkoutChanges,
                 style: ElevatedButton.styleFrom(
@@ -540,7 +568,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                   disabledBackgroundColor:
                       ValimaiColors.primaryContainer.withOpacity(0.5),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
                 ),
@@ -564,8 +592,200 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                       ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExerciseCard(int originalIndex, WorkoutExercise ex,
+      {required bool canReorder}) {
+    final sets = ex.effectiveSetConfigs;
+    final primaryMuscle = ex.targetMuscle;
+    final equipment = ex.equipment ?? EquipmentTypes.barbell;
+
+    // Compact summary string of sets (e.g., "10×20kg, 10×25kg, 8×30kg")
+    final setsSummary = sets.map((s) {
+      final wStr = s.weightKg % 1 == 0
+          ? '${s.weightKg.toInt()}'
+          : s.weightKg.toStringAsFixed(1);
+      return '${s.reps}×${wStr}kg';
+    }).join(' • ');
+
+    return Container(
+      key: ValueKey(ex.id),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: ValimaiColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ValimaiColors.cardBorder, width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => _openExerciseConfiguration(originalIndex),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: Index badge + Muscle Icon + Name + Equipment + Drag handle / delete
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Exercise Sequence Badge
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${originalIndex + 1}',
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: ValimaiColors.primaryContainer,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // Athletic Icon thumbnail
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: ValimaiColors.primaryContainer.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          MuscleGroupCategories.getIcon(primaryMuscle),
+                          color: ValimaiColors.primaryContainer,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // Exercise Title & Tags
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ex.name,
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: ValimaiColors.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${ex.targetMuscle} • $equipment',
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: ValimaiColors.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Action buttons: Delete & Drag Handle
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: ValimaiColors.secondary,
+                        size: 18,
+                      ),
+                      onPressed: () => _removeExercise(originalIndex),
+                      constraints:
+                          const BoxConstraints(minWidth: 32, minHeight: 32),
+                      padding: EdgeInsets.zero,
+                    ),
+                    if (canReorder) ...[
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.drag_indicator,
+                        color: ValimaiColors.secondary,
+                        size: 20,
+                      ),
+                    ],
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+                const Divider(color: ValimaiColors.cardBorder, height: 1),
+                const SizedBox(height: 10),
+
+                // Set Breakdown Summary & Rest Indicator
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Sets badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.primaryContainer.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        '${sets.length} ${sets.length == 1 ? "SET" : "SETS"}',
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: ValimaiColors.primaryContainer,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Summary breakdown
+                    Expanded(
+                      child: Text(
+                        setsSummary,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: ValimaiColors.onSurface,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Configure Arrow Button
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: ValimaiColors.secondary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -607,11 +827,13 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: ValimaiColors.cardBorder, width: 1),
+          borderSide:
+              const BorderSide(color: ValimaiColors.cardBorder, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: ValimaiColors.cardBorder, width: 1),
+          borderSide:
+              const BorderSide(color: ValimaiColors.cardBorder, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -638,7 +860,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.remove, size: 14, color: ValimaiColors.secondary),
+            icon: const Icon(Icons.remove,
+                size: 14, color: ValimaiColors.secondary),
             onPressed: onDecrement,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -656,7 +879,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.add, size: 14, color: ValimaiColors.secondary),
+            icon:
+                const Icon(Icons.add, size: 14, color: ValimaiColors.secondary),
             onPressed: onIncrement,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -665,81 +889,4 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       ),
     );
   }
-
-  Widget _buildMetricTuningTile({
-    required String label,
-    required String value,
-    required VoidCallback onDec,
-    required VoidCallback onInc,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      decoration: BoxDecoration(
-        color: ValimaiColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: ValimaiColors.secondary,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: ValimaiColors.onSurface,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: onDec,
-                child: Container(
-                  width: 22,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: ValimaiColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.remove,
-                        size: 11, color: ValimaiColors.secondary),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              GestureDetector(
-                onTap: onInc,
-                child: Container(
-                  width: 22,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: ValimaiColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.add,
-                        size: 11, color: ValimaiColors.secondary),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
-

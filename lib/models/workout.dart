@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 /// Type of day in the workout schedule
 enum ScheduledDayType {
   workout,
@@ -18,79 +16,175 @@ enum ScheduledDayType {
   }
 }
 
-/// An individual exercise within a workout
+/// An individual set configuration with independent reps and weight
+class ExerciseSetConfig {
+  final int setNumber;
+  final int reps;
+  final double weightKg;
+
+  const ExerciseSetConfig({
+    required this.setNumber,
+    required this.reps,
+    required this.weightKg,
+  });
+
+  ExerciseSetConfig copyWith({
+    int? setNumber,
+    int? reps,
+    double? weightKg,
+  }) {
+    return ExerciseSetConfig(
+      setNumber: setNumber ?? this.setNumber,
+      reps: reps ?? this.reps,
+      weightKg: weightKg ?? this.weightKg,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'setNumber': setNumber,
+      'reps': reps,
+      'weightKg': weightKg,
+    };
+  }
+
+  factory ExerciseSetConfig.fromJson(Map<String, dynamic> json) {
+    return ExerciseSetConfig(
+      setNumber: (json['setNumber'] as num?)?.toInt() ?? 1,
+      reps: (json['reps'] as num?)?.toInt() ?? 10,
+      weightKg: (json['weightKg'] as num?)?.toDouble() ?? 20.0,
+    );
+  }
+}
+
+/// An individual exercise within a workout with configurable sets
 class WorkoutExercise {
   final String id;
   final String? exerciseId;
   final String name;
   final String targetMuscle;
+  final List<ExerciseSetConfig> setConfigs;
   final int sets;
   final int reps;
   final double weightKg;
-  final int restSeconds;
   final int order;
+  final String? equipment;
+  final List<String> secondaryMuscles;
 
   const WorkoutExercise({
     required this.id,
     this.exerciseId,
     required this.name,
     required this.targetMuscle,
-    required this.sets,
-    required this.reps,
-    required this.weightKg,
-    required this.restSeconds,
+    this.setConfigs = const [],
+    this.sets = 3,
+    this.reps = 10,
+    this.weightKg = 20.0,
     this.order = 0,
+    this.equipment,
+    this.secondaryMuscles = const [],
   });
+
+  /// Effective list of sets (guarantees at least 1 set and per-set configurations)
+  List<ExerciseSetConfig> get effectiveSetConfigs {
+    if (setConfigs.isNotEmpty) {
+      return setConfigs;
+    }
+    final count = sets > 0 ? sets : 1;
+    return List.generate(
+      count,
+      (i) => ExerciseSetConfig(
+        setNumber: i + 1,
+        reps: reps,
+        weightKg: weightKg,
+      ),
+    );
+  }
 
   WorkoutExercise copyWith({
     String? id,
     String? exerciseId,
     String? name,
     String? targetMuscle,
+    List<ExerciseSetConfig>? setConfigs,
     int? sets,
     int? reps,
     double? weightKg,
-    int? restSeconds,
     int? order,
+    String? equipment,
+    List<String>? secondaryMuscles,
   }) {
+    final effectiveSets = setConfigs ?? this.setConfigs;
+    final int resolvedSets = sets ??
+        (effectiveSets.isNotEmpty ? effectiveSets.length : this.sets);
+    final int resolvedReps = reps ??
+        (effectiveSets.isNotEmpty ? effectiveSets.first.reps : this.reps);
+    final double resolvedWeight = weightKg ??
+        (effectiveSets.isNotEmpty
+            ? effectiveSets.first.weightKg
+            : this.weightKg);
+
     return WorkoutExercise(
       id: id ?? this.id,
       exerciseId: exerciseId ?? this.exerciseId,
       name: name ?? this.name,
       targetMuscle: targetMuscle ?? this.targetMuscle,
-      sets: sets ?? this.sets,
-      reps: reps ?? this.reps,
-      weightKg: weightKg ?? this.weightKg,
-      restSeconds: restSeconds ?? this.restSeconds,
+      setConfigs: effectiveSets,
+      sets: resolvedSets,
+      reps: resolvedReps,
+      weightKg: resolvedWeight,
       order: order ?? this.order,
+      equipment: equipment ?? this.equipment,
+      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
     );
   }
 
   Map<String, dynamic> toJson() {
+    final activeSets = effectiveSetConfigs;
     return {
       'id': id,
       'exerciseId': exerciseId,
       'name': name,
       'targetMuscle': targetMuscle,
-      'sets': sets,
-      'reps': reps,
-      'weightKg': weightKg,
-      'restSeconds': restSeconds,
+      'sets': activeSets.length,
+      'reps': activeSets.isNotEmpty ? activeSets.first.reps : reps,
+      'weightKg':
+          activeSets.isNotEmpty ? activeSets.first.weightKg : weightKg,
       'order': order,
+      'equipment': equipment,
+      'secondaryMuscles': secondaryMuscles,
+      'setConfigs': activeSets.map((s) => s.toJson()).toList(),
     };
   }
 
   factory WorkoutExercise.fromJson(Map<String, dynamic> json) {
+    final setsList = (json['setConfigs'] as List<dynamic>?)
+            ?.map((e) => ExerciseSetConfig.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        <ExerciseSetConfig>[];
+
+    final secondaries = (json['secondaryMuscles'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        <String>[];
+
+    final legacySets = (json['sets'] as num?)?.toInt() ?? 3;
+    final legacyReps = (json['reps'] as num?)?.toInt() ?? 10;
+    final legacyWeight = (json['weightKg'] as num?)?.toDouble() ?? 20.0;
+
     return WorkoutExercise(
-      id: json['id'] as String? ?? 'ex_${DateTime.now().millisecondsSinceEpoch}',
+      id: json['id'] as String? ??
+          'ex_${DateTime.now().millisecondsSinceEpoch}',
       exerciseId: json['exerciseId'] as String?,
       name: json['name'] as String? ?? 'Exercise',
       targetMuscle: json['targetMuscle'] as String? ?? 'General',
-      sets: (json['sets'] as num?)?.toInt() ?? 3,
-      reps: (json['reps'] as num?)?.toInt() ?? 10,
-      weightKg: (json['weightKg'] as num?)?.toDouble() ?? 20.0,
-      restSeconds: (json['restSeconds'] as num?)?.toInt() ?? 90,
+      setConfigs: setsList.isNotEmpty ? setsList : const [],
+      sets: legacySets,
+      reps: legacyReps,
+      weightKg: legacyWeight,
       order: (json['order'] as num?)?.toInt() ?? 0,
+      equipment: json['equipment'] as String?,
+      secondaryMuscles: secondaries,
     );
   }
 }
@@ -147,7 +241,8 @@ class Workout {
   factory Workout.fromJson(Map<String, dynamic> json) {
     final list = json['exercises'] as List<dynamic>? ?? [];
     return Workout(
-      id: json['id'] as String? ?? 'workout_${DateTime.now().millisecondsSinceEpoch}',
+      id: json['id'] as String? ??
+          'workout_${DateTime.now().millisecondsSinceEpoch}',
       name: json['name'] as String? ?? 'Workout',
       targetMuscleGroups: json['targetMuscleGroups'] as String? ?? 'Full Body',
       estimatedDurationMinutes:
@@ -234,4 +329,3 @@ class DaySchedule {
     return '${dt.year.toString().padLeft(4, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
   }
 }
-
