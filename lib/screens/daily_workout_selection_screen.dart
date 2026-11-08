@@ -8,10 +8,12 @@ import 'main_shell.dart';
 
 class DailyWorkoutSelectionScreen extends StatefulWidget {
   final bool isModal;
+  final DateTime? targetDate;
 
   const DailyWorkoutSelectionScreen({
     super.key,
     this.isModal = false,
+    this.targetDate,
   });
 
   @override
@@ -26,7 +28,7 @@ class _DailyWorkoutSelectionScreenState
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = widget.targetDate ?? DateTime.now();
     _today = DateTime(now.year, now.month, now.day);
   }
 
@@ -194,9 +196,11 @@ class _DailyWorkoutSelectionScreenState
             const SizedBox(height: 10),
 
             // Heading
-            const Text(
-              'What are we training today?',
-              style: TextStyle(
+            Text(
+              DateUtils.isSameDay(_today, DateTime.now())
+                  ? 'What are we training today?'
+                  : 'What are we training?',
+              style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
@@ -206,9 +210,11 @@ class _DailyWorkoutSelectionScreenState
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Calibrate your terminal for today’s session or choose recovery.',
-              style: TextStyle(
+            Text(
+              DateUtils.isSameDay(_today, DateTime.now())
+                  ? 'Calibrate your terminal for today’s session or choose recovery.'
+                  : 'Assign a workout session or designate recovery for this day.',
+              style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 12,
                 color: ValimaiColors.secondary,

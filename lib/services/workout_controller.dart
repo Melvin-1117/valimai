@@ -254,7 +254,8 @@ class WorkoutController extends ChangeNotifier {
       if (schedule.isCompleted || schedule.customWorkout != null) {
         return schedule;
       }
-      if (schedule.type == ScheduledDayType.rest) {
+      if (schedule.type == ScheduledDayType.rest ||
+          schedule.type == ScheduledDayType.unassigned) {
         return schedule;
       }
       if (schedule.workoutId != null) {

@@ -1079,9 +1079,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
                 const SizedBox(height: 24),
 
-                // Workshop & Network Section
+                // Routine Workshop Section
                 const Text(
-                  'WORKSHOP & NETWORK',
+                  'WORKSHOP',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
                     fontSize: 11,
@@ -1097,22 +1097,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   title: 'Create Custom Routine',
                   subtitle: 'Set target metrics, set structure, and cues',
                   onTap: _openCreateRoutineDialog,
-                ),
-                const SizedBox(height: 10),
-
-                _buildActionCard(
-                  icon: Icons.public,
-                  title: 'Explore Community Splits',
-                  subtitle: 'Verified powerlifting and hypertrophy blocks',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Community splits available offline.'),
-                        backgroundColor: ValimaiColors.surfaceContainerHigh,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
                 ),
                 const SizedBox(height: 24),
               ],

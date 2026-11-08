@@ -185,38 +185,43 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Text(
-                    monthTitle,
-                    style: const TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: ValimaiColors.onSurface,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: ValimaiColors.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      weekRangeSubtitle,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
-                        color: ValimaiColors.secondary,
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        monthTitle,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: ValimaiColors.onSurface,
+                          letterSpacing: -0.3,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        weekRangeSubtitle,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: ValimaiColors.secondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Row(
                 children: [
@@ -836,14 +841,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-              Text(
-                headerDateStr,
-                style: const TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: ValimaiColors.secondary,
-                  letterSpacing: 0.6,
+              Flexible(
+                child: Text(
+                  headerDateStr,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: ValimaiColors.secondary,
+                    letterSpacing: 0.6,
+                  ),
                 ),
               ),
             ],
@@ -1089,8 +1097,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) =>
-                          const DailyWorkoutSelectionScreen(isModal: true),
+                      builder: (_) => DailyWorkoutSelectionScreen(
+                        isModal: true,
+                        targetDate: date,
+                      ),
                     ),
                   );
                 },
@@ -1245,10 +1255,13 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 44,
             child: OutlinedButton.icon(
               onPressed: () {
-                WorkoutController.instance.setDayType(
-                  date,
-                  ScheduledDayType.workout,
-                  workoutId: 'workout_push',
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => DailyWorkoutSelectionScreen(
+                      isModal: true,
+                      targetDate: date,
+                    ),
+                  ),
                 );
               },
               icon: const Icon(
@@ -1285,8 +1298,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) =>
-                          const DailyWorkoutSelectionScreen(isModal: true),
+                      builder: (_) => DailyWorkoutSelectionScreen(
+                        isModal: true,
+                        targetDate: date,
+                      ),
                     ),
                   );
                 },
@@ -1367,10 +1382,13 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 44,
             child: ElevatedButton.icon(
               onPressed: () {
-                WorkoutController.instance.setDayType(
-                  date,
-                  ScheduledDayType.workout,
-                  workoutId: 'workout_push',
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => DailyWorkoutSelectionScreen(
+                      isModal: true,
+                      targetDate: date,
+                    ),
+                  ),
                 );
               },
               icon: const Icon(Icons.add, size: 18),
@@ -1582,8 +1600,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) =>
-                          const DailyWorkoutSelectionScreen(isModal: true),
+                      builder: (_) => DailyWorkoutSelectionScreen(
+                        isModal: true,
+                        targetDate: date,
+                      ),
                     ),
                   );
                 },

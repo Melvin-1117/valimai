@@ -893,6 +893,10 @@ void main() {
       expect(find.text('Workout A – Chest + Triceps'), findsOneWidget);
       expect(find.text('Workout B – Lats + Biceps'), findsOneWidget);
 
+      // Verify Explore Community Splits was removed
+      expect(find.text('Explore Community Splits'), findsNothing);
+      expect(find.text('Create Custom Routine'), findsOneWidget);
+
       // Tap NEW ROUTINE button
       await tester.tap(find.text('NEW ROUTINE'));
       await tester.pumpAndSettle();
@@ -2038,6 +2042,33 @@ void main() {
       expect(loadedWorkout.exercises.length, 1);
       expect(loadedWorkout.exercises.first.name, 'Incline Dumbbell Bench Press');
       expect(loadedWorkout.exercises.first.effectiveSetConfigs.length, 4);
+    });
+
+    testWidgets('Tapping ASSIGN WORKOUT on Home unassigned card opens DailyWorkoutSelectionScreen', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      // Mark unassigned day on test date
+      final unassignedDate = DateTime(2026, 12, 1);
+      await WorkoutController.instance.setDayType(unassignedDate, ScheduledDayType.unassigned);
+      WorkoutController.instance.selectDate(unassignedDate);
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HomeScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final assignBtn = find.text('ASSIGN WORKOUT');
+      expect(assignBtn, findsOneWidget);
+
+      await tester.tap(assignBtn);
+      await tester.pumpAndSettle();
+
+      // Verify routed to DailyWorkoutSelectionScreen
+      expect(find.byType(DailyWorkoutSelectionScreen), findsOneWidget);
+      expect(find.textContaining('What are we training'), findsOneWidget);
     });
   });
 }
