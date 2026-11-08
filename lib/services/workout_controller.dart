@@ -4,6 +4,7 @@ import '../models/weekly_schedule.dart';
 import '../models/workout.dart';
 import 'daily_workout_controller.dart';
 import 'routine_controller.dart';
+import 'workout_history_controller.dart';
 import 'workout_rotation_engine.dart';
 import 'workout_storage.dart';
 
@@ -367,7 +368,11 @@ class WorkoutController extends ChangeNotifier {
   }
 
   /// Toggle or set workout completion status
-  Future<bool> markWorkoutCompleted(DateTime date, bool isCompleted) async {
+  Future<bool> markWorkoutCompleted(
+    DateTime date,
+    bool isCompleted, {
+    Workout? completedWorkout,
+  }) async {
     final norm = DateTime(date.year, date.month, date.day);
     final key = DaySchedule.dateKey(norm);
 
@@ -375,6 +380,7 @@ class WorkoutController extends ChangeNotifier {
     schedule = schedule.copyWith(
       isCompleted: isCompleted,
       completedAt: isCompleted ? DateTime.now() : null,
+      customWorkout: completedWorkout ?? schedule.customWorkout,
     );
 
     _schedules[key] = schedule;
@@ -383,12 +389,34 @@ class WorkoutController extends ChangeNotifier {
     try {
       final success = await _storage.saveDaySchedule(schedule);
       if (isCompleted) {
+        final workoutSnapshot =
+            completedWorkout ?? schedule.customWorkout ?? getWorkoutForDate(norm);
+        try {
+          await WorkoutHistoryController.instance.recordCompletedSession(
+            date: norm,
+            routineId: schedule.workoutId ??
+                workoutSnapshot?.id ??
+                'workout_${norm.millisecondsSinceEpoch}',
+            routineName: workoutSnapshot?.name ?? 'Completed Workout',
+            targetMuscleGroups: workoutSnapshot?.targetMuscleGroups,
+            workoutSnapshot: workoutSnapshot,
+            completedAt: schedule.completedAt,
+          );
+        } catch (_) {}
         try {
           await DailyWorkoutController.instance.markCompletedForDate(
             norm,
             routineId: schedule.workoutId,
             completedAt: schedule.completedAt,
           );
+        } catch (_) {}
+      } else {
+        try {
+          final sessions =
+              WorkoutHistoryController.instance.getSessionsForDate(norm);
+          for (final sess in sessions) {
+            await WorkoutHistoryController.instance.deleteSession(sess.id);
+          }
         } catch (_) {}
       }
       return success;

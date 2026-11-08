@@ -9,8 +9,10 @@ import 'package:valimai/models/workout.dart';
 import 'package:valimai/models/workout_rotation.dart';
 import 'package:valimai/screens/active_workout_screen.dart';
 import 'package:valimai/screens/add_exercise_screen.dart';
+import 'package:valimai/screens/daily_analytics_screen.dart';
 import 'package:valimai/screens/daily_workout_selection_screen.dart';
 import 'package:valimai/screens/exercise_configuration_screen.dart';
+import 'package:valimai/screens/history_screen.dart';
 import 'package:valimai/screens/home_screen.dart';
 import 'package:valimai/screens/schedule_screen.dart';
 import 'package:valimai/screens/workout_editor_screen.dart';
@@ -24,6 +26,7 @@ import 'package:valimai/services/profile_storage.dart';
 import 'package:valimai/services/routine_controller.dart';
 import 'package:valimai/services/routine_storage.dart';
 import 'package:valimai/services/workout_controller.dart';
+import 'package:valimai/services/workout_history_controller.dart';
 import 'package:valimai/services/workout_rotation_engine.dart';
 import 'package:valimai/services/workout_storage.dart';
 
@@ -2000,6 +2003,157 @@ void main() {
       expect(find.text('00:00'), findsOneWidget);
     });
 
+    testWidgets('ActiveWorkoutScreen initially shows no logged sets and displays progression upon logging', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ActiveWorkoutScreen(
+            workoutTitle: 'Back + Rear Delts',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // At initial, no set has logged and SET LOG PROGRESSION is kept to nothing
+      expect(find.text('SET LOG PROGRESSION'), findsNothing);
+
+      // Tap LOG NEXT SET
+      final logSetBtn = find.text('LOG NEXT SET');
+      expect(logSetBtn, findsOneWidget);
+      await tester.tap(logSetBtn);
+      await tester.pumpAndSettle();
+
+      // Now SET LOG PROGRESSION appears with Set 1
+      expect(find.text('SET LOG PROGRESSION'), findsOneWidget);
+      expect(find.text('34 kg × 10 reps'), findsOneWidget);
+    });
+
+    testWidgets('ActiveWorkoutScreen routes to next exercise in sequence upon tapping UP NEXT IN SEQUENCE', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final workout = Workout(
+        id: 'test_seq_workout',
+        name: 'Workout D — Back + Rear Delts',
+        targetMuscleGroups: 'Back • Rear Delts',
+        estimatedDurationMinutes: 45,
+        exercises: const [
+          WorkoutExercise(
+            id: 'ex_1',
+            name: 'Incline Dumbbell Bench Press',
+            targetMuscle: 'Upper Pecs',
+            sets: 3,
+            reps: 10,
+            weightKg: 34.0,
+          ),
+          WorkoutExercise(
+            id: 'ex_2',
+            name: 'Weighted Tricep Dips',
+            targetMuscle: 'Triceps',
+            sets: 3,
+            reps: 10,
+            weightKg: 20.0,
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ActiveWorkoutScreen(
+            workout: workout,
+            workoutTitle: workout.name,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Check initial exercise
+      expect(find.text('Incline Dumbbell Bench Press'), findsOneWidget);
+      expect(find.text('EXERCISE 01 OF 02'), findsOneWidget);
+
+      // Log set for Exercise 1
+      await tester.tap(find.text('LOG NEXT SET'));
+      await tester.pumpAndSettle();
+      expect(find.text('34 kg × 10 reps'), findsOneWidget);
+
+      // Verify UP NEXT IN SEQUENCE shows Weighted Tricep Dips
+      expect(find.textContaining('Weighted Tricep Dips'), findsOneWidget);
+
+      // Tap UP NEXT IN SEQUENCE card to advance
+      await tester.tap(find.textContaining('Weighted Tricep Dips'));
+      await tester.pumpAndSettle();
+
+      // Verify routed to next exercise
+      expect(find.text('Weighted Tricep Dips'), findsOneWidget);
+      expect(find.text('EXERCISE 02 OF 02'), findsOneWidget);
+
+      // Set log progression for Exercise 2 is initially empty (nothing until logged)
+      expect(find.text('SET LOG PROGRESSION'), findsNothing);
+
+      // Log set for Exercise 2
+      await tester.tap(find.text('LOG NEXT SET'));
+      await tester.pumpAndSettle();
+      expect(find.text('SET LOG PROGRESSION'), findsOneWidget);
+      expect(find.text('20 kg × 10 reps'), findsOneWidget);
+    });
+
+    testWidgets('ActiveWorkoutScreen wires actual performed sets to completion snapshot and daily analytics', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      Workout? completedResult;
+      final workout = Workout(
+        id: 'test_live_workout',
+        name: 'Workout D — Back + Rear Delts',
+        targetMuscleGroups: 'Back • Rear Delts',
+        estimatedDurationMinutes: 45,
+        exercises: const [
+          WorkoutExercise(
+            id: 'ex_1',
+            name: 'Barbell Bent-Over Row',
+            targetMuscle: 'Back',
+            sets: 3,
+            reps: 10,
+            weightKg: 70.0,
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ActiveWorkoutScreen(
+            workout: workout,
+            workoutTitle: workout.name,
+            onFinishWithData: (completed) {
+              completedResult = completed;
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Log set 1 (70kg x 10)
+      await tester.tap(find.text('LOG NEXT SET'));
+      await tester.pumpAndSettle();
+
+      // Tap + on weight stepper (+2kg -> 72kg)
+      await tester.tap(find.byIcon(Icons.add).first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('LOG NEXT SET'));
+      await tester.pumpAndSettle();
+
+      // Finish workout
+      await tester.tap(find.text('FINISH'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('SAVE TO PERFORMANCE ARCHIVE'));
+      await tester.pumpAndSettle();
+
+      expect(completedResult, isNotNull);
+      expect(completedResult!.exercises.first.effectiveSetConfigs.length, 2);
+      expect(completedResult!.exercises.first.effectiveSetConfigs[0].weightKg, 70.0);
+      expect(completedResult!.exercises.first.effectiveSetConfigs[1].weightKg, 72.0);
+    });
+
     test('WorkoutController.updateWorkoutForDate successfully saves modifications and preserves custom workout', () async {
       final testDate = DateTime(2026, 11, 8);
       final initialWorkout = WorkoutController.instance.getWorkoutForDate(testDate) ??
@@ -2069,6 +2223,211 @@ void main() {
       // Verify routed to DailyWorkoutSelectionScreen
       expect(find.byType(DailyWorkoutSelectionScreen), findsOneWidget);
       expect(find.textContaining('What are we training'), findsOneWidget);
+    });
+
+    test('WorkoutHistoryController records and calculates session metrics accurately', () async {
+      final testWorkout = Workout(
+        id: 'test_routine_push',
+        name: 'Push Strength Focus',
+        targetMuscleGroups: 'Chest, Triceps, Shoulders',
+        estimatedDurationMinutes: 45,
+        exercises: [
+          const WorkoutExercise(
+            id: 'we_1',
+            name: 'Incline Dumbbell Bench Press',
+            targetMuscle: 'Chest',
+            setConfigs: [
+              ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 34.0),
+              ExerciseSetConfig(setNumber: 2, reps: 10, weightKg: 34.0),
+              ExerciseSetConfig(setNumber: 3, reps: 8, weightKg: 36.0),
+              ExerciseSetConfig(setNumber: 4, reps: 8, weightKg: 36.0),
+            ],
+          ),
+          const WorkoutExercise(
+            id: 'we_2',
+            name: 'Weighted Tricep Dips',
+            targetMuscle: 'Triceps',
+            setConfigs: [
+              ExerciseSetConfig(setNumber: 1, reps: 12, weightKg: 16.0),
+              ExerciseSetConfig(setNumber: 2, reps: 10, weightKg: 20.0),
+            ],
+          ),
+        ],
+      );
+
+      final date = DateTime(2026, 11, 8);
+      await WorkoutHistoryController.instance.recordCompletedSession(
+        date: date,
+        routineId: testWorkout.id,
+        routineName: testWorkout.name,
+        targetMuscleGroups: testWorkout.targetMuscleGroups,
+        workoutSnapshot: testWorkout,
+        completedAt: date,
+      );
+
+      final sessions = WorkoutHistoryController.instance.getSessionsForDate(date);
+      expect(sessions.isNotEmpty, isTrue);
+      final session = sessions.first;
+      expect(session.routineName, 'Push Strength Focus');
+      expect(session.calculatedExercisesCount, 2);
+      expect(session.calculatedTotalSets, 6);
+      expect(session.calculatedTotalReps, 58);
+      expect(session.calculatedVolumeKg, 1648.0);
+    });
+
+    testWidgets('DailyAnalyticsScreen displays workout summary, exercise breakdown, and muscle groups', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final testWorkout = Workout(
+        id: 'test_hypertrophy',
+        name: 'Chest & Triceps Hypertrophy',
+        targetMuscleGroups: 'Chest • Triceps',
+        estimatedDurationMinutes: 50,
+        exercises: [
+          const WorkoutExercise(
+            id: 'ex_1',
+            name: 'Incline Dumbbell Bench Press',
+            targetMuscle: 'Chest',
+            setConfigs: [
+              ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 34.0),
+              ExerciseSetConfig(setNumber: 2, reps: 8, weightKg: 36.0),
+            ],
+          ),
+          const WorkoutExercise(
+            id: 'ex_2',
+            name: 'Bodyweight Dips',
+            targetMuscle: 'Triceps',
+            setConfigs: [
+              ExerciseSetConfig(setNumber: 1, reps: 12, weightKg: 0.0),
+            ],
+          ),
+        ],
+      );
+
+      final session = CompletedWorkoutSession(
+        routineId: 'test_hypertrophy',
+        completedAt: DateTime(2026, 11, 8),
+        routineName: testWorkout.name,
+        targetMuscleGroups: testWorkout.targetMuscleGroups,
+        workoutSnapshot: testWorkout,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DailyAnalyticsScreen(session: session),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Title & Header
+      expect(find.text('DAILY ANALYTICS'), findsOneWidget);
+      expect(find.text('Chest & Triceps Hypertrophy'), findsOneWidget);
+      expect(find.text('COMPLETED'), findsOneWidget);
+
+      // Section A: 4 Summary Cards
+      expect(find.text('EXERCISES'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('TOTAL SETS'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('TOTAL REPS'), findsOneWidget);
+      expect(find.text('30'), findsOneWidget);
+      expect(find.text('VOLUME'), findsOneWidget);
+      expect(find.text('628 kg'), findsOneWidget);
+
+      // Section B: Exercise Performance List
+      expect(find.text('EXERCISE PERFORMANCE'), findsOneWidget);
+      expect(find.text('Incline Dumbbell Bench Press'), findsOneWidget);
+      expect(find.text('Bodyweight Dips'), findsOneWidget);
+      expect(find.text('Set 1 — 34 kg × 10 reps'), findsOneWidget);
+      expect(find.text('Set 2 — 36 kg × 8 reps'), findsOneWidget);
+      expect(find.text('Set 1 — Bodyweight × 12 reps'), findsOneWidget);
+
+      // Section C: Muscle Groups Trained
+      expect(find.text('MUSCLE GROUPS TRAINED'), findsOneWidget);
+      expect(find.text('Chest'), findsWidgets);
+      expect(find.text('Triceps'), findsWidgets);
+    });
+
+    testWidgets('HistoryScreen displays compact monthly calendar, indicators, and navigates to Daily Analytics', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final testDate = DateTime(2026, 11, 8);
+      final testWorkout = Workout(
+        id: 'test_rot_a',
+        name: 'Workout A — Chest & Triceps',
+        targetMuscleGroups: 'Chest • Triceps',
+        estimatedDurationMinutes: 45,
+        exercises: [
+          const WorkoutExercise(
+            id: 'e1',
+            name: 'Incline Bench Press',
+            targetMuscle: 'Chest',
+            setConfigs: [
+              ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 34.0),
+            ],
+          ),
+        ],
+      );
+
+      await WorkoutHistoryController.instance.recordCompletedSession(
+        date: testDate,
+        routineId: testWorkout.id,
+        routineName: testWorkout.name,
+        targetMuscleGroups: testWorkout.targetMuscleGroups,
+        workoutSnapshot: testWorkout,
+        completedAt: testDate,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HistoryScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Calendar presence & title
+      expect(find.text('History'), findsOneWidget);
+      expect(find.text('Completed'), findsOneWidget);
+      expect(find.text('Rest Day'), findsOneWidget);
+      expect(find.text('Skipped'), findsOneWidget);
+
+      // Workout History list section
+      expect(find.text('WORKOUT HISTORY'), findsOneWidget);
+      expect(find.text('Workout A — Chest & Triceps'), findsOneWidget);
+      expect(find.text('1 Exercises'), findsOneWidget);
+      expect(find.text('1 Sets'), findsOneWidget);
+
+      // Tapping workout history item opens Daily Analytics
+      final historyCard = find.text('Workout A — Chest & Triceps');
+      await tester.tap(historyCard);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DailyAnalyticsScreen), findsOneWidget);
+      expect(find.text('DAILY ANALYTICS'), findsOneWidget);
+      expect(find.text('Set 1 — 34 kg × 10 reps'), findsOneWidget);
+    });
+
+    testWidgets('HistoryScreen shows empty state when no workouts are recorded', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      // Clear sessions in history controller
+      while (WorkoutHistoryController.instance.allSessions.isNotEmpty) {
+        await WorkoutHistoryController.instance
+            .deleteSession(WorkoutHistoryController.instance.allSessions.first.id);
+      }
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: HistoryScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No workouts recorded yet.'), findsOneWidget);
+      expect(find.textContaining('Your workout journey starts here'), findsOneWidget);
     });
   });
 }

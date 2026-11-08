@@ -4,6 +4,7 @@ import '../services/exercise_controller.dart';
 import '../services/profile_controller.dart';
 import '../services/routine_controller.dart';
 import '../services/workout_controller.dart';
+import '../services/workout_history_controller.dart';
 import '../theme/app_theme.dart';
 import 'daily_workout_selection_screen.dart';
 import 'profile_setup_screen.dart';
@@ -33,6 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ExerciseController.instance.initialize(),
       RoutineController.instance.initialize(),
       DailyWorkoutController.instance.initialize(),
+      WorkoutHistoryController.instance.initialize(),
     ]);
 
     // Ensure smooth minimum presentation duration (800ms)

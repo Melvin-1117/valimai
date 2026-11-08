@@ -1,14 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../models/workout.dart';
 import '../theme/app_theme.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   final String workoutTitle;
+  final Workout? workout;
+  final void Function(Workout completedWorkout)? onFinishWithData;
   final VoidCallback? onFinish;
 
   const ActiveWorkoutScreen({
     super.key,
     this.workoutTitle = 'Chest & Triceps Hypertrophy',
+    this.workout,
+    this.onFinishWithData,
     this.onFinish,
   });
 
@@ -20,23 +25,148 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   late Timer _stopwatchTimer;
   int _secondsElapsed = 0;
 
-  // Current active set data
+  // Active exercises in this workout session
+  late List<WorkoutExercise> _exercises;
+  int _currentExerciseIndex = 0;
+
+  // Current active set controls
   int _currentWeight = 34;
   int _currentReps = 10;
   double _currentRpe = 8.5;
 
-  // Sets to track progression
-  final List<Map<String, dynamic>> _loggedSets = [
-    {'set': 1, 'prev': '32 kg × 10', 'weight': 34, 'reps': 10, 'rpe': 8.0, 'completed': false},
-    {'set': 2, 'prev': '34 kg × 8', 'weight': 34, 'reps': 10, 'rpe': 8.5, 'completed': false},
-    {'set': 3, 'prev': '34 kg × 8', 'weight': 34, 'reps': 9, 'rpe': 9.0, 'completed': false},
-    {'set': 4, 'prev': '34 kg × 8', 'weight': 34, 'reps': 8, 'rpe': 9.5, 'completed': false},
-  ];
+  // Map of exerciseIndex -> logged sets (empty initially for each exercise)
+  final Map<int, List<Map<String, dynamic>>> _loggedSetsPerExercise = {};
+
+  List<Map<String, dynamic>> get _currentLoggedSets {
+    return _loggedSetsPerExercise.putIfAbsent(_currentExerciseIndex, () => []);
+  }
 
   @override
   void initState() {
     super.initState();
     _startStopwatch();
+
+    // Load exercises from provided workout or fallback to default sequence
+    if (widget.workout != null && widget.workout!.exercises.isNotEmpty) {
+      _exercises = List<WorkoutExercise>.from(widget.workout!.exercises);
+    } else {
+      _exercises = _buildDefaultExercises();
+    }
+
+    _loadExerciseInputs(_currentExerciseIndex);
+  }
+
+  List<WorkoutExercise> _buildDefaultExercises() {
+    return const [
+      WorkoutExercise(
+        id: 'ex_1',
+        name: 'Incline Dumbbell Bench Press',
+        targetMuscle: 'Upper Pecs (Clavicular Head)',
+        equipment: '30° Bench Angle',
+        sets: 4,
+        reps: 10,
+        weightKg: 34.0,
+        setConfigs: [
+          ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 34.0),
+          ExerciseSetConfig(setNumber: 2, reps: 10, weightKg: 34.0),
+          ExerciseSetConfig(setNumber: 3, reps: 10, weightKg: 34.0),
+          ExerciseSetConfig(setNumber: 4, reps: 10, weightKg: 34.0),
+        ],
+      ),
+      WorkoutExercise(
+        id: 'ex_2',
+        name: 'Weighted Tricep Dips',
+        targetMuscle: 'Triceps',
+        equipment: 'Bodyweight',
+        sets: 3,
+        reps: 10,
+        weightKg: 20.0,
+        setConfigs: [
+          ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 20.0),
+          ExerciseSetConfig(setNumber: 2, reps: 10, weightKg: 20.0),
+          ExerciseSetConfig(setNumber: 3, reps: 8, weightKg: 20.0),
+        ],
+      ),
+      WorkoutExercise(
+        id: 'ex_3',
+        name: 'Standing Dual-Cable Flyes',
+        targetMuscle: 'Chest',
+        equipment: 'Cable',
+        sets: 3,
+        reps: 15,
+        weightKg: 14.0,
+        setConfigs: [
+          ExerciseSetConfig(setNumber: 1, reps: 15, weightKg: 14.0),
+          ExerciseSetConfig(setNumber: 2, reps: 15, weightKg: 14.0),
+          ExerciseSetConfig(setNumber: 3, reps: 12, weightKg: 16.0),
+        ],
+      ),
+      WorkoutExercise(
+        id: 'ex_4',
+        name: 'Overhead Rope Triceps Extension',
+        targetMuscle: 'Triceps',
+        equipment: 'Cable',
+        sets: 3,
+        reps: 12,
+        weightKg: 25.0,
+        setConfigs: [
+          ExerciseSetConfig(setNumber: 1, reps: 12, weightKg: 25.0),
+          ExerciseSetConfig(setNumber: 2, reps: 12, weightKg: 25.0),
+          ExerciseSetConfig(setNumber: 3, reps: 10, weightKg: 30.0),
+        ],
+      ),
+      WorkoutExercise(
+        id: 'ex_5',
+        name: 'Dumbbell Lateral Raises',
+        targetMuscle: 'Lateral Delts',
+        equipment: 'Dumbbell',
+        sets: 3,
+        reps: 12,
+        weightKg: 12.0,
+      ),
+      WorkoutExercise(
+        id: 'ex_6',
+        name: 'Close-Grip Pushups',
+        targetMuscle: 'Triceps & Chest',
+        equipment: 'Bodyweight',
+        sets: 3,
+        reps: 15,
+        weightKg: 0.0,
+      ),
+    ];
+  }
+
+  void _loadExerciseInputs(int index) {
+    if (index < 0 || index >= _exercises.length) return;
+    _currentExerciseIndex = index;
+
+    final currentEx = _exercises[index];
+    final loggedSets = _currentLoggedSets;
+
+    if (loggedSets.isNotEmpty) {
+      final lastSet = loggedSets.last;
+      _currentWeight = (lastSet['weight'] as num).toInt();
+      _currentReps = (lastSet['reps'] as num).toInt();
+      _currentRpe = (lastSet['rpe'] as num).toDouble();
+    } else {
+      final defaultConfigs = currentEx.effectiveSetConfigs;
+      if (defaultConfigs.isNotEmpty) {
+        _currentWeight = defaultConfigs.first.weightKg.toInt();
+        _currentReps = defaultConfigs.first.reps;
+      } else {
+        _currentWeight = currentEx.weightKg > 0 ? currentEx.weightKg.toInt() : 34;
+        _currentReps = currentEx.reps > 0 ? currentEx.reps : 10;
+      }
+      _currentRpe = 8.5;
+    }
+  }
+
+  void _navigateToExercise(int targetIndex) {
+    if (targetIndex >= 0 && targetIndex < _exercises.length) {
+      setState(() {
+        _loadExerciseInputs(targetIndex);
+      });
+    }
   }
 
   void _startStopwatch() {
@@ -51,7 +181,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   void _toggleSetCompletion(int index) {
     setState(() {
-      _loggedSets[index]['completed'] = !_loggedSets[index]['completed'];
+      _currentLoggedSets[index]['completed'] =
+          !_currentLoggedSets[index]['completed'];
     });
   }
 
@@ -119,19 +250,18 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           ],
         ),
         actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-            child: ElevatedButton(
-              onPressed: () {
-                _showSessionSummary();
-              },
-              style: ElevatedButton.styleFrom(
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: TextButton(
+              onPressed: _showSessionSummary,
+              style: TextButton.styleFrom(
                 backgroundColor: ValimaiColors.primaryContainer,
                 foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
                 elevation: 0,
               ),
               child: const Text(
@@ -164,9 +294,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             _buildSetInputControls(),
             const SizedBox(height: 16),
 
-            // Sets Progression Table
-            _buildSetsTable(),
-            const SizedBox(height: 20),
+            // Sets Progression Table (kept to nothing until first set is logged)
+            if (_currentLoggedSets.isNotEmpty) ...[
+              _buildSetsTable(),
+              const SizedBox(height: 20),
+            ],
 
             // Upcoming Movement in Queue
             _buildNextExercisePreview(),
@@ -204,8 +336,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                 style: TextStyle(
                   fontFamily: 'Montserrat',
                   fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.0,
                   color: ValimaiColors.secondary,
                 ),
               ),
@@ -215,21 +347,25 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             _formatTime(_secondsElapsed),
             style: const TextStyle(
               fontFamily: 'Montserrat',
-              fontSize: 24,
+              fontSize: 26,
               fontWeight: FontWeight.w800,
+              letterSpacing: 1.5,
               color: ValimaiColors.onSurface,
-              letterSpacing: 0.5,
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: ValimaiColors.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: const Row(
               children: [
-                Icon(Icons.bolt, size: 14, color: ValimaiColors.primaryContainer),
+                Icon(
+                  Icons.bolt,
+                  size: 12,
+                  color: ValimaiColors.primaryContainer,
+                ),
                 SizedBox(width: 4),
                 Text(
                   'HEAVY LOAD',
@@ -249,6 +385,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   }
 
   Widget _buildActiveMovementCard() {
+    final currentEx = _exercises[_currentExerciseIndex];
+    final displayOrder =
+        (_currentExerciseIndex + 1).toString().padLeft(2, '0');
+    final totalCount = _exercises.length.toString().padLeft(2, '0');
+
+    String subtitle = 'Primary focus: ${currentEx.targetMuscle}';
+    if (currentEx.equipment != null && currentEx.equipment!.trim().isNotEmpty) {
+      subtitle += ' • ${currentEx.equipment}';
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -262,22 +408,57 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: ValimaiColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'EXERCISE 01 OF 06',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                    color: Colors.white,
+              Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: ValimaiColors.primaryContainer,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'EXERCISE $displayOrder OF $totalCount',
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
+                  if (_currentExerciseIndex > 0) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () =>
+                          _navigateToExercise(_currentExerciseIndex - 1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: ValimaiColors.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.chevron_left,
+                                size: 12, color: ValimaiColors.secondary),
+                            Text(
+                              'PREV',
+                              style: TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: ValimaiColors.secondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const Text(
                 'TARGET: RPE 8.5',
@@ -291,9 +472,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
-            'Incline Dumbbell Bench Press',
-            style: TextStyle(
+          Text(
+            currentEx.name,
+            style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -301,9 +482,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Primary focus: Upper Pecs (Clavicular Head) • 30° Bench Angle',
-            style: TextStyle(
+          Text(
+            subtitle,
+            style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 12,
               color: ValimaiColors.secondary,
@@ -349,9 +530,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
 
-          // RPE Slider
+          // Exertion (RPE) Slider
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -361,27 +542,30 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   fontFamily: 'Montserrat',
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
                   color: ValimaiColors.secondary,
                 ),
               ),
               Text(
-                'RPE ${_currentRpe.toStringAsFixed(1)}',
+                'RPE $_currentRpe',
                 style: const TextStyle(
                   fontFamily: 'Montserrat',
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: ValimaiColors.primaryContainer,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 4),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: ValimaiColors.primaryContainer,
               inactiveTrackColor: ValimaiColors.surfaceContainerHigh,
               thumbColor: ValimaiColors.primaryContainer,
               overlayColor: ValimaiColors.primaryContainer.withOpacity(0.2),
-              trackHeight: 4,
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
             ),
             child: Slider(
               value: _currentRpe,
@@ -395,16 +579,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               },
             ),
           ),
+          const SizedBox(height: 8),
 
-          // Log Set Action Button
+          // Log Next Set Button
           SizedBox(
             width: double.infinity,
             height: 44,
             child: ElevatedButton(
               onPressed: () {
                 setState(() {
-                  _loggedSets.add({
-                    'set': _loggedSets.length + 1,
+                  _currentLoggedSets.add({
+                    'set': _currentLoggedSets.length + 1,
                     'prev': '$_currentWeight kg × $_currentReps',
                     'weight': _currentWeight,
                     'reps': _currentReps,
@@ -424,7 +609,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_task, size: 18, color: ValimaiColors.primaryContainer),
+                  Icon(Icons.add_task,
+                      size: 18, color: ValimaiColors.primaryContainer),
                   SizedBox(width: 8),
                   Text(
                     'LOG NEXT SET',
@@ -452,13 +638,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     required VoidCallback onPlus,
   }) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: ValimaiColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ValimaiColors.cardBorder, width: 1),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
@@ -466,11 +652,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               fontFamily: 'Montserrat',
               fontSize: 9,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.6,
+              letterSpacing: 0.8,
               color: ValimaiColors.secondary,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -485,7 +671,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   color: ValimaiColors.onSurface,
                 ),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 3),
               Text(
                 unit,
                 style: const TextStyle(
@@ -501,8 +687,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStepButton(Icons.remove, onMinus),
-              _buildStepButton(Icons.add, onPlus),
+              _buildStepperBtn(Icons.remove, onMinus),
+              _buildStepperBtn(Icons.add, onPlus),
             ],
           ),
         ],
@@ -510,13 +696,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     );
   }
 
-  Widget _buildStepButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
+  Widget _buildStepperBtn(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Container(
         width: 32,
-        height: 32,
+        height: 28,
         decoration: BoxDecoration(
           color: ValimaiColors.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(8),
@@ -527,6 +712,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   }
 
   Widget _buildSetsTable() {
+    final sets = _currentLoggedSets;
+    if (sets.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -563,8 +752,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          ...List.generate(_loggedSets.length, (index) {
-            final set = _loggedSets[index];
+          ...List.generate(sets.length, (index) {
+            final set = sets[index];
             final bool isCompleted = set['completed'] as bool;
 
             return Container(
@@ -665,66 +854,169 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   }
 
   Widget _buildNextExercisePreview() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: ValimaiColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ValimaiColors.cardBorder, width: 1),
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.skip_next, size: 20, color: ValimaiColors.secondary),
-              SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'UP NEXT IN SEQUENCE',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: ValimaiColors.secondary,
-                    ),
-                  ),
-                  Text(
-                    'Weighted Tricep Dips (3 Sets)',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: ValimaiColors.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    final bool hasNext = _currentExerciseIndex < _exercises.length - 1;
+    final WorkoutExercise? nextEx =
+        hasNext ? _exercises[_currentExerciseIndex + 1] : null;
+
+    return GestureDetector(
+      onTap: () {
+        if (hasNext) {
+          _navigateToExercise(_currentExerciseIndex + 1);
+        } else {
+          _showSessionSummary();
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: ValimaiColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: hasNext
+                ? ValimaiColors.cardBorder
+                : ValimaiColors.primaryContainer.withOpacity(0.4),
+            width: 1,
           ),
-          Icon(Icons.chevron_right, color: ValimaiColors.secondary, size: 20),
-        ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  hasNext ? Icons.skip_next : Icons.check_circle_outline,
+                  size: 20,
+                  color: hasNext
+                      ? ValimaiColors.primaryContainer
+                      : ValimaiColors.primaryContainer,
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasNext ? 'UP NEXT IN SEQUENCE' : 'WORKOUT COMPLETE',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: hasNext
+                            ? ValimaiColors.secondary
+                            : ValimaiColors.primaryContainer,
+                      ),
+                    ),
+                    Text(
+                      hasNext
+                          ? '${nextEx!.name} (${nextEx.effectiveSetConfigs.length} Sets)'
+                          : 'All ${_exercises.length} movements complete',
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: ValimaiColors.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  hasNext ? 'NEXT' : 'FINISH',
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: ValimaiColors.primaryContainer,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                const Icon(
+                  Icons.chevron_right,
+                  color: ValimaiColors.primaryContainer,
+                  size: 18,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  Workout _buildCompletedWorkoutSnapshot() {
+    final List<WorkoutExercise> performedExercises = [];
+
+    for (int i = 0; i < _exercises.length; i++) {
+      final ex = _exercises[i];
+      final loggedSets = _loggedSetsPerExercise[i];
+
+      if (loggedSets != null && loggedSets.isNotEmpty) {
+        final List<ExerciseSetConfig> setConfigs = [];
+        for (int s = 0; s < loggedSets.length; s++) {
+          final setMap = loggedSets[s];
+          setConfigs.add(
+            ExerciseSetConfig(
+              setNumber: s + 1,
+              reps: (setMap['reps'] as num).toInt(),
+              weightKg: (setMap['weight'] as num).toDouble(),
+            ),
+          );
+        }
+
+        performedExercises.add(
+          ex.copyWith(
+            setConfigs: setConfigs,
+            sets: setConfigs.length,
+            reps: setConfigs.isNotEmpty ? setConfigs.first.reps : ex.reps,
+            weightKg: setConfigs.isNotEmpty
+                ? setConfigs.first.weightKg
+                : ex.weightKg,
+          ),
+        );
+      }
+    }
+
+    // If no sets were explicitly logged, fall back to base exercises
+    final effectiveExercises = performedExercises.isNotEmpty
+        ? performedExercises
+        : List<WorkoutExercise>.from(_exercises);
+
+    final baseWorkout = widget.workout;
+    return Workout(
+      id: baseWorkout?.id ??
+          'workout_${DateTime.now().millisecondsSinceEpoch}',
+      name: baseWorkout?.name ?? widget.workoutTitle,
+      targetMuscleGroups: baseWorkout?.targetMuscleGroups ??
+          effectiveExercises.map((e) => e.targetMuscle).toSet().join(' • '),
+      estimatedDurationMinutes: (_secondsElapsed / 60).ceil().clamp(1, 300),
+      exercises: effectiveExercises,
+    );
+  }
+
   void _showSessionSummary() {
+    int totalLoggedSets = 0;
+    for (final list in _loggedSetsPerExercise.values) {
+      totalLoggedSets += list.length;
+    }
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: ValimaiColors.surfaceContainer,
+      backgroundColor: ValimaiColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 40,
+                width: 36,
                 height: 4,
                 decoration: BoxDecoration(
                   color: ValimaiColors.secondary.withOpacity(0.3),
@@ -750,7 +1042,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Total Volume: 18 Sets • ${_formatTime(_secondsElapsed)} duration',
+                totalLoggedSets > 0
+                    ? 'Total Sets: $totalLoggedSets • ${_formatTime(_secondsElapsed)} duration'
+                    : 'Duration: ${_formatTime(_secondsElapsed)}',
                 style: const TextStyle(
                   fontFamily: 'Montserrat',
                   fontSize: 13,
@@ -763,9 +1057,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
+                    final completedSnapshot = _buildCompletedWorkoutSnapshot();
                     Navigator.of(ctx).pop();
                     Navigator.of(context).pop();
-                    if (widget.onFinish != null) widget.onFinish!();
+                    if (widget.onFinishWithData != null) {
+                      widget.onFinishWithData!(completedSnapshot);
+                    } else if (widget.onFinish != null) {
+                      widget.onFinish!();
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ValimaiColors.primaryContainer,

@@ -6,6 +6,7 @@ import '../models/workout_rotation.dart';
 import 'daily_workout_controller.dart';
 import 'routine_controller.dart';
 import 'workout_controller.dart';
+import 'workout_history_controller.dart';
 
 /// Automatic workout recommendation engine for VALIMAI.
 /// Determines the next routine based on completed workout history,
@@ -188,6 +189,17 @@ class WorkoutRotationEngine {
   /// Deduplicates sessions by (routineId + dateKey) and sorts newest first.
   List<CompletedWorkoutSession> getCompletedHistory() {
     final Map<String, CompletedWorkoutSession> sessionMap = {};
+
+    // 0. Extract from WorkoutHistoryController if initialized
+    try {
+      if (WorkoutHistoryController.instance.isInitialized) {
+        for (final sess in WorkoutHistoryController.instance.allSessions) {
+          final dateKey = DaySchedule.dateKey(sess.completedAt);
+          final key = '${sess.routineId}_$dateKey';
+          sessionMap[key] = sess;
+        }
+      }
+    } catch (_) {}
 
     // 1. Extract from DailyWorkoutController records
     try {

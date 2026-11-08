@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../models/workout_rotation.dart';
+import '../services/workout_history_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/valimai_app_bar.dart';
+import 'daily_analytics_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -10,984 +13,1017 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  int _selectedTimeframe = 1; // Last 30 Days
-  final List<String> _timeframes = [
-    'Last 7 Days',
-    'Last 30 Days',
-    'Current Meso',
-    'All Time',
-  ];
+  late DateTime _viewingMonth;
+  late DateTime _selectedDate;
 
-  final Set<int> _expandedLogs = {};
+  final WorkoutHistoryController _historyController =
+      WorkoutHistoryController.instance;
 
-  void _toggleLog(int index) {
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _viewingMonth = DateTime(now.year, now.month, 1);
+    _selectedDate = DateTime(now.year, now.month, now.day);
+    _historyController.initialize();
+  }
+
+  void _previousMonth() {
     setState(() {
-      if (_expandedLogs.contains(index)) {
-        _expandedLogs.remove(index);
-      } else {
-        _expandedLogs.add(index);
-      }
+      _viewingMonth = DateTime(_viewingMonth.year, _viewingMonth.month - 1, 1);
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const ValimaiAppBar(
-        title: 'History',
-        showSearch: true,
+  void _nextMonth() {
+    setState(() {
+      _viewingMonth = DateTime(_viewingMonth.year, _viewingMonth.month + 1, 1);
+    });
+  }
+
+  void _goToCurrentMonth() {
+    final now = DateTime.now();
+    setState(() {
+      _viewingMonth = DateTime(now.year, now.month, 1);
+      _selectedDate = DateTime(now.year, now.month, now.day);
+    });
+  }
+
+  String _formatMonthYear(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    return '${months[date.month - 1]} ${date.year}';
+  }
+
+  String _formatFullDate(DateTime date) {
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  void _onDateTapped(DateTime date) {
+    setState(() {
+      _selectedDate = date;
+    });
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+
+    if (target.isAfter(today)) {
+      // Future date - cannot have completed sessions
+      return;
+    }
+
+    final sessions = _historyController.getSessionsForDate(date);
+    if (sessions.isNotEmpty) {
+      if (sessions.length == 1) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DailyAnalyticsScreen(session: sessions.first),
+          ),
+        );
+      } else {
+        _showMultipleSessionsBottomSheet(date, sessions);
+      }
+    }
+  }
+
+  void _showMultipleSessionsBottomSheet(
+      DateTime date, List<CompletedWorkoutSession> sessions) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: ValimaiColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Pulse & Sub-Context
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: ValimaiColors.primaryContainer,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
                         const Text(
-                          'PERFORMANCE ARCHIVE',
+                          'COMPLETED SESSIONS',
                           style: TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
                             letterSpacing: 1.0,
                             color: ValimaiColors.secondary,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'MESO 04 : HYPERTROPHY',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: ValimaiColors.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: ValimaiColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.download,
-                    size: 18,
-                    color: ValimaiColors.secondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            // Timeframe Filter Carousel
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(_timeframes.length, (index) {
-                  final isSelected = _selectedTimeframe == index;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: () => setState(() => _selectedTimeframe = index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? ValimaiColors.primaryContainer
-                              : ValimaiColors.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _timeframes[index].toUpperCase(),
-                          style: TextStyle(
+                        const SizedBox(height: 2),
+                        Text(
+                          _formatFullDate(date),
+                          style: const TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 10,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
-                            color: isSelected ? Colors.white : ValimaiColors.secondary,
+                            color: ValimaiColors.onSurface,
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 18),
-
-            // Core Metric Bento Grid (2x2)
-            Row(
-              children: [
-                Expanded(
-                  child: _buildBentoCard(
-                    title: 'GROSS VOLUME',
-                    icon: Icons.fitness_center,
-                    value: '142.8',
-                    unit: 'T',
-                    delta: '+12% MoM',
-                    deltaPositive: true,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildBentoCard(
-                    title: 'COMPLETED',
-                    icon: Icons.task_alt,
-                    value: '22',
-                    unit: 'Logs',
-                    delta: '100% of target pace',
-                    deltaPositive: true,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildBentoCard(
-                    title: 'IRON DURATION',
-                    icon: Icons.timer,
-                    value: '19h 45m',
-                    unit: '',
-                    delta: 'Avg 54m / session',
-                    deltaPositive: false,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildBentoCard(
-                    title: 'PRS LOGGED',
-                    icon: Icons.local_fire_department,
-                    value: '05',
-                    unit: 'New Max',
-                    delta: 'Peak condition',
-                    deltaPositive: true,
-                    isPrCard: true,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-
-            // Micro Volume Trend (Sparkline)
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: ValimaiColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ValimaiColors.cardBorder, width: 1),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'WEEKLY DENSITY DELTA',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
-                          color: ValimaiColors.secondary,
-                        ),
-                      ),
-                      Text(
-                        'PEAK LOAD',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: ValimaiColors.primaryContainer,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 54,
-                    width: double.infinity,
-                    child: CustomPaint(
-                      painter: _SparklinePainter(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 22),
-
-            // PR Spotlight Section
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.military_tech,
-                      color: ValimaiColors.primaryContainer,
-                      size: 20,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Personal Records',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: ValimaiColors.onSurface,
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: ValimaiColors.secondary),
+                      onPressed: () => Navigator.of(ctx).pop(),
                     ),
                   ],
                 ),
-                Text(
-                  'LATEST 30D',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    color: ValimaiColors.secondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            // PR Horizontal Cards Carousel
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildPrCard(
-                    tag: 'NEW PR',
-                    date: 'Oct 22',
-                    title: 'Incline DB Press',
-                    weight: '36',
-                    reps: '× 8',
-                    progression: '+2 kg Jump',
-                    icon: Icons.trending_up,
-                    isRedTag: true,
-                  ),
-                  const SizedBox(width: 10),
-                  _buildPrCard(
-                    tag: 'HEAVY SET',
-                    date: 'Oct 18',
-                    title: 'Weighted Dips',
-                    weight: '+20',
-                    reps: '× 8',
-                    progression: '+4 kg progression',
-                    icon: Icons.show_chart,
-                  ),
-                  const SizedBox(width: 10),
-                  _buildPrCard(
-                    tag: 'TIER 1 LIFT',
-                    date: 'Oct 14',
-                    title: 'Barbell Back Squat',
-                    weight: '140',
-                    reps: '× 5',
-                    progression: 'Est. 1RM: 162 kg',
-                    icon: Icons.bolt,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Execution Log Feed
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.history_edu,
-                      color: ValimaiColors.secondary,
-                      size: 20,
+                const SizedBox(height: 16),
+                ...sessions.map((sess) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: ValimaiColors.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(14),
+                      border:
+                          Border.all(color: ValimaiColors.cardBorder, width: 1),
                     ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Execution Log',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: ValimaiColors.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  'OCTOBER 2024',
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    color: ValimaiColors.secondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Log Items
-            _buildExecutionLogCard(
-              index: 0,
-              timeLabel: 'YESTERDAY',
-              dateLabel: 'Oct 23, 18:15',
-              title: 'Back & Rear Delts Hypertrophy',
-              time: '54m',
-              sets: '19',
-              volume: '18.4t',
-              strain: 'RPE 8',
-              highlight: '3 Exercises over Target',
-              isHighlightRed: true,
-              exercises: const [
-                'Chest Supported T-Bar Row | 4 sets • 80kg × 10',
-                'Lat Pulldown (Neutral Grip) | 4 sets • 75kg × 12',
-                'Reverse Pec Deck Delts | 4 sets • 50kg × 15',
-                'Single Arm Cable Row | 3 sets • 35kg × 12',
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            _buildExecutionLogCard(
-              index: 1,
-              timeLabel: 'MON, OCT 21',
-              dateLabel: '07:30 AM',
-              title: 'Push Day: Chest & Shoulders',
-              time: '48m',
-              sets: '16',
-              volume: '15.2t',
-              strain: 'RPE 8.5',
-              highlight: 'Incline DB Record',
-              isHighlightRed: true,
-              exercises: const [
-                'Incline DB Bench Press | 4 sets • 36kg × 8 (PR)',
-                'Overhead Barbell Press | 4 sets • 60kg × 6',
-                'Lateral Raises (Cable) | 5 sets • 14kg × 15',
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            _buildExecutionLogCard(
-              index: 2,
-              timeLabel: 'SAT, OCT 19',
-              dateLabel: '11:00 AM',
-              title: 'Lower Body Heavy',
-              time: '62m',
-              sets: '18',
-              volume: '22.9t',
-              strain: 'RPE 9.0',
-              highlight: 'High Ton Peak',
-              isHighlightRed: false,
-              exercises: const [
-                'Barbell Back Squat | 5 sets • 140kg × 5',
-                'Romanian Deadlift | 4 sets • 130kg × 8',
-                'Standing Calf Raises | 4 sets • 110kg × 12',
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Historical Vault Query
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: ValimaiColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ValimaiColors.cardBorder, width: 1),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'HISTORICAL VAULT',
-                        style: TextStyle(
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      title: Text(
+                        sess.routineName ?? 'Completed Workout',
+                        style: const TextStyle(
                           fontFamily: 'Montserrat',
-                          fontSize: 9,
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
-                          color: ValimaiColors.secondary,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Looking for Mesocycles 01-03?',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 12,
                           color: ValimaiColors.onSurface,
                         ),
                       ),
-                    ],
-                  ),
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ValimaiColors.surfaceContainerHigh,
-                      foregroundColor: ValimaiColors.onSurface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      subtitle: Text(
+                        '${sess.calculatedExercisesCount} Exercises • ${sess.calculatedTotalSets} Sets',
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 12,
+                          color: ValimaiColors.secondary,
+                        ),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'QUERY VAULT',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.6,
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: ValimaiColors.primaryContainer,
                       ),
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => DailyAnalyticsScreen(session: sess),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBentoCard({
-    required String title,
-    required IconData icon,
-    required String value,
-    required String unit,
-    required String delta,
-    required bool deltaPositive,
-    bool isPrCard = false,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: ValimaiColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isPrCard
-              ? ValimaiColors.primaryContainer.withOpacity(0.3)
-              : ValimaiColors.cardBorder,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: isPrCard
-                      ? ValimaiColors.primaryContainer
-                      : ValimaiColors.secondary,
-                ),
-              ),
-              Icon(
-                icon,
-                size: 16,
-                color: isPrCard
-                    ? ValimaiColors.primaryContainer
-                    : ValimaiColors.secondary,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: isPrCard
-                      ? ValimaiColors.primaryContainer
-                      : ValimaiColors.onSurface,
-                ),
-              ),
-              if (unit.isNotEmpty) ...[
-                const SizedBox(width: 4),
-                Text(
-                  unit,
-                  style: const TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: ValimaiColors.secondary,
-                  ),
-                ),
+                  );
+                }),
               ],
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            delta,
-            style: TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: deltaPositive
-                  ? ValimaiColors.primaryContainer
-                  : ValimaiColors.secondary,
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildPrCard({
-    required String tag,
-    required String date,
-    required String title,
-    required String weight,
-    required String reps,
-    required String progression,
-    required IconData icon,
-    bool isRedTag = false,
-  }) {
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: _historyController,
+      builder: (context, _) {
+        final completedSessions = _historyController.allSessions;
+
+        return Scaffold(
+          backgroundColor: ValimaiColors.background,
+          appBar: const ValimaiAppBar(
+            title: 'History',
+            showSearch: false,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Section A: Compact Monthly Activity Calendar
+                _buildMonthlyCalendarCard(),
+                const SizedBox(height: 16),
+
+                // Selected Date Status (displays state for selected date without workout)
+                _buildSelectedDateStatus(),
+                const SizedBox(height: 24),
+
+                // Section B: Chronological Workout History
+                _buildWorkoutHistoryHeader(completedSessions.length),
+                const SizedBox(height: 12),
+
+                // Section C / List: Empty State or Sessions List
+                if (completedSessions.isEmpty)
+                  _buildEmptyState()
+                else
+                  _buildSessionsList(completedSessions),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMonthlyCalendarCard() {
+    final now = DateTime.now();
+    final isViewingCurrentMonth = _viewingMonth.year == now.year &&
+        _viewingMonth.month == now.month;
+
     return Container(
-      width: 220,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ValimaiColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(14),
+        color: ValimaiColors.surface,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: ValimaiColors.cardBorder, width: 1),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Month navigation bar
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isRedTag
-                      ? ValimaiColors.primaryContainer
-                      : ValimaiColors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  tag,
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    color: isRedTag ? Colors.white : ValimaiColors.onSurface,
-                    letterSpacing: 0.5,
+              Row(
+                children: [
+                  Text(
+                    _formatMonthYear(_viewingMonth),
+                    style: const TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: ValimaiColors.onSurface,
+                    ),
                   ),
-                ),
+                  if (!isViewingCurrentMonth) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _goToCurrentMonth,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color:
+                              ValimaiColors.primaryContainer.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'TODAY',
+                          style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: ValimaiColors.primaryContainer,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              Text(
-                date,
-                style: const TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 11,
-                  color: ValimaiColors.secondary,
-                ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left,
+                        size: 20, color: ValimaiColors.onSurface),
+                    onPressed: _previousMonth,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right,
+                        size: 20, color: ValimaiColors.onSurface),
+                    onPressed: _nextMonth,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: ValimaiColors.onSurface,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          const SizedBox(height: 14),
+
+          // Weekday Labels
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Text(
-                weight,
-                style: const TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: ValimaiColors.onSurface,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Text(
-                'KG',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: ValimaiColors.secondary,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                reps,
-                style: const TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ValimaiColors.secondary,
-                ),
-              ),
+              _WeekdayLabel('M'),
+              _WeekdayLabel('T'),
+              _WeekdayLabel('W'),
+              _WeekdayLabel('T'),
+              _WeekdayLabel('F'),
+              _WeekdayLabel('S'),
+              _WeekdayLabel('S'),
             ],
           ),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: ValimaiColors.surfaceContainerHigh.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  progression,
-                  style: const TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: ValimaiColors.primaryContainer,
-                  ),
-                ),
-                Icon(icon, size: 14, color: ValimaiColors.primaryContainer),
-              ],
-            ),
+
+          // Calendar Grid
+          _buildCalendarGrid(),
+          const SizedBox(height: 14),
+
+          // Legend
+          const Divider(height: 1, color: ValimaiColors.cardBorder),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem(
+                color: ValimaiColors.primaryContainer,
+                label: 'Completed',
+                isDot: true,
+              ),
+              const SizedBox(width: 16),
+              _buildLegendItem(
+                color: ValimaiColors.secondary,
+                label: 'Rest Day',
+                isDot: true,
+              ),
+              const SizedBox(width: 16),
+              _buildLegendItem(
+                color: const Color(0xFFE5A93B),
+                label: 'Skipped',
+                isDot: false,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildExecutionLogCard({
-    required int index,
-    required String timeLabel,
-    required String dateLabel,
-    required String title,
-    required String time,
-    required String sets,
-    required String volume,
-    required String strain,
-    required String highlight,
-    required bool isHighlightRed,
-    required List<String> exercises,
+  Widget _buildLegendItem({
+    required Color color,
+    required String label,
+    required bool isDot,
   }) {
-    final isExpanded = _expandedLogs.contains(index);
-
-    return InkWell(
-      onTap: () => _toggleLog(index),
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: ValimaiColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ValimaiColors.cardBorder, width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      timeLabel,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: ValimaiColors.primaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      width: 3,
-                      height: 3,
-                      decoration: const BoxDecoration(
-                        color: ValimaiColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      dateLabel,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 11,
-                        color: ValimaiColors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: ValimaiColors.primaryContainer.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.done_all,
-                    size: 14,
-                    color: ValimaiColors.primaryContainer,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Montserrat',
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: ValimaiColors.onSurface,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // 4 Column Grid
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: ValimaiColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(child: _buildLogMetric('TIME', time, false)),
-                  Expanded(child: _buildLogMetric('SETS', sets, false)),
-                  Expanded(child: _buildLogMetric('VOLUME', volume, true)),
-                  Expanded(child: _buildLogMetric('STRAIN', strain, false)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.bolt,
-                      size: 14,
-                      color: isHighlightRed
-                          ? ValimaiColors.primaryContainer
-                          : ValimaiColors.secondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      highlight,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: ValimaiColors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    const Text(
-                      'BREAKDOWN',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                        color: ValimaiColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      isExpanded ? Icons.keyboard_arrow_up : Icons.chevron_right,
-                      size: 16,
-                      color: ValimaiColors.secondary,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            if (isExpanded) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: ValimaiColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: exercises.map((item) {
-                    final parts = item.split('|');
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            parts[0].trim(),
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 11,
-                              color: ValimaiColors.secondary,
-                            ),
-                          ),
-                          Text(
-                            parts.length > 1 ? parts[1].trim() : '',
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: ValimaiColors.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLogMetric(String label, String value, bool isAccent) {
-    return Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
+        if (isDot)
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          )
+        else
+          Container(
+            width: 8,
+            height: 2,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        const SizedBox(width: 5),
         Text(
           label,
           style: const TextStyle(
             fontFamily: 'Montserrat',
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
             color: ValimaiColors.secondary,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Montserrat',
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: isAccent ? ValimaiColors.primaryContainer : ValimaiColors.onSurface,
           ),
         ),
       ],
     );
   }
-}
 
-class _SparklinePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path();
-    final fillPath = Path();
+  Widget _buildCalendarGrid() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
-    final points = [
-      Offset(0, size.height * 0.8),
-      Offset(size.width * 0.2, size.height * 0.65),
-      Offset(size.width * 0.4, size.height * 0.5),
-      Offset(size.width * 0.6, size.height * 0.3),
-      Offset(size.width * 0.8, size.height * 0.45),
-      Offset(size.width, size.height * 0.15),
-    ];
+    final daysInMonth =
+        DateTime(_viewingMonth.year, _viewingMonth.month + 1, 0).day;
+    final firstWeekday =
+        DateTime(_viewingMonth.year, _viewingMonth.month, 1).weekday; // 1 = Mon
 
-    path.moveTo(points[0].dx, points[0].dy);
-    fillPath.moveTo(points[0].dx, points[0].dy);
+    // Leading padding count (days from previous month to align Monday)
+    final leadingSpaces = firstWeekday - 1;
+    final totalCells = leadingSpaces + daysInMonth;
+    final totalRows = (totalCells / 7).ceil();
 
-    for (int i = 1; i < points.length; i++) {
-      final prev = points[i - 1];
-      final cur = points[i];
-      final c1 = Offset((prev.dx + cur.dx) / 2, prev.dy);
-      final c2 = Offset((prev.dx + cur.dx) / 2, cur.dy);
-      path.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, cur.dx, cur.dy);
-      fillPath.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, cur.dx, cur.dy);
-    }
+    return Column(
+      children: List.generate(totalRows, (row) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(7, (col) {
+              final cellIndex = row * 7 + col;
+              final dayNumber = cellIndex - leadingSpaces + 1;
 
-    fillPath.lineTo(size.width, size.height);
-    fillPath.lineTo(0, size.height);
-    fillPath.close();
+              if (dayNumber < 1 || dayNumber > daysInMonth) {
+                return const SizedBox(width: 36, height: 40);
+              }
 
-    final fillPaint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          ValimaiColors.primaryContainer.withOpacity(0.35),
-          ValimaiColors.primaryContainer.withOpacity(0.0),
-        ],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+              final cellDate = DateTime(
+                  _viewingMonth.year, _viewingMonth.month, dayNumber);
+              final isToday = cellDate.year == today.year &&
+                  cellDate.month == today.month &&
+                  cellDate.day == today.day;
+              final isSelected = cellDate.year == _selectedDate.year &&
+                  cellDate.month == _selectedDate.month &&
+                  cellDate.day == _selectedDate.day;
+              final isFuture = cellDate.isAfter(today);
 
-    canvas.drawPath(fillPath, fillPaint);
+              // History states (future dates NEVER show activity)
+              final bool hasCompleted = !isFuture &&
+                  _historyController.hasCompletedWorkoutOnDate(cellDate);
+              final bool isRest = !isFuture &&
+                  !hasCompleted &&
+                  _historyController.isRestDayOnDate(cellDate);
+              final bool isSkipped = !isFuture &&
+                  !hasCompleted &&
+                  !isRest &&
+                  _historyController.isSkippedOnDate(cellDate);
 
-    final linePaint = Paint()
-      ..color = ValimaiColors.primaryContainer
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    canvas.drawPath(path, linePaint);
-
-    // Endpoint dot
-    final dotPaint = Paint()..color = ValimaiColors.primaryContainer;
-    canvas.drawCircle(points.last, 3.5, dotPaint);
+              return GestureDetector(
+                onTap: () => _onDateTapped(cellDate),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: 36,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? ValimaiColors.primaryContainer
+                        : (isToday
+                            ? ValimaiColors.primaryContainer.withOpacity(0.12)
+                            : Colors.transparent),
+                    borderRadius: BorderRadius.circular(10),
+                    border: isToday && !isSelected
+                        ? Border.all(
+                            color:
+                                ValimaiColors.primaryContainer.withOpacity(0.5),
+                            width: 1,
+                          )
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$dayNumber',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected || isToday ? FontWeight.w800 : FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white
+                              : (isFuture
+                                  ? ValimaiColors.secondary.withOpacity(0.35)
+                                  : ValimaiColors.onSurface),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      // Indicator Dot / Dash
+                      SizedBox(
+                        height: 4,
+                        child: hasCompleted
+                            ? Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : ValimaiColors.primaryContainer,
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            : (isRest
+                                ? Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Colors.white.withOpacity(0.8)
+                                          : ValimaiColors.secondary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  )
+                                : (isSkipped
+                                    ? Container(
+                                        width: 6,
+                                        height: 2,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Colors.white.withOpacity(0.8)
+                                              : const Color(0xFFE5A93B),
+                                          borderRadius:
+                                              BorderRadius.circular(1),
+                                        ),
+                                      )
+                                    : null)),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        );
+      }),
+    );
   }
 
+  Widget _buildSelectedDateStatus() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final isFuture = _selectedDate.isAfter(today);
+    final hasCompleted = !isFuture &&
+        _historyController.hasCompletedWorkoutOnDate(_selectedDate);
+
+    // If completed, user will either be navigated on tap or can tap the session card below
+    if (hasCompleted) {
+      final sessions = _historyController.getSessionsForDate(_selectedDate);
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: ValimaiColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: ValimaiColors.primaryContainer.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: ValimaiColors.primaryContainer,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${_formatFullDate(_selectedDate)}: ${sessions.length} Completed Session${sessions.length > 1 ? "s" : ""}',
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: ValimaiColors.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () {
+                if (sessions.length == 1) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          DailyAnalyticsScreen(session: sessions.first),
+                    ),
+                  );
+                } else {
+                  _showMultipleSessionsBottomSheet(_selectedDate, sessions);
+                }
+              },
+              child: const Row(
+                children: [
+                  Text(
+                    'VIEW',
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: ValimaiColors.primaryContainer,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 14,
+                    color: ValimaiColors.primaryContainer,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final isRest =
+        !isFuture && _historyController.isRestDayOnDate(_selectedDate);
+    final isSkipped =
+        !isFuture && _historyController.isSkippedOnDate(_selectedDate);
+
+    String statusText;
+    IconData statusIcon;
+    Color statusColor;
+
+    if (isFuture) {
+      statusText = 'Future date — No workout scheduled or recorded';
+      statusIcon = Icons.event_available;
+      statusColor = ValimaiColors.secondary;
+    } else if (isRest) {
+      statusText = 'Rest Day — Scheduled recovery day';
+      statusIcon = Icons.nightlight_round;
+      statusColor = ValimaiColors.secondary;
+    } else if (isSkipped) {
+      statusText = 'Skipped Day — Workout skipped';
+      statusIcon = Icons.skip_next;
+      statusColor = const Color(0xFFE5A93B);
+    } else {
+      statusText = 'No workout recorded on ${_formatFullDate(_selectedDate)}';
+      statusIcon = Icons.info_outline;
+      statusColor = ValimaiColors.secondary;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: ValimaiColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ValimaiColors.cardBorder, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(statusIcon, color: statusColor, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              statusText,
+              style: TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: statusColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWorkoutHistoryHeader(int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'WORKOUT HISTORY',
+          style: TextStyle(
+            fontFamily: 'Montserrat',
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+            color: ValimaiColors.secondary,
+          ),
+        ),
+        if (count > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: ValimaiColors.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '$count ${count == 1 ? "SESSION" : "SESSIONS"}',
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+                color: ValimaiColors.primaryContainer,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      decoration: BoxDecoration(
+        color: ValimaiColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ValimaiColors.cardBorder, width: 1),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: ValimaiColors.surfaceContainerHigh,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: ValimaiColors.primaryContainer.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.fitness_center_outlined,
+                size: 26,
+                color: ValimaiColors.primaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No workouts recorded yet.',
+            style: TextStyle(
+              fontFamily: 'Montserrat',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: ValimaiColors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Your workout journey starts here. Complete your first workout to see your progress.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Montserrat',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: ValimaiColors.secondary,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionsList(List<CompletedWorkoutSession> sessions) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: sessions.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final session = sessions[index];
+        return _buildSessionCard(session);
+      },
+    );
+  }
+
+  Widget _buildSessionCard(CompletedWorkoutSession session) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DailyAnalyticsScreen(session: session),
+          ),
+        );
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: ValimaiColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ValimaiColors.cardBorder, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date & Status Badge
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 12,
+                      color: ValimaiColors.primaryContainer,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _formatFullDate(session.completedAt),
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: ValimaiColors.secondaryLight,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: ValimaiColors.primaryContainer.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check,
+                        size: 11,
+                        color: ValimaiColors.primaryContainer,
+                      ),
+                      SizedBox(width: 3),
+                      Text(
+                        'Completed',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: ValimaiColors.primaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+
+            // Routine Name & Chevron
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        session.routineName ?? 'Completed Workout',
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: ValimaiColors.onSurface,
+                        ),
+                      ),
+                      if (session.targetMuscleGroups != null &&
+                          session.targetMuscleGroups!.trim().isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          session.targetMuscleGroups!,
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: ValimaiColors.secondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: ValimaiColors.secondary,
+                  size: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: ValimaiColors.cardBorder),
+            const SizedBox(height: 10),
+
+            // Performance Metrics Pills
+            Row(
+              children: [
+                _buildStatPill(
+                  icon: Icons.fitness_center,
+                  label: '${session.calculatedExercisesCount} Exercises',
+                ),
+                const SizedBox(width: 8),
+                _buildStatPill(
+                  icon: Icons.repeat,
+                  label: '${session.calculatedTotalSets} Sets',
+                ),
+                if (session.calculatedVolumeKg > 0) ...[
+                  const SizedBox(width: 8),
+                  _buildStatPill(
+                    icon: Icons.scale,
+                    label: '${session.calculatedVolumeKg.toInt()} kg',
+                    highlight: true,
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatPill({
+    required IconData icon,
+    required String label,
+    bool highlight = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: ValimaiColors.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 11,
+            color: highlight
+                ? ValimaiColors.primaryContainer
+                : ValimaiColors.secondary,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Montserrat',
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: highlight
+                  ? ValimaiColors.primaryContainer
+                  : ValimaiColors.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeekdayLabel extends StatelessWidget {
+  final String label;
+
+  const _WeekdayLabel(this.label);
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 36,
+      child: Center(
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Montserrat',
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: ValimaiColors.secondary,
+          ),
+        ),
+      ),
+    );
+  }
 }

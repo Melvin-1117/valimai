@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/routine.dart';
 import '../models/weekly_schedule.dart';
 import '../models/workout.dart';
 import '../services/daily_workout_controller.dart';
@@ -22,14 +21,6 @@ class ScheduleScreen extends StatefulWidget {
 class _ScheduleScreenState extends State<ScheduleScreen> {
   int _selectedView = 0; // 0: WEEK, 1: MONTH, 2: MESO
   final List<String> _views = ['WEEK', 'MONTH', 'MESO'];
-  int _selectedDayIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _selectedDayIndex = (now.weekday - 1).clamp(0, 6);
-  }
 
   void _showWeekdayAssignmentSheet(BuildContext context, int weekday, [DateTime? forDate]) {
     final activeRoutines = RoutineController.instance.activeRoutines;
@@ -668,7 +659,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       hasWorkout: daySchedule.type == ScheduledDayType.workout,
                       onTap: () {
                         controller.selectDate(dayDate);
-                        setState(() => _selectedDayIndex = index);
                       },
                     );
                   }),
@@ -1341,6 +1331,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 MaterialPageRoute(
                                   builder: (_) => ActiveWorkoutScreen(
                                     workoutTitle: workout.name,
+                                    workout: workout,
+                                    onFinishWithData: (completedWorkout) {
+                                      WorkoutController.instance
+                                          .markWorkoutCompleted(
+                                        date,
+                                        true,
+                                        completedWorkout: completedWorkout,
+                                      );
+                                    },
                                     onFinish: () {
                                       WorkoutController.instance
                                           .markWorkoutCompleted(date, true);

@@ -49,6 +49,17 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(
         builder: (_) => ActiveWorkoutScreen(
           workoutTitle: workout.name,
+          workout: workout,
+          onFinishWithData: (completedWorkout) {
+            WorkoutController.instance.markWorkoutCompleted(
+              date,
+              true,
+              completedWorkout: completedWorkout,
+            );
+            if (widget.onNavigateTab != null) {
+              widget.onNavigateTab!(3); // Switch to history
+            }
+          },
           onFinish: () {
             WorkoutController.instance.markWorkoutCompleted(date, true);
             if (widget.onNavigateTab != null) {
