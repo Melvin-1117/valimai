@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/workout.dart';
 import '../models/workout_rotation.dart';
 import '../theme/app_theme.dart';
@@ -7,10 +8,7 @@ import '../theme/app_theme.dart';
 class DailyAnalyticsScreen extends StatelessWidget {
   final CompletedWorkoutSession session;
 
-  const DailyAnalyticsScreen({
-    super.key,
-    required this.session,
-  });
+  const DailyAnalyticsScreen({super.key, required this.session});
 
   String _formatWeekday(DateTime date) {
     const days = [
@@ -20,7 +18,7 @@ class DailyAnalyticsScreen extends StatelessWidget {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     return days[date.weekday - 1];
   }
@@ -38,7 +36,7 @@ class DailyAnalyticsScreen extends StatelessWidget {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     return '${_formatWeekday(date)}, ${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -502,7 +500,10 @@ class DailyAnalyticsScreen extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: ValimaiColors.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(10),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 
 class ValimaiBottomNav extends StatelessWidget {
@@ -35,9 +36,24 @@ class ValimaiBottomNav extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-              _buildNavItem(1, Icons.fitness_center_outlined, Icons.fitness_center, 'Workouts'),
-              _buildNavItem(2, Icons.calendar_today_outlined, Icons.calendar_today, 'Schedule'),
-              _buildNavItem(3, Icons.history_outlined, Icons.history, 'History'),
+              _buildNavItem(
+                1,
+                Icons.fitness_center_outlined,
+                Icons.fitness_center,
+                'Workouts',
+              ),
+              _buildNavItem(
+                2,
+                Icons.calendar_today_outlined,
+                Icons.calendar_today,
+                'Schedule',
+              ),
+              _buildNavItem(
+                3,
+                Icons.history_outlined,
+                Icons.history,
+                'History',
+              ),
               _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile'),
             ],
           ),
@@ -46,9 +62,16 @@ class ValimaiBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(int index, IconData outlineIcon, IconData filledIcon, String label) {
+  Widget _buildNavItem(
+    int index,
+    IconData outlineIcon,
+    IconData filledIcon,
+    String label,
+  ) {
     final bool isSelected = currentIndex == index;
-    final Color color = isSelected ? ValimaiColors.primaryContainer : ValimaiColors.secondary;
+    final Color color = isSelected
+        ? ValimaiColors.primaryContainer
+        : ValimaiColors.secondary;
 
     return Expanded(
       child: InkWell(
@@ -58,11 +81,7 @@ class ValimaiBottomNav extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isSelected ? filledIcon : outlineIcon,
-              color: color,
-              size: 22,
-            ),
+            Icon(isSelected ? filledIcon : outlineIcon, color: color, size: 22),
             const SizedBox(height: 4),
             Text(
               label,
@@ -80,4 +99,3 @@ class ValimaiBottomNav extends StatelessWidget {
     );
   }
 }
-

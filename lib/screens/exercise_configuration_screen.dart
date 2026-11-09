@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/exercise_controller.dart';
@@ -43,11 +44,13 @@ class _ExerciseConfigurationScreenState
     _metadata = widget.exerciseMetadata;
     if (_metadata == null) {
       if (widget.workoutExercise.exerciseId != null) {
-        _metadata = ExerciseController.instance
-            .getExerciseById(widget.workoutExercise.exerciseId!);
+        _metadata = ExerciseController.instance.getExerciseById(
+          widget.workoutExercise.exerciseId!,
+        );
       }
-      _metadata ??= ExerciseController.instance
-          .getExerciseByName(widget.workoutExercise.name);
+      _metadata ??= ExerciseController.instance.getExerciseByName(
+        widget.workoutExercise.name,
+      );
     }
   }
 
@@ -149,96 +152,102 @@ class _ExerciseConfigurationScreenState
     required ValueChanged<double> onSubmitted,
   }) async {
     final controller = TextEditingController(text: initialValue);
-    await showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: ValimaiColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: ValimaiColors.cardBorder, width: 1),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: ValimaiColors.onSurface,
+    try {
+      await showDialog(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            backgroundColor: ValimaiColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: ValimaiColors.cardBorder, width: 1),
             ),
-          ),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            keyboardType: TextInputType.numberWithOptions(decimal: isDecimal),
-            inputFormatters: [
-              if (isDecimal)
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
-              else
-                FilteringTextInputFormatter.digitsOnly,
-            ],
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: ValimaiColors.onSurface,
-            ),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: ValimaiColors.surfaceContainerLow,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: ValimaiColors.cardBorder),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(
-                    color: ValimaiColors.primaryContainer, width: 1.5),
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: ValimaiColors.onSurface,
               ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text(
-                'CANCEL',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: ValimaiColors.secondary,
-                ),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.numberWithOptions(decimal: isDecimal),
+              inputFormatters: [
+                if (isDecimal)
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
+                else
+                  FilteringTextInputFormatter.digitsOnly,
+              ],
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: ValimaiColors.onSurface,
               ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final text = controller.text.trim();
-                final val = double.tryParse(text);
-                if (val != null) {
-                  onSubmitted(val);
-                }
-                Navigator.of(ctx).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: ValimaiColors.primaryContainer,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: ValimaiColors.surfaceContainerLow,
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: ValimaiColors.cardBorder),
                 ),
-              ),
-              child: const Text(
-                'CONFIRM',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: ValimaiColors.primaryContainer,
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
-          ],
-        );
-      },
-    );
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text(
+                  'CANCEL',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: ValimaiColors.secondary,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final text = controller.text.trim();
+                  final val = double.tryParse(text);
+                  if (val != null) {
+                    onSubmitted(val);
+                  }
+                  Navigator.of(ctx).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ValimaiColors.primaryContainer,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'CONFIRM',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      controller.dispose();
+    }
   }
 
   void _saveAndReturn() {
@@ -260,12 +269,14 @@ class _ExerciseConfigurationScreenState
 
   @override
   Widget build(BuildContext context) {
-    final primaryMuscle = _metadata?.primaryMuscleGroup ??
-        widget.workoutExercise.targetMuscle;
-    final equipment = _metadata?.equipment ??
+    final primaryMuscle =
+        _metadata?.primaryMuscleGroup ?? widget.workoutExercise.targetMuscle;
+    final equipment =
+        _metadata?.equipment ??
         widget.workoutExercise.equipment ??
         EquipmentTypes.barbell;
-    final secondaryMuscles = _metadata?.secondaryMuscleGroups ??
+    final secondaryMuscles =
+        _metadata?.secondaryMuscleGroups ??
         widget.workoutExercise.secondaryMuscles;
 
     return Scaffold(
@@ -522,8 +533,10 @@ class _ExerciseConfigurationScreenState
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: ValimaiColors.primaryContainer.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(6),
@@ -545,8 +558,10 @@ class _ExerciseConfigurationScreenState
                 onTap: () => _applySetToAll(index),
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: ValimaiColors.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(6),
@@ -583,8 +598,9 @@ class _ExerciseConfigurationScreenState
                       ? ValimaiColors.secondary
                       : ValimaiColors.secondary.withOpacity(0.3),
                 ),
-                onPressed:
-                    _setConfigs.length > 1 ? () => _removeSet(index) : null,
+                onPressed: _setConfigs.length > 1
+                    ? () => _removeSet(index)
+                    : null,
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 padding: EdgeInsets.zero,
                 tooltip: _setConfigs.length > 1
@@ -684,15 +700,14 @@ class _ExerciseConfigurationScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStepperButton(
-                icon: Icons.remove,
-                onTap: onDecrement,
-              ),
+              _buildStepperButton(icon: Icons.remove, onTap: onDecrement),
               GestureDetector(
                 onTap: onTapValue,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: ValimaiColors.surfaceContainerHigh.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(6),
@@ -708,10 +723,7 @@ class _ExerciseConfigurationScreenState
                   ),
                 ),
               ),
-              _buildStepperButton(
-                icon: Icons.add,
-                onTap: onIncrement,
-              ),
+              _buildStepperButton(icon: Icons.add, onTap: onIncrement),
             ],
           ),
         ],
@@ -734,11 +746,7 @@ class _ExerciseConfigurationScreenState
           borderRadius: BorderRadius.circular(6),
         ),
         child: Center(
-          child: Icon(
-            icon,
-            size: 14,
-            color: ValimaiColors.onSurface,
-          ),
+          child: Icon(icon, size: 14, color: ValimaiColors.onSurface),
         ),
       ),
     );
@@ -774,4 +782,3 @@ class _ExerciseConfigurationScreenState
     );
   }
 }
-

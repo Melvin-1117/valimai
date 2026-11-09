@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/daily_workout_controller.dart';
 import '../services/exercise_controller.dart';
 import '../services/profile_controller.dart';
@@ -56,11 +57,14 @@ class _SplashScreenState extends State<SplashScreen> {
         // Subsequent openings on the same day: navigate directly to Home Dashboard
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const MainShell(),
-            transitionsBuilder: (_, animation, __, child) => FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const MainShell(),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) => FadeTransition(opacity: animation, child: child),
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
@@ -68,12 +72,14 @@ class _SplashScreenState extends State<SplashScreen> {
         // First opening today without decision: show Daily Workout Selection
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) =>
+            pageBuilder: (context, animation, secondaryAnimation) =>
                 const DailyWorkoutSelectionScreen(),
-            transitionsBuilder: (_, animation, __, child) => FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            transitionsBuilder: (
+              context,
+              animation,
+              secondaryAnimation,
+              child,
+            ) => FadeTransition(opacity: animation, child: child),
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
@@ -82,11 +88,10 @@ class _SplashScreenState extends State<SplashScreen> {
       // First launch: navigate to Profile Setup
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const ProfileSetupScreen(),
-          transitionsBuilder: (_, animation, __, child) => FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const ProfileSetupScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 300),
         ),
       );
@@ -117,11 +122,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
               child: const Center(
-                child: Icon(
-                  Icons.bolt,
-                  color: Colors.white,
-                  size: 40,
-                ),
+                child: Icon(Icons.bolt, color: Colors.white, size: 40),
               ),
             ),
             const SizedBox(height: 20),
@@ -161,4 +162,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-

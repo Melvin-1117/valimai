@@ -29,11 +29,7 @@ class WeeklyDayAssignment {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'weekday': weekday,
-      'type': type.name,
-      'routineId': routineId,
-    };
+    return {'weekday': weekday, 'type': type.name, 'routineId': routineId};
   }
 
   factory WeeklyDayAssignment.fromJson(Map<String, dynamic> json) {
@@ -58,7 +54,7 @@ class WeeklyDayAssignment {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     if (weekday >= 1 && weekday <= 7) return names[weekday];
     return 'Day $weekday';
@@ -70,4 +66,3 @@ class WeeklyDayAssignment {
     return 'D$weekday';
   }
 }
-

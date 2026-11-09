@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/daily_workout.dart';
 import '../models/routine.dart';
 import '../services/daily_workout_controller.dart';
@@ -40,10 +41,7 @@ class _DailyWorkoutSelectionScreenState
         PageRouteBuilder(
           pageBuilder: (context, anim, secAnim) => const MainShell(),
           transitionsBuilder: (context, animation, secAnim, child) =>
-              FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
+              FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 300),
         ),
       );
@@ -51,7 +49,9 @@ class _DailyWorkoutSelectionScreenState
   }
 
   Future<void> _handleChooseSuggested(
-      WorkoutRoutine routine, bool isScheduled) async {
+    WorkoutRoutine routine,
+    bool isScheduled,
+  ) async {
     await DailyWorkoutController.instance.selectRoutineForToday(
       routine,
       selectionType: isScheduled
@@ -98,7 +98,7 @@ class _DailyWorkoutSelectionScreenState
       'THURSDAY',
       'FRIDAY',
       'SATURDAY',
-      'SUNDAY'
+      'SUNDAY',
     ];
     const months = [
       '',
@@ -113,7 +113,7 @@ class _DailyWorkoutSelectionScreenState
       'SEP',
       'OCT',
       'NOV',
-      'DEC'
+      'DEC',
     ];
 
     return '${weekdays[date.weekday]}, ${months[date.month]} ${date.day}, ${date.year}';
@@ -121,14 +121,17 @@ class _DailyWorkoutSelectionScreenState
 
   @override
   Widget build(BuildContext context) {
-    final suggested =
-        DailyWorkoutController.instance.getSuggestedRoutine(_today);
-    final isScheduled = suggested != null &&
+    final suggested = DailyWorkoutController.instance.getSuggestedRoutine(
+      _today,
+    );
+    final isScheduled =
+        suggested != null &&
         DailyWorkoutController.instance.isScheduledForToday(_today, suggested);
 
     final allActive = RoutineController.instance.activeRoutines;
-    final otherRoutines =
-        allActive.where((r) => r.id != suggested?.id).toList();
+    final otherRoutines = allActive
+        .where((r) => r.id != suggested?.id)
+        .toList();
 
     return Scaffold(
       backgroundColor: ValimaiColors.background,
@@ -137,8 +140,10 @@ class _DailyWorkoutSelectionScreenState
         elevation: 0,
         leading: widget.isModal
             ? IconButton(
-                icon: const Icon(Icons.arrow_back,
-                    color: ValimaiColors.onSurface),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: ValimaiColors.onSurface,
+                ),
                 onPressed: () => Navigator.of(context).pop(),
               )
             : Padding(
@@ -247,7 +252,9 @@ class _DailyWorkoutSelectionScreenState
                         color: ValimaiColors.surfaceContainerHigh,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: ValimaiColors.primaryContainer.withOpacity(0.3),
+                          color: ValimaiColors.primaryContainer.withOpacity(
+                            0.3,
+                          ),
                           width: 1,
                         ),
                       ),
@@ -299,7 +306,9 @@ class _DailyWorkoutSelectionScreenState
                 ),
               ),
               const SizedBox(height: 12),
-              ...otherRoutines.map((routine) => _buildRoutineOptionCard(routine)),
+              ...otherRoutines.map(
+                (routine) => _buildRoutineOptionCard(routine),
+              ),
               const SizedBox(height: 20),
             ],
 
@@ -311,8 +320,11 @@ class _DailyWorkoutSelectionScreenState
             Center(
               child: TextButton.icon(
                 onPressed: _handleSkipForNow,
-                icon: const Icon(Icons.arrow_forward,
-                    size: 14, color: ValimaiColors.secondary),
+                icon: const Icon(
+                  Icons.arrow_forward,
+                  size: 14,
+                  color: ValimaiColors.secondary,
+                ),
                 label: const Text(
                   'Skip for now, take me to Home',
                   style: TextStyle(
@@ -331,10 +343,10 @@ class _DailyWorkoutSelectionScreenState
     );
   }
 
-  Widget _buildSuggestedWorkoutCard(
-      WorkoutRoutine routine, bool isScheduled) {
-    final rotationLetter =
-        String.fromCharCode(65 + (routine.rotationOrder % 26));
+  Widget _buildSuggestedWorkoutCard(WorkoutRoutine routine, bool isScheduled) {
+    final rotationLetter = String.fromCharCode(
+      65 + (routine.rotationOrder % 26),
+    );
 
     return Container(
       decoration: BoxDecoration(
@@ -361,8 +373,10 @@ class _DailyWorkoutSelectionScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: ValimaiColors.primaryContainer.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(6),
@@ -392,8 +406,7 @@ class _DailyWorkoutSelectionScreenState
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: ValimaiColors.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(6),
@@ -443,8 +456,10 @@ class _DailyWorkoutSelectionScreenState
               runSpacing: 6,
               children: routine.targetMuscleGroups.map((muscle) {
                 return Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: ValimaiColors.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(6),
@@ -476,7 +491,9 @@ class _DailyWorkoutSelectionScreenState
                 _buildMetricCol('MOVEMENTS', '${routine.totalExercises} Units'),
                 _buildMetricCol('VOLUME', '${routine.totalSets} Sets'),
                 _buildMetricCol(
-                    'EST. TIME', '~${routine.estimatedDurationMinutes}m'),
+                  'EST. TIME',
+                  '~${routine.estimatedDurationMinutes}m',
+                ),
               ],
             ),
           ),
@@ -514,8 +531,9 @@ class _DailyWorkoutSelectionScreenState
   }
 
   Widget _buildRoutineOptionCard(WorkoutRoutine routine) {
-    final rotationLetter =
-        String.fromCharCode(65 + (routine.rotationOrder % 26));
+    final rotationLetter = String.fromCharCode(
+      65 + (routine.rotationOrder % 26),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -709,4 +727,3 @@ class _DailyWorkoutSelectionScreenState
     );
   }
 }
-

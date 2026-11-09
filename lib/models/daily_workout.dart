@@ -49,7 +49,8 @@ enum DailyWorkoutStatus {
 /// A persistent record of the daily workout decision for a local calendar day
 class DailyWorkout {
   final String id;
-  final String localDate; // YYYY-MM-DD local calendar date (avoids timezone issues)
+  final String
+  localDate; // YYYY-MM-DD local calendar date (avoids timezone issues)
   final String? selectedRoutineId;
   final DailySelectionType selectionType;
   final DailyWorkoutStatus status;
@@ -135,9 +136,11 @@ class DailyWorkout {
 
   factory DailyWorkout.fromJson(Map<String, dynamic> json) {
     return DailyWorkout(
-      id: json['id'] as String? ?? 'dw_${DateTime.now().millisecondsSinceEpoch}',
-      localDate: json['localDate'] as String? ??
-          formatLocalDate(DateTime.now()),
+      id:
+          json['id'] as String? ??
+          'dw_${DateTime.now().millisecondsSinceEpoch}',
+      localDate:
+          json['localDate'] as String? ?? formatLocalDate(DateTime.now()),
       selectedRoutineId: json['selectedRoutineId'] as String?,
       selectionType: _parseSelectionType(json['selectionType'] as String?),
       status: _parseStatus(json['status'] as String?),
@@ -151,8 +154,8 @@ class DailyWorkout {
       targetMuscleGroups: json['targetMuscleGroups'] as String?,
       exerciseCount: (json['exerciseCount'] as num?)?.toInt(),
       totalSets: (json['totalSets'] as num?)?.toInt(),
-      estimatedDurationMinutes:
-          (json['estimatedDurationMinutes'] as num?)?.toInt(),
+      estimatedDurationMinutes: (json['estimatedDurationMinutes'] as num?)
+          ?.toInt(),
     );
   }
 
@@ -172,4 +175,3 @@ class DailyWorkout {
     );
   }
 }
-

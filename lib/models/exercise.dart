@@ -133,13 +133,16 @@ class Exercise {
   }
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
-    final secondaries = (json['secondaryMuscleGroups'] as List<dynamic>?)
+    final secondaries =
+        (json['secondaryMuscleGroups'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         <String>[];
 
     return Exercise(
-      id: json['id'] as String? ?? 'ex_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          json['id'] as String? ??
+          'ex_${DateTime.now().millisecondsSinceEpoch}',
       name: json['name'] as String? ?? 'Unnamed Exercise',
       primaryMuscleGroup:
           json['primaryMuscleGroup'] as String? ?? MuscleGroupCategories.chest,
@@ -152,4 +155,3 @@ class Exercise {
     );
   }
 }
-

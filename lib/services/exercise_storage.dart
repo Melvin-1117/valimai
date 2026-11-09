@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import '../models/exercise.dart';
 import 'storage_helper.dart';
 
@@ -29,8 +30,9 @@ class LocalExerciseStorage implements IExerciseStorage {
         // Merge presets to ensure all canonical presets exist without duplicating
         final presets = getPresetExercises();
         final existingIds = loaded.map((e) => e.id).toSet();
-        final existingNames =
-            loaded.map((e) => e.name.toLowerCase().trim()).toSet();
+        final existingNames = loaded
+            .map((e) => e.name.toLowerCase().trim())
+            .toSet();
 
         bool needsResave = false;
         for (final preset in presets) {
@@ -68,8 +70,9 @@ class LocalExerciseStorage implements IExerciseStorage {
 
     // Prevent duplicates by name
     final nameLower = exercise.name.toLowerCase().trim();
-    final index =
-        list.indexWhere((e) => e.name.toLowerCase().trim() == nameLower);
+    final index = list.indexWhere(
+      (e) => e.name.toLowerCase().trim() == nameLower,
+    );
 
     if (index >= 0) {
       // Update existing
@@ -641,4 +644,3 @@ class LocalExerciseStorage implements IExerciseStorage {
     ];
   }
 }
-

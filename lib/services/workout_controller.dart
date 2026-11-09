@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../models/daily_workout.dart';
 import '../models/weekly_schedule.dart';
 import '../models/workout.dart';
@@ -19,17 +20,25 @@ class WorkoutController extends ChangeNotifier {
   final IWorkoutStorage _storage;
 
   WorkoutController({IWorkoutStorage? storage})
-      : _storage = storage ?? LocalWorkoutStorage() {
+    : _storage = storage ?? LocalWorkoutStorage() {
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
-    _viewingWeekStart = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    _viewingWeekStart = DateTime(
+      now.year,
+      now.month,
+      now.day - (now.weekday - 1),
+    );
   }
 
   WorkoutController._internal({IWorkoutStorage? storage})
-      : _storage = storage ?? LocalWorkoutStorage() {
+    : _storage = storage ?? LocalWorkoutStorage() {
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
-    _viewingWeekStart = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    _viewingWeekStart = DateTime(
+      now.year,
+      now.month,
+      now.day - (now.weekday - 1),
+    );
   }
 
   bool _isInitialized = false;
@@ -166,7 +175,11 @@ class WorkoutController extends ChangeNotifier {
     _selectedDate = norm;
 
     // Check if selected date is in another week; if so, update viewing week
-    final weekStart = DateTime(norm.year, norm.month, norm.day - (norm.weekday - 1));
+    final weekStart = DateTime(
+      norm.year,
+      norm.month,
+      norm.day - (norm.weekday - 1),
+    );
     if (_viewingWeekStart != weekStart) {
       _viewingWeekStart = weekStart;
     }
@@ -190,7 +203,11 @@ class WorkoutController extends ChangeNotifier {
   void jumpToToday() {
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
-    _viewingWeekStart = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    _viewingWeekStart = DateTime(
+      now.year,
+      now.month,
+      now.day - (now.weekday - 1),
+    );
     notifyListeners();
   }
 
@@ -205,16 +222,17 @@ class WorkoutController extends ChangeNotifier {
 
     // 1. PRIORITY 1: Explicit daily selection or date-specific override
     try {
-      final dailyRecord =
-          DailyWorkoutController.instance.getDailyWorkoutForDate(norm);
+      final dailyRecord = DailyWorkoutController.instance
+          .getDailyWorkoutForDate(norm);
       if (dailyRecord != null) {
         final existingSchedule = _schedules[key];
         final customWorkoutOverride = existingSchedule?.customWorkout;
 
         if (dailyRecord.status == DailyWorkoutStatus.completed) {
           final routine = dailyRecord.selectedRoutineId != null
-              ? RoutineController.instance
-                  .getRoutineById(dailyRecord.selectedRoutineId!)
+              ? RoutineController.instance.getRoutineById(
+                  dailyRecord.selectedRoutineId!,
+                )
               : null;
           return DaySchedule(
             date: norm,
@@ -225,18 +243,13 @@ class WorkoutController extends ChangeNotifier {
             completedAt: dailyRecord.completedAt,
           );
         } else if (dailyRecord.isRest) {
-          return DaySchedule(
-            date: norm,
-            type: ScheduledDayType.rest,
-          );
+          return DaySchedule(date: norm, type: ScheduledDayType.rest);
         } else if (dailyRecord.isSkipped) {
-          return DaySchedule(
-            date: norm,
-            type: ScheduledDayType.unassigned,
-          );
+          return DaySchedule(date: norm, type: ScheduledDayType.unassigned);
         } else if (dailyRecord.hasWorkout) {
-          final routine = RoutineController.instance
-              .getRoutineById(dailyRecord.selectedRoutineId!);
+          final routine = RoutineController.instance.getRoutineById(
+            dailyRecord.selectedRoutineId!,
+          );
           return DaySchedule(
             date: norm,
             type: ScheduledDayType.workout,
@@ -259,8 +272,9 @@ class WorkoutController extends ChangeNotifier {
         return schedule;
       }
       if (schedule.workoutId != null) {
-        final routine =
-            RoutineController.instance.getRoutineById(schedule.workoutId!);
+        final routine = RoutineController.instance.getRoutineById(
+          schedule.workoutId!,
+        );
         if (routine != null) {
           return schedule.copyWith(customWorkout: routine.toWorkout());
         }
@@ -271,8 +285,9 @@ class WorkoutController extends ChangeNotifier {
     // 2. PRIORITY 2: Scheduled routine for that weekday (Recurring weekly plan)
     final assignment = getWeeklyAssignment(norm.weekday);
     if (assignment.isWorkout && assignment.routineId != null) {
-      final routine =
-          RoutineController.instance.getRoutineById(assignment.routineId!);
+      final routine = RoutineController.instance.getRoutineById(
+        assignment.routineId!,
+      );
       return DaySchedule(
         date: norm,
         type: ScheduledDayType.workout,
@@ -281,17 +296,11 @@ class WorkoutController extends ChangeNotifier {
         isCompleted: false,
       );
     } else if (assignment.isRest) {
-      return DaySchedule(
-        date: norm,
-        type: ScheduledDayType.rest,
-      );
+      return DaySchedule(date: norm, type: ScheduledDayType.rest);
     }
 
     // 3. PRIORITY 3: Unassigned (no scheduled routine or rest day)
-    return DaySchedule(
-      date: norm,
-      type: ScheduledDayType.unassigned,
-    );
+    return DaySchedule(date: norm, type: ScheduledDayType.unassigned);
   }
 
   /// Retrieve the workout assigned to a given date (either custom, template, or rotation)
@@ -308,8 +317,9 @@ class WorkoutController extends ChangeNotifier {
 
     // Find routine in RoutineController
     if (schedule.workoutId != null) {
-      final routine =
-          RoutineController.instance.getRoutineById(schedule.workoutId!);
+      final routine = RoutineController.instance.getRoutineById(
+        schedule.workoutId!,
+      );
       if (routine != null) {
         return routine.toWorkout();
       }
@@ -322,7 +332,10 @@ class WorkoutController extends ChangeNotifier {
   }
 
   /// Modify/save workout assigned to a specific date
-  Future<bool> updateWorkoutForDate(DateTime date, Workout updatedWorkout) async {
+  Future<bool> updateWorkoutForDate(
+    DateTime date,
+    Workout updatedWorkout,
+  ) async {
     final norm = DateTime(date.year, date.month, date.day);
     final key = DaySchedule.dateKey(norm);
 
@@ -370,11 +383,14 @@ class WorkoutController extends ChangeNotifier {
       final success = await _storage.saveDaySchedule(schedule);
       if (isCompleted) {
         final workoutSnapshot =
-            completedWorkout ?? schedule.customWorkout ?? getWorkoutForDate(norm);
+            completedWorkout ??
+            schedule.customWorkout ??
+            getWorkoutForDate(norm);
         try {
           await WorkoutHistoryController.instance.recordCompletedSession(
             date: norm,
-            routineId: schedule.workoutId ??
+            routineId:
+                schedule.workoutId ??
                 workoutSnapshot?.id ??
                 'workout_${norm.millisecondsSinceEpoch}',
             routineName: workoutSnapshot?.name ?? 'Completed Workout',
@@ -392,8 +408,9 @@ class WorkoutController extends ChangeNotifier {
         } catch (_) {}
       } else {
         try {
-          final sessions =
-              WorkoutHistoryController.instance.getSessionsForDate(norm);
+          final sessions = WorkoutHistoryController.instance.getSessionsForDate(
+            norm,
+          );
           for (final sess in sessions) {
             await WorkoutHistoryController.instance.deleteSession(sess.id);
           }
@@ -419,7 +436,9 @@ class WorkoutController extends ChangeNotifier {
     schedule = schedule.copyWith(
       type: type,
       workoutId: workoutId,
-      customWorkout: type == ScheduledDayType.workout ? schedule.customWorkout : null,
+      customWorkout: type == ScheduledDayType.workout
+          ? schedule.customWorkout
+          : null,
     );
 
     _schedules[key] = schedule;
@@ -521,10 +540,12 @@ class WorkoutController extends ChangeNotifier {
     final updatedMap = Map<String, DaySchedule>.from(_schedules);
     for (final entry in updatedMap.entries) {
       final schedule = entry.value;
-      final isFutureOrUncompletedToday = schedule.date.isAfter(today) ||
+      final isFutureOrUncompletedToday =
+          schedule.date.isAfter(today) ||
           (schedule.date == today && !schedule.isCompleted);
 
-      if (isFutureOrUncompletedToday && schedule.workoutId == deletedRoutineId) {
+      if (isFutureOrUncompletedToday &&
+          schedule.workoutId == deletedRoutineId) {
         _schedules[entry.key] = DaySchedule(
           date: schedule.date,
           type: ScheduledDayType.unassigned,

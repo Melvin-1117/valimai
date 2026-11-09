@@ -33,8 +33,12 @@ class ValimaiColors {
   static const Color outline = Color(0xFFAD8885);
   static const Color outlineVariant = Color(0xFF5D3F3D);
 
-  static const Color cardBorder = Color(0x14FFFFFF); // 1px solid rgba(255, 255, 255, 0.08)
-  static const Color activeBorder = Color(0x59F02D36); // rgba(240, 45, 54, 0.35)
+  static const Color cardBorder = Color(
+    0x14FFFFFF,
+  ); // 1px solid rgba(255, 255, 255, 0.08)
+  static const Color activeBorder = Color(
+    0x59F02D36,
+  ); // rgba(240, 45, 54, 0.35)
 }
 
 class ValimaiTheme {
@@ -131,4 +135,3 @@ class ValimaiTheme {
     );
   }
 }
-

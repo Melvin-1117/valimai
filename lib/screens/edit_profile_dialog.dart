@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/user_profile.dart';
 import '../services/profile_controller.dart';
 import '../theme/app_theme.dart';
@@ -26,10 +27,8 @@ class EditProfileSheet extends StatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => EditProfileSheet(
-        profile: profile,
-        focusBodyInfo: focusBodyInfo,
-      ),
+      builder: (_) =>
+          EditProfileSheet(profile: profile, focusBodyInfo: focusBodyInfo),
     );
   }
 
@@ -59,9 +58,7 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     _heightController = TextEditingController(
       text: widget.profile.height.toInt().toString(),
     );
-    _ageController = TextEditingController(
-      text: widget.profile.age.toString(),
-    );
+    _ageController = TextEditingController(text: widget.profile.age.toString());
     _targetWeightController = TextEditingController(
       text: widget.profile.targetWeight != null
           ? widget.profile.targetWeight!.toStringAsFixed(1)
@@ -96,8 +93,9 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     final age = int.tryParse(_ageController.text.trim());
     final targetWeightText = _targetWeightController.text.trim();
     final bool clearTargetWeight = targetWeightText.isEmpty;
-    final double? targetWeight =
-        clearTargetWeight ? null : double.tryParse(targetWeightText);
+    final double? targetWeight = clearTargetWeight
+        ? null
+        : double.tryParse(targetWeightText);
 
     final success = await ProfileController.instance.updateProfile(
       name: name,
@@ -118,7 +116,8 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
       Navigator.of(context).pop(true);
     } else {
       setState(() {
-        _errorMessage = ProfileController.instance.errorMessage ??
+        _errorMessage =
+            ProfileController.instance.errorMessage ??
             'Failed to update profile. Please verify your entries.';
       });
     }
@@ -167,7 +166,10 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: ValimaiColors.secondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: ValimaiColors.secondary,
+                    ),
                     onPressed: () => Navigator.of(context).pop(false),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -372,8 +374,8 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ValimaiColors.primaryContainer,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor:
-                        ValimaiColors.primaryContainer.withOpacity(0.5),
+                    disabledBackgroundColor: ValimaiColors.primaryContainer
+                        .withOpacity(0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -466,15 +468,17 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
           fontSize: 12,
           color: ValimaiColors.secondary.withOpacity(0.5),
         ),
-        prefixIcon: Icon(
-          icon,
-          size: 18,
-          color: ValimaiColors.secondary,
+        prefixIcon: Icon(icon, size: 18, color: ValimaiColors.secondary),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: ValimaiColors.cardBorder, width: 1),
+          borderSide: const BorderSide(
+            color: ValimaiColors.cardBorder,
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -507,4 +511,3 @@ class _EditProfileSheetState extends State<EditProfileSheet> {
     );
   }
 }
-

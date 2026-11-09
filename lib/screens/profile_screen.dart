@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+
 import '../models/exercise.dart';
 import '../models/user_profile.dart';
+import '../models/workout.dart';
+import '../models/workout_rotation.dart';
 import '../services/profile_analytics_service.dart';
 import '../services/profile_controller.dart';
 import '../services/workout_controller.dart';
@@ -19,6 +22,53 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late DateTime _selectedMonth;
 
+  List<CompletedWorkoutSession>? _lastSessions;
+  Map<String, DaySchedule>? _lastSchedules;
+  DateTime? _lastViewingMonth;
+
+  AllTimeOverviewData? _cachedAllTime;
+  MonthlyAnalyticsData? _cachedMonthlyData;
+  List<MuscleDistributionItem>? _cachedMuscleDistribution;
+  List<PersonalRecordItem>? _cachedPersonalRecords;
+
+  void _updateAnalyticsCacheIfNeeded(
+    List<CompletedWorkoutSession> sessions,
+    Map<String, DaySchedule> schedules,
+  ) {
+    final bool sessionsOrSchedulesChanged =
+        !identical(_lastSessions, sessions) ||
+        !identical(_lastSchedules, schedules) ||
+        _lastSessions?.length != sessions.length ||
+        _cachedAllTime == null;
+
+    if (sessionsOrSchedulesChanged) {
+      _lastSessions = sessions;
+      _lastSchedules = schedules;
+      _cachedAllTime = ProfileAnalyticsService.computeAllTimeOverview(
+        sessions: sessions,
+        schedules: schedules,
+      );
+      _cachedMuscleDistribution =
+          ProfileAnalyticsService.computeMuscleDistribution(sessions: sessions);
+      _cachedPersonalRecords = ProfileAnalyticsService.computePersonalRecords(
+        sessions: sessions,
+      );
+    }
+
+    final bool monthChanged =
+        _lastViewingMonth != _selectedMonth ||
+        sessionsOrSchedulesChanged ||
+        _cachedMonthlyData == null;
+
+    if (monthChanged) {
+      _lastViewingMonth = _selectedMonth;
+      _cachedMonthlyData = ProfileAnalyticsService.computeMonthlyAnalytics(
+        sessions: sessions,
+        viewingMonth: _selectedMonth,
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -26,13 +76,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _selectedMonth = DateTime(now.year, now.month, 1);
   }
 
-  void _openEditProfile(BuildContext context, UserProfile profile,
-      {bool focusBody = false}) {
-    EditProfileSheet.show(
-      context,
-      profile: profile,
-      focusBodyInfo: focusBody,
-    );
+  void _openEditProfile(
+    BuildContext context,
+    UserProfile profile, {
+    bool focusBody = false,
+  }) {
+    EditProfileSheet.show(context, profile: profile, focusBodyInfo: focusBody);
   }
 
   bool get _isCurrentMonth {
@@ -42,16 +91,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _previousMonth() {
     setState(() {
-      _selectedMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month - 1,
+        1,
+      );
     });
   }
 
   void _nextMonth() {
     if (_isCurrentMonth) return;
     setState(() {
-      _selectedMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + 1,
+        1,
+      );
     });
   }
 
@@ -69,37 +124,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     return '${months[date.month]} ${date.year}';
-  }
-
-  String _formatShortDate(DateTime date) {
-    const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    return '${months[date.month]} ${date.day}, ${date.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ValimaiColors.background,
-      appBar: const ValimaiAppBar(
-        title: 'Profile',
-      ),
+      appBar: const ValimaiAppBar(title: 'Profile'),
       body: ListenableBuilder(
         listenable: Listenable.merge([
           ProfileController.instance,
@@ -149,24 +183,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final sessions = WorkoutHistoryController.instance.allSessions;
           final schedules = WorkoutController.instance.schedules;
 
-          final allTime = ProfileAnalyticsService.computeAllTimeOverview(
-            sessions: sessions,
-            schedules: schedules,
-          );
-
-          final monthlyData = ProfileAnalyticsService.computeMonthlyAnalytics(
-            sessions: sessions,
-            viewingMonth: _selectedMonth,
-          );
-
-          final muscleDistribution =
-              ProfileAnalyticsService.computeMuscleDistribution(
-            sessions: sessions,
-          );
-
-          final personalRecords = ProfileAnalyticsService.computePersonalRecords(
-            sessions: sessions,
-          );
+          _updateAnalyticsCacheIfNeeded(sessions, schedules);
+          final allTime = _cachedAllTime!;
+          final monthlyData = _cachedMonthlyData!;
+          final muscleDistribution = _cachedMuscleDistribution!;
+          final personalRecords = _cachedPersonalRecords!;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -268,17 +289,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     color: ValimaiColors.primaryContainer,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: ValimaiColors.surface,
-                      width: 2,
-                    ),
+                    border: Border.all(color: ValimaiColors.surface, width: 2),
                   ),
                   child: const Center(
-                    child: Icon(
-                      Icons.bolt,
-                      color: Colors.white,
-                      size: 14,
-                    ),
+                    child: Icon(Icons.bolt, color: Colors.white, size: 14),
                   ),
                 ),
               ),
@@ -335,7 +349,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // SECTION B – BODY INFORMATION
   // ==========================================
   Widget _buildBodyInformationSection(
-      BuildContext context, UserProfile profile) {
+    BuildContext context,
+    UserProfile profile,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -579,7 +595,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: ValimaiColors.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: ValimaiColors.cardBorder, width: 1),
+                          color: ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
                       ),
                       child: const Center(
                         child: Icon(
@@ -602,7 +620,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             : ValimaiColors.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: ValimaiColors.cardBorder, width: 1),
+                          color: ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
                       ),
                       child: Center(
                         child: Icon(
@@ -647,10 +667,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 20),
 
           // Divider
-          Container(
-            height: 1,
-            color: ValimaiColors.cardBorder,
-          ),
+          Container(height: 1, color: ValimaiColors.cardBorder),
           const SizedBox(height: 16),
 
           // Weekly Frequency Subtitle
@@ -744,8 +761,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: items.map((item) {
-        final heightRatio =
-            maxCount > 0 ? (item.workoutCount / maxCount).clamp(0.0, 1.0) : 0.0;
+        final heightRatio = maxCount > 0
+            ? (item.workoutCount / maxCount).clamp(0.0, 1.0)
+            : 0.0;
         final barHeight = item.workoutCount > 0 ? (heightRatio * 70) + 12 : 6.0;
 
         return Expanded(
@@ -1035,7 +1053,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: ValimaiColors.primaryContainer.withOpacity(0.18),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: ValimaiColors.primaryContainer.withOpacity(0.4),
+                          color: ValimaiColors.primaryContainer.withOpacity(
+                            0.4,
+                          ),
                           width: 1,
                         ),
                       ),
@@ -1076,7 +1096,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: ValimaiColors.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(6),
@@ -1198,11 +1220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(
-                icon,
-                size: 16,
-                color: accentColor,
-              ),
+              Icon(icon, size: 16, color: accentColor),
             ],
           ),
           const SizedBox(height: 10),

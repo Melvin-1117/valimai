@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import '../models/weekly_schedule.dart';
 import '../models/workout.dart';
 import 'storage_helper.dart';
@@ -119,8 +120,9 @@ class LocalWorkoutStorage implements IWorkoutStorage {
         jsonMap.forEach((key, val) {
           final weekday = int.tryParse(key);
           if (weekday != null) {
-            result[weekday] =
-                WeeklyDayAssignment.fromJson(val as Map<String, dynamic>);
+            result[weekday] = WeeklyDayAssignment.fromJson(
+              val as Map<String, dynamic>,
+            );
           }
         });
         _cachedWeeklyPlan = result;
@@ -158,10 +160,7 @@ class LocalWorkoutStorage implements IWorkoutStorage {
         type: ScheduledDayType.workout,
         routineId: 'routine_b_pull',
       ),
-      3: const WeeklyDayAssignment(
-        weekday: 3,
-        type: ScheduledDayType.rest,
-      ),
+      3: const WeeklyDayAssignment(weekday: 3, type: ScheduledDayType.rest),
       4: const WeeklyDayAssignment(
         weekday: 4,
         type: ScheduledDayType.workout,
@@ -177,10 +176,7 @@ class LocalWorkoutStorage implements IWorkoutStorage {
         type: ScheduledDayType.workout,
         routineId: 'routine_b_pull',
       ),
-      7: const WeeklyDayAssignment(
-        weekday: 7,
-        type: ScheduledDayType.rest,
-      ),
+      7: const WeeklyDayAssignment(weekday: 7, type: ScheduledDayType.rest),
     };
   }
 
@@ -190,8 +186,7 @@ class LocalWorkoutStorage implements IWorkoutStorage {
       'workout_push': const Workout(
         id: 'workout_push',
         name: 'Chest & Triceps Hypertrophy',
-        targetMuscleGroups:
-            'Pectorals (Sternocostal & Clavicular), Anterior Deltoids, Lateral Triceps',
+        targetMuscleGroups: 'Pectorals (Sternocostal & Clavicular), Anterior Deltoids, Lateral Triceps',
         estimatedDurationMinutes: 52,
         exercises: [
           WorkoutExercise(
@@ -416,7 +411,11 @@ class LocalWorkoutStorage implements IWorkoutStorage {
       {'dayOffset': 1, 'type': ScheduledDayType.workout, 'id': 'workout_pull'},
       {'dayOffset': 2, 'type': ScheduledDayType.rest, 'id': null},
       {'dayOffset': 3, 'type': ScheduledDayType.workout, 'id': 'workout_legs'},
-      {'dayOffset': 4, 'type': ScheduledDayType.workout, 'id': 'workout_shoulders'},
+      {
+        'dayOffset': 4,
+        'type': ScheduledDayType.workout,
+        'id': 'workout_shoulders',
+      },
       {'dayOffset': 5, 'type': ScheduledDayType.workout, 'id': 'workout_core'},
       {'dayOffset': 6, 'type': ScheduledDayType.rest, 'id': null},
     ];
@@ -438,4 +437,3 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     return map;
   }
 }
-

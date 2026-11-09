@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../models/routine.dart';
 import '../models/workout.dart';
 import 'routine_storage.dart';
@@ -16,10 +17,10 @@ class RoutineController extends ChangeNotifier {
   final IRoutineStorage _storage;
 
   RoutineController({IRoutineStorage? storage})
-      : _storage = storage ?? LocalRoutineStorage();
+    : _storage = storage ?? LocalRoutineStorage();
 
   RoutineController._internal({IRoutineStorage? storage})
-      : _storage = storage ?? LocalRoutineStorage();
+    : _storage = storage ?? LocalRoutineStorage();
 
   bool _isInitialized = false;
   bool _isLoading = false;
@@ -267,13 +268,14 @@ class RoutineController extends ChangeNotifier {
     return _routines.where((r) {
       final nameMatches = r.name.toLowerCase().contains(q);
       final descMatches = r.description.toLowerCase().contains(q);
-      final muscleMatches =
-          r.targetMuscleGroups.any((m) => m.toLowerCase().contains(q));
-      final exerciseMatches =
-          r.exercises.any((e) => e.name.toLowerCase().contains(q));
+      final muscleMatches = r.targetMuscleGroups.any(
+        (m) => m.toLowerCase().contains(q),
+      );
+      final exerciseMatches = r.exercises.any(
+        (e) => e.name.toLowerCase().contains(q),
+      );
 
       return nameMatches || descMatches || muscleMatches || exerciseMatches;
     }).toList();
   }
 }
-

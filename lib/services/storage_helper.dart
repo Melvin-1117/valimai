@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 /// Centralized utility for resolving writable local storage across Windows, Android, iOS, and Linux.
@@ -20,7 +21,8 @@ class StorageHelper {
 
     // 1. Windows: Try LOCALAPPDATA or APPDATA
     try {
-      final localAppData = Platform.environment['LOCALAPPDATA'] ??
+      final localAppData =
+          Platform.environment['LOCALAPPDATA'] ??
           Platform.environment['APPDATA'];
       if (localAppData != null && localAppData.isNotEmpty) {
         final dir = Directory('$localAppData/Valimai');
@@ -62,25 +64,41 @@ class StorageHelper {
     return File('${dir.path}/$fileName');
   }
 
-  /// Safe write string that falls back to system temp if primary directory encounters permission errors
+  /// Safe write string with atomic staging (.tmp file) and buffer flushing to prevent data corruption
   static Future<bool> safeWriteString(String fileName, String content) async {
     try {
       final file = await getStorageFile(fileName);
-      await file.writeAsString(content);
+      final tempFile = File('${file.path}.tmp');
+      await tempFile.writeAsString(content, flush: true);
+      if (await file.exists()) {
+        await file.delete();
+      }
+      await tempFile.rename(file.path);
       return true;
     } catch (e) {
-      debugPrint('Primary write failed for $fileName: $e');
+      debugPrint('Primary atomic write failed for $fileName: $e');
+      // Direct write fallback to primary location
       try {
-        final fallbackDir = Directory('${Directory.systemTemp.path}/valimai_data');
-        if (!await fallbackDir.exists()) {
-          await fallbackDir.create(recursive: true);
-        }
-        final fallbackFile = File('${fallbackDir.path}/$fileName');
-        await fallbackFile.writeAsString(content);
+        final file = await getStorageFile(fileName);
+        await file.writeAsString(content, flush: true);
         return true;
-      } catch (fallbackError) {
-        debugPrint('Fallback write failed for $fileName: $fallbackError');
-        return false;
+      } catch (directError) {
+        debugPrint('Primary direct write failed for $fileName: $directError');
+        // Secondary fallback to system temp directory
+        try {
+          final fallbackDir = Directory(
+            '${Directory.systemTemp.path}/valimai_data',
+          );
+          if (!await fallbackDir.exists()) {
+            await fallbackDir.create(recursive: true);
+          }
+          final fallbackFile = File('${fallbackDir.path}/$fileName');
+          await fallbackFile.writeAsString(content, flush: true);
+          return true;
+        } catch (fallbackError) {
+          debugPrint('Fallback write failed for $fileName: $fallbackError');
+          return false;
+        }
       }
     }
   }
@@ -96,7 +114,9 @@ class StorageHelper {
     } catch (_) {}
 
     try {
-      final fallbackFile = File('${Directory.systemTemp.path}/valimai_data/$fileName');
+      final fallbackFile = File(
+        '${Directory.systemTemp.path}/valimai_data/$fileName',
+      );
       if (await fallbackFile.exists()) {
         final content = await fallbackFile.readAsString();
         if (content.trim().isNotEmpty) return content;
@@ -118,8 +138,9 @@ class StorageHelper {
     } catch (_) {}
 
     try {
-      final fallbackFile =
-          File('${Directory.systemTemp.path}/valimai_data/$fileName');
+      final fallbackFile = File(
+        '${Directory.systemTemp.path}/valimai_data/$fileName',
+      );
       if (await fallbackFile.exists()) {
         await fallbackFile.delete();
         deleted = true;
@@ -139,8 +160,9 @@ class StorageHelper {
         return; // Already cleaned, do not touch user data!
       }
 
-      final fallbackFile =
-          File('${Directory.systemTemp.path}/valimai_data/$_cleanV1Flag');
+      final fallbackFile = File(
+        '${Directory.systemTemp.path}/valimai_data/$_cleanV1Flag',
+      );
       if (await fallbackFile.exists()) {
         return;
       }
@@ -166,4 +188,3 @@ class StorageHelper {
     }
   }
 }
-

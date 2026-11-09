@@ -139,7 +139,13 @@ class ProfileAnalyticsService {
     final today = DateTime(now.year, now.month, now.day);
 
     final completedDates = sessions
-        .map((s) => DateTime(s.completedAt.year, s.completedAt.month, s.completedAt.day))
+        .map(
+          (s) => DateTime(
+            s.completedAt.year,
+            s.completedAt.month,
+            s.completedAt.day,
+          ),
+        )
         .toSet();
 
     final isTodayCompleted = completedDates.contains(today);
@@ -164,8 +170,12 @@ class ProfileAnalyticsService {
       } else {
         final dateKey = DaySchedule.dateKey(checkDate);
         final schedule = schedules[dateKey];
-        final isRest = schedule?.type == ScheduledDayType.rest ||
-            DailyWorkoutController.instance.getDailyWorkoutForDate(checkDate)?.isRest == true;
+        final isRest =
+            schedule?.type == ScheduledDayType.rest ||
+            DailyWorkoutController.instance
+                    .getDailyWorkoutForDate(checkDate)
+                    ?.isRest ==
+                true;
 
         if (isRest) {
           // Explicit Rest Day preserves continuity without incrementing streak
@@ -250,7 +260,7 @@ class ProfileAnalyticsService {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     final monthName = monthShorts[month];
 
@@ -272,13 +282,15 @@ class ProfileAnalyticsService {
 
       // Count sessions strictly falling within this calendar week window
       final count = monthSessions.where((s) {
-        return !s.completedAt.isBefore(weekStart) && !s.completedAt.isAfter(weekEnd);
+        return !s.completedAt.isBefore(weekStart) &&
+            !s.completedAt.isAfter(weekEnd);
       }).length;
 
       items.add(
         WeeklyFrequencyItem(
           weekLabel: 'W$weekIndex',
-          dateRangeLabel: '${weekStart.day.toString().padLeft(2, '0')}-${endDay.toString().padLeft(2, '0')} $monthName',
+          dateRangeLabel:
+              '${weekStart.day.toString().padLeft(2, '0')}-${endDay.toString().padLeft(2, '0')} $monthName',
           workoutCount: count,
         ),
       );
@@ -346,25 +358,92 @@ class ProfileAnalyticsService {
     return list;
   }
 
+  static final Map<String, String> _knownAliases = {
+    'chest': MuscleGroupCategories.chest,
+    'pec': MuscleGroupCategories.chest,
+    'pecs': MuscleGroupCategories.chest,
+    'pectorals': MuscleGroupCategories.chest,
+    'back': MuscleGroupCategories.back,
+    'lat': MuscleGroupCategories.back,
+    'lats': MuscleGroupCategories.back,
+    'latissimus dorsi': MuscleGroupCategories.back,
+    'trap': MuscleGroupCategories.back,
+    'traps': MuscleGroupCategories.back,
+    'rhomboids': MuscleGroupCategories.back,
+    'shoulders': MuscleGroupCategories.shoulders,
+    'shoulder': MuscleGroupCategories.shoulders,
+    'delt': MuscleGroupCategories.shoulders,
+    'delts': MuscleGroupCategories.shoulders,
+    'deltoids': MuscleGroupCategories.shoulders,
+    'biceps': MuscleGroupCategories.biceps,
+    'bicep': MuscleGroupCategories.biceps,
+    'triceps': MuscleGroupCategories.triceps,
+    'tricep': MuscleGroupCategories.triceps,
+    'abs': MuscleGroupCategories.abs,
+    'ab': MuscleGroupCategories.abs,
+    'core': MuscleGroupCategories.abs,
+    'abdominals': MuscleGroupCategories.abs,
+    'quadriceps': MuscleGroupCategories.quadriceps,
+    'quad': MuscleGroupCategories.quadriceps,
+    'quads': MuscleGroupCategories.quadriceps,
+    'hamstrings': MuscleGroupCategories.hamstrings,
+    'hamstring': MuscleGroupCategories.hamstrings,
+    'glutes': MuscleGroupCategories.glutes,
+    'glute': MuscleGroupCategories.glutes,
+    'calves': MuscleGroupCategories.calves,
+    'calf': MuscleGroupCategories.calves,
+    'forearms': MuscleGroupCategories.forearms,
+    'forearm': MuscleGroupCategories.forearms,
+  };
+
   static String? _matchMuscleCategory(String raw) {
     final lower = raw.toLowerCase().trim();
+    if (_knownAliases.containsKey(lower)) {
+      return _knownAliases[lower];
+    }
     for (final cat in MuscleGroupCategories.all) {
       final catLower = cat.toLowerCase();
-      if (catLower == lower || lower.contains(catLower) || catLower.contains(lower)) {
+      if (catLower == lower ||
+          lower.contains(catLower) ||
+          catLower.contains(lower)) {
         return cat;
       }
     }
-    // Check aliases
-    if (lower.contains('pec') || lower.contains('chest')) return MuscleGroupCategories.chest;
-    if (lower.contains('lat') || lower.contains('back') || lower.contains('trap')) return MuscleGroupCategories.back;
-    if (lower.contains('delt') || lower.contains('shoulder')) return MuscleGroupCategories.shoulders;
-    if (lower.contains('arm') && lower.contains('bi')) return MuscleGroupCategories.biceps;
-    if (lower.contains('arm') && lower.contains('tri')) return MuscleGroupCategories.triceps;
-    if (lower.contains('core') || lower.contains('ab')) return MuscleGroupCategories.abs;
-    if (lower.contains('quad') || lower.contains('thigh') || lower.contains('leg')) return MuscleGroupCategories.quadriceps;
-    if (lower.contains('ham')) return MuscleGroupCategories.hamstrings;
-    if (lower.contains('glute') || lower.contains('butt')) return MuscleGroupCategories.glutes;
-    if (lower.contains('calf') || lower.contains('calves')) return MuscleGroupCategories.calves;
+    // Check substring aliases
+    if (lower.contains('pec') || lower.contains('chest')) {
+      return MuscleGroupCategories.chest;
+    }
+    if (lower.contains('lat') ||
+        lower.contains('back') ||
+        lower.contains('trap')) {
+      return MuscleGroupCategories.back;
+    }
+    if (lower.contains('delt') || lower.contains('shoulder')) {
+      return MuscleGroupCategories.shoulders;
+    }
+    if (lower.contains('arm') && lower.contains('bi')) {
+      return MuscleGroupCategories.biceps;
+    }
+    if (lower.contains('arm') && lower.contains('tri')) {
+      return MuscleGroupCategories.triceps;
+    }
+    if (lower.contains('core') || lower.contains('ab')) {
+      return MuscleGroupCategories.abs;
+    }
+    if (lower.contains('quad') ||
+        lower.contains('thigh') ||
+        lower.contains('leg')) {
+      return MuscleGroupCategories.quadriceps;
+    }
+    if (lower.contains('ham')) {
+      return MuscleGroupCategories.hamstrings;
+    }
+    if (lower.contains('glute') || lower.contains('butt')) {
+      return MuscleGroupCategories.glutes;
+    }
+    if (lower.contains('calf') || lower.contains('calves')) {
+      return MuscleGroupCategories.calves;
+    }
 
     return null;
   }
@@ -392,12 +471,14 @@ class ProfileAnalyticsService {
 
           if (existing == null ||
               s.weightKg > existing.maxWeightKg ||
-              (s.weightKg == existing.maxWeightKg && s.reps > existing.repsAtMaxWeight)) {
+              (s.weightKg == existing.maxWeightKg &&
+                  s.reps > existing.repsAtMaxWeight)) {
             recordsMap[name] = PersonalRecordItem(
               exerciseName: name,
               maxWeightKg: s.weightKg,
               repsAtMaxWeight: s.reps,
-              bestSetVolumeKg: existing != null && existing.bestSetVolumeKg > volume
+              bestSetVolumeKg:
+                  existing != null && existing.bestSetVolumeKg > volume
                   ? existing.bestSetVolumeKg
                   : volume,
               date: sess.completedAt,

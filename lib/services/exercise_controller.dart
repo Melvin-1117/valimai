@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../models/exercise.dart';
 import 'exercise_storage.dart';
 
@@ -14,10 +15,10 @@ class ExerciseController extends ChangeNotifier {
   final IExerciseStorage _storage;
 
   ExerciseController({IExerciseStorage? storage})
-      : _storage = storage ?? LocalExerciseStorage();
+    : _storage = storage ?? LocalExerciseStorage();
 
   ExerciseController._internal({IExerciseStorage? storage})
-      : _storage = storage ?? LocalExerciseStorage();
+    : _storage = storage ?? LocalExerciseStorage();
 
   bool _isInitialized = false;
   bool _isLoading = false;
@@ -58,8 +59,9 @@ class ExerciseController extends ChangeNotifier {
       if (ex.primaryMuscleGroup.toLowerCase().trim() == catLower) {
         return true;
       }
-      return ex.secondaryMuscleGroups
-          .any((s) => s.toLowerCase().trim() == catLower);
+      return ex.secondaryMuscleGroups.any(
+        (s) => s.toLowerCase().trim() == catLower,
+      );
     }).toList();
   }
 
@@ -68,8 +70,9 @@ class ExerciseController extends ChangeNotifier {
     final catLower = category.toLowerCase().trim();
     return _exercises.where((ex) {
       return ex.primaryMuscleGroup.toLowerCase().trim() == catLower ||
-          ex.secondaryMuscleGroups
-              .any((s) => s.toLowerCase().trim() == catLower);
+          ex.secondaryMuscleGroups.any(
+            (s) => s.toLowerCase().trim() == catLower,
+          );
     }).length;
   }
 
@@ -86,8 +89,9 @@ class ExerciseController extends ChangeNotifier {
       final nameMatches = ex.name.toLowerCase().contains(q);
       final primaryMatches = ex.primaryMuscleGroup.toLowerCase().contains(q);
       final equipmentMatches = ex.equipment.toLowerCase().contains(q);
-      final secondaryMatches = ex.secondaryMuscleGroups
-          .any((sec) => sec.toLowerCase().contains(q));
+      final secondaryMatches = ex.secondaryMuscleGroups.any(
+        (sec) => sec.toLowerCase().contains(q),
+      );
 
       return nameMatches ||
           primaryMatches ||
@@ -109,9 +113,7 @@ class ExerciseController extends ChangeNotifier {
   Exercise? getExerciseByName(String name) {
     final lower = name.toLowerCase().trim();
     try {
-      return _exercises.firstWhere(
-        (e) => e.name.toLowerCase().trim() == lower,
-      );
+      return _exercises.firstWhere((e) => e.name.toLowerCase().trim() == lower);
     } catch (_) {
       return null;
     }
@@ -135,8 +137,9 @@ class ExerciseController extends ChangeNotifier {
 
     // Check duplicate
     final nameLower = trimmedName.toLowerCase();
-    final isDuplicate =
-        _exercises.any((e) => e.name.toLowerCase().trim() == nameLower);
+    final isDuplicate = _exercises.any(
+      (e) => e.name.toLowerCase().trim() == nameLower,
+    );
     if (isDuplicate) {
       _lastError = 'An exercise named "$trimmedName" already exists.';
       notifyListeners();
@@ -168,4 +171,3 @@ class ExerciseController extends ChangeNotifier {
     }
   }
 }
-

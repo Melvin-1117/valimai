@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/workout_rotation.dart';
 import '../services/workout_history_controller.dart';
 import '../theme/app_theme.dart';
@@ -61,7 +62,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
@@ -74,7 +75,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     const months = [
       'Jan',
@@ -88,7 +89,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -122,7 +123,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showMultipleSessionsBottomSheet(
-      DateTime date, List<CompletedWorkoutSession> sessions) {
+    DateTime date,
+    List<CompletedWorkoutSession> sessions,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: ValimaiColors.surface,
@@ -166,7 +169,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: ValimaiColors.secondary),
+                      icon: const Icon(
+                        Icons.close,
+                        color: ValimaiColors.secondary,
+                      ),
                       onPressed: () => Navigator.of(ctx).pop(),
                     ),
                   ],
@@ -178,12 +184,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     decoration: BoxDecoration(
                       color: ValimaiColors.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(14),
-                      border:
-                          Border.all(color: ValimaiColors.cardBorder, width: 1),
+                      border: Border.all(
+                        color: ValimaiColors.cardBorder,
+                        width: 1,
+                      ),
                     ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
                       title: Text(
                         sess.routineName ?? 'Completed Workout',
                         style: const TextStyle(
@@ -233,10 +243,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
         return Scaffold(
           backgroundColor: ValimaiColors.background,
-          appBar: const ValimaiAppBar(
-            title: 'History',
-            showSearch: false,
-          ),
+          appBar: const ValimaiAppBar(title: 'History', showSearch: false),
           body: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Column(
@@ -270,8 +277,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Widget _buildMonthlyCalendarCard() {
     final now = DateTime.now();
-    final isViewingCurrentMonth = _viewingMonth.year == now.year &&
-        _viewingMonth.month == now.month;
+    final isViewingCurrentMonth =
+        _viewingMonth.year == now.year && _viewingMonth.month == now.month;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -303,10 +310,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       onTap: _goToCurrentMonth,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color:
-                              ValimaiColors.primaryContainer.withOpacity(0.15),
+                          color: ValimaiColors.primaryContainer.withOpacity(
+                            0.15,
+                          ),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
@@ -327,23 +337,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left,
-                        size: 20, color: ValimaiColors.onSurface),
+                    icon: const Icon(
+                      Icons.chevron_left,
+                      size: 20,
+                      color: ValimaiColors.onSurface,
+                    ),
                     onPressed: _previousMonth,
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right,
-                        size: 20, color: ValimaiColors.onSurface),
+                    icon: const Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: ValimaiColors.onSurface,
+                    ),
                     onPressed: _nextMonth,
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ],
               ),
@@ -441,10 +461,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final daysInMonth =
-        DateTime(_viewingMonth.year, _viewingMonth.month + 1, 0).day;
-    final firstWeekday =
-        DateTime(_viewingMonth.year, _viewingMonth.month, 1).weekday; // 1 = Mon
+    final daysInMonth = DateTime(
+      _viewingMonth.year,
+      _viewingMonth.month + 1,
+      0,
+    ).day;
+    final firstWeekday = DateTime(
+      _viewingMonth.year,
+      _viewingMonth.month,
+      1,
+    ).weekday; // 1 = Mon
 
     // Leading padding count (days from previous month to align Monday)
     final leadingSpaces = firstWeekday - 1;
@@ -466,22 +492,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
               }
 
               final cellDate = DateTime(
-                  _viewingMonth.year, _viewingMonth.month, dayNumber);
-              final isToday = cellDate.year == today.year &&
+                _viewingMonth.year,
+                _viewingMonth.month,
+                dayNumber,
+              );
+              final isToday =
+                  cellDate.year == today.year &&
                   cellDate.month == today.month &&
                   cellDate.day == today.day;
-              final isSelected = cellDate.year == _selectedDate.year &&
+              final isSelected =
+                  cellDate.year == _selectedDate.year &&
                   cellDate.month == _selectedDate.month &&
                   cellDate.day == _selectedDate.day;
               final isFuture = cellDate.isAfter(today);
 
               // History states (future dates NEVER show activity)
-              final bool hasCompleted = !isFuture &&
+              final bool hasCompleted =
+                  !isFuture &&
                   _historyController.hasCompletedWorkoutOnDate(cellDate);
-              final bool isRest = !isFuture &&
+              final bool isRest =
+                  !isFuture &&
                   !hasCompleted &&
                   _historyController.isRestDayOnDate(cellDate);
-              final bool isSkipped = !isFuture &&
+              final bool isSkipped =
+                  !isFuture &&
                   !hasCompleted &&
                   !isRest &&
                   _historyController.isSkippedOnDate(cellDate);
@@ -496,13 +530,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     color: isSelected
                         ? ValimaiColors.primaryContainer
                         : (isToday
-                            ? ValimaiColors.primaryContainer.withOpacity(0.12)
-                            : Colors.transparent),
+                              ? ValimaiColors.primaryContainer.withOpacity(0.12)
+                              : Colors.transparent),
                     borderRadius: BorderRadius.circular(10),
                     border: isToday && !isSelected
                         ? Border.all(
-                            color:
-                                ValimaiColors.primaryContainer.withOpacity(0.5),
+                            color: ValimaiColors.primaryContainer.withOpacity(
+                              0.5,
+                            ),
                             width: 1,
                           )
                         : null,
@@ -515,13 +550,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         style: TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 12,
-                          fontWeight:
-                              isSelected || isToday ? FontWeight.w800 : FontWeight.w600,
+                          fontWeight: isSelected || isToday
+                              ? FontWeight.w800
+                              : FontWeight.w600,
                           color: isSelected
                               ? Colors.white
                               : (isFuture
-                                  ? ValimaiColors.secondary.withOpacity(0.35)
-                                  : ValimaiColors.onSurface),
+                                    ? ValimaiColors.secondary.withOpacity(0.35)
+                                    : ValimaiColors.onSurface),
                         ),
                       ),
                       const SizedBox(height: 3),
@@ -540,29 +576,31 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ),
                               )
                             : (isRest
-                                ? Container(
-                                    width: 4,
-                                    height: 4,
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? Colors.white.withOpacity(0.8)
-                                          : ValimaiColors.secondary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  )
-                                : (isSkipped
-                                    ? Container(
-                                        width: 6,
-                                        height: 2,
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? Colors.white.withOpacity(0.8)
-                                              : const Color(0xFFE5A93B),
-                                          borderRadius:
-                                              BorderRadius.circular(1),
-                                        ),
-                                      )
-                                    : null)),
+                                  ? Container(
+                                      width: 4,
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? Colors.white.withOpacity(0.8)
+                                            : ValimaiColors.secondary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    )
+                                  : (isSkipped
+                                        ? Container(
+                                            width: 6,
+                                            height: 2,
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? Colors.white.withOpacity(
+                                                      0.8,
+                                                    )
+                                                  : const Color(0xFFE5A93B),
+                                              borderRadius:
+                                                  BorderRadius.circular(1),
+                                            ),
+                                          )
+                                        : null)),
                       ),
                     ],
                   ),
@@ -579,7 +617,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final isFuture = _selectedDate.isAfter(today);
-    final hasCompleted = !isFuture &&
+    final hasCompleted =
+        !isFuture &&
         _historyController.hasCompletedWorkoutOnDate(_selectedDate);
 
     // If completed, user will either be navigated on tap or can tap the session card below
@@ -863,8 +902,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ],
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: ValimaiColors.primaryContainer.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),

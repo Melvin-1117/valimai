@@ -38,7 +38,8 @@ class RoutineExercise {
     ];
   }
 
-  int get setsCount => setsConfiguration.isNotEmpty ? setsConfiguration.length : 3;
+  int get setsCount =>
+      setsConfiguration.isNotEmpty ? setsConfiguration.length : 3;
 
   RoutineExercise copyWith({
     String? id,
@@ -118,18 +119,22 @@ class RoutineExercise {
   }
 
   factory RoutineExercise.fromJson(Map<String, dynamic> json) {
-    final setsList = (json['setsConfiguration'] as List<dynamic>?)
+    final setsList =
+        (json['setsConfiguration'] as List<dynamic>?)
             ?.map((e) => ExerciseSetConfig.fromJson(e as Map<String, dynamic>))
             .toList() ??
         <ExerciseSetConfig>[];
 
-    final secondaries = (json['secondaryMuscles'] as List<dynamic>?)
+    final secondaries =
+        (json['secondaryMuscles'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         <String>[];
 
     return RoutineExercise(
-      id: json['id'] as String? ?? 're_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          json['id'] as String? ??
+          're_${DateTime.now().millisecondsSinceEpoch}',
       routineId: json['routineId'] as String? ?? '',
       exerciseId: json['exerciseId'] as String? ?? '',
       name: json['name'] as String? ?? 'Exercise',
@@ -168,8 +173,7 @@ class WorkoutRoutine {
   });
 
   /// Total number of working sets across all exercises
-  int get totalSets =>
-      exercises.fold<int>(0, (sum, ex) => sum + ex.setsCount);
+  int get totalSets => exercises.fold<int>(0, (sum, ex) => sum + ex.setsCount);
 
   /// Total number of exercises
   int get totalExercises => exercises.length;
@@ -258,18 +262,22 @@ class WorkoutRoutine {
   }
 
   factory WorkoutRoutine.fromJson(Map<String, dynamic> json) {
-    final exerciseList = (json['exercises'] as List<dynamic>?)
+    final exerciseList =
+        (json['exercises'] as List<dynamic>?)
             ?.map((e) => RoutineExercise.fromJson(e as Map<String, dynamic>))
             .toList() ??
         <RoutineExercise>[];
 
-    final muscles = (json['targetMuscleGroups'] as List<dynamic>?)
+    final muscles =
+        (json['targetMuscleGroups'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         <String>[];
 
     return WorkoutRoutine(
-      id: json['id'] as String? ?? 'routine_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          json['id'] as String? ??
+          'routine_${DateTime.now().millisecondsSinceEpoch}',
       name: json['name'] as String? ?? 'Workout Routine',
       description: json['description'] as String? ?? '',
       targetMuscleGroups: muscles,

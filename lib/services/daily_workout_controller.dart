@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../models/daily_workout.dart';
 import '../models/routine.dart';
 import '../models/workout.dart';
@@ -8,8 +9,7 @@ import 'workout_controller.dart';
 import 'workout_rotation_engine.dart';
 
 class DailyWorkoutController extends ChangeNotifier {
-  static DailyWorkoutController _instance =
-      DailyWorkoutController._internal();
+  static DailyWorkoutController _instance = DailyWorkoutController._internal();
   static DailyWorkoutController get instance => _instance;
 
   @visibleForTesting
@@ -20,10 +20,10 @@ class DailyWorkoutController extends ChangeNotifier {
   final IDailyWorkoutStorage _storage;
 
   DailyWorkoutController({IDailyWorkoutStorage? storage})
-      : _storage = storage ?? LocalDailyWorkoutStorage();
+    : _storage = storage ?? LocalDailyWorkoutStorage();
 
   DailyWorkoutController._internal({IDailyWorkoutStorage? storage})
-      : _storage = storage ?? LocalDailyWorkoutStorage();
+    : _storage = storage ?? LocalDailyWorkoutStorage();
 
   bool _isInitialized = false;
   bool _isLoading = false;
@@ -88,24 +88,26 @@ class DailyWorkoutController extends ChangeNotifier {
     final now = completedAt ?? DateTime.now();
 
     DailyWorkout? existing = _records[localDate];
-    final effectiveRoutineId = routineId ??
+    final effectiveRoutineId =
+        routineId ??
         existing?.selectedRoutineId ??
         WorkoutController.instance.getDaySchedule(date).workoutId;
 
-    final updated = (existing ??
-            DailyWorkout(
-              id: 'dw_${date.millisecondsSinceEpoch}',
-              localDate: localDate,
+    final updated =
+        (existing ??
+                DailyWorkout(
+                  id: 'dw_${date.millisecondsSinceEpoch}',
+                  localDate: localDate,
+                  selectedRoutineId: effectiveRoutineId,
+                  selectionType: DailySelectionType.manual,
+                  status: DailyWorkoutStatus.completed,
+                  selectedAt: now,
+                ))
+            .copyWith(
               selectedRoutineId: effectiveRoutineId,
-              selectionType: DailySelectionType.manual,
               status: DailyWorkoutStatus.completed,
-              selectedAt: now,
-            ))
-        .copyWith(
-      selectedRoutineId: effectiveRoutineId,
-      status: DailyWorkoutStatus.completed,
-      completedAt: now,
-    );
+              completedAt: now,
+            );
 
     _records[localDate] = updated;
     notifyListeners();
@@ -140,8 +142,10 @@ class DailyWorkoutController extends ChangeNotifier {
     notifyListeners();
 
     // Assign routine workout to today's date in WorkoutController
-    await WorkoutController.instance
-        .updateWorkoutForDate(targetDate, routine.toWorkout());
+    await WorkoutController.instance.updateWorkoutForDate(
+      targetDate,
+      routine.toWorkout(),
+    );
 
     return await _storage.saveDailyWorkout(record);
   }
@@ -165,8 +169,10 @@ class DailyWorkoutController extends ChangeNotifier {
     notifyListeners();
 
     // Update WorkoutController to Rest Day (does NOT advance rotation)
-    await WorkoutController.instance
-        .setDayType(targetDate, ScheduledDayType.rest);
+    await WorkoutController.instance.setDayType(
+      targetDate,
+      ScheduledDayType.rest,
+    );
 
     return await _storage.saveDailyWorkout(record);
   }
@@ -192,4 +198,3 @@ class DailyWorkoutController extends ChangeNotifier {
     return await _storage.saveDailyWorkout(record);
   }
 }
-

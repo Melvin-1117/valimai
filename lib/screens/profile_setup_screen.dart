@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/user_profile.dart';
 import '../services/daily_workout_controller.dart';
 import '../services/profile_controller.dart';
@@ -76,12 +77,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       if (!DailyWorkoutController.instance.hasDecisionForToday()) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) =>
-                const DailyWorkoutSelectionScreen(),
-            transitionsBuilder: (_, animation, __, child) => FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            pageBuilder: (_, __, ___) => const DailyWorkoutSelectionScreen(),
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
@@ -90,17 +88,16 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
             pageBuilder: (_, __, ___) => const MainShell(),
-            transitionsBuilder: (_, animation, __, child) => FadeTransition(
-              opacity: animation,
-              child: child,
-            ),
+            transitionsBuilder: (_, animation, __, child) =>
+                FadeTransition(opacity: animation, child: child),
             transitionDuration: const Duration(milliseconds: 300),
           ),
         );
       }
     } else {
       setState(() {
-        _generalError = ProfileController.instance.errorMessage ??
+        _generalError =
+            ProfileController.instance.errorMessage ??
             'Failed to save profile. Please check your inputs.';
       });
     }
@@ -182,7 +179,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         color: ValimaiColors.primaryContainer.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: ValimaiColors.primaryContainer.withOpacity(0.4),
+                          color: ValimaiColors.primaryContainer.withOpacity(
+                            0.4,
+                          ),
                           width: 1,
                         ),
                       ),
@@ -245,9 +244,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                               controller: _weightController,
                               hint: '75.0',
                               icon: Icons.scale_outlined,
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                   RegExp(r'^\d*\.?\d{0,1}'),
@@ -346,15 +346,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildLabel('TARGET WT (OPTIONAL)', isRequired: false),
+                            _buildLabel(
+                              'TARGET WT (OPTIONAL)',
+                              isRequired: false,
+                            ),
                             const SizedBox(height: 6),
                             _buildTextField(
                               controller: _targetWeightController,
                               hint: '80.0',
                               icon: Icons.flag_outlined,
-                              keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                   RegExp(r'^\d*\.?\d{0,1}'),
@@ -388,8 +392,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ValimaiColors.primaryContainer,
                         foregroundColor: Colors.white,
-                        disabledBackgroundColor:
-                            ValimaiColors.primaryContainer.withOpacity(0.5),
+                        disabledBackgroundColor: ValimaiColors.primaryContainer
+                            .withOpacity(0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -495,15 +499,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           fontSize: 13,
           color: ValimaiColors.secondary.withOpacity(0.6),
         ),
-        prefixIcon: Icon(
-          icon,
-          size: 18,
-          color: ValimaiColors.secondary,
+        prefixIcon: Icon(icon, size: 18, color: ValimaiColors.secondary),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: ValimaiColors.cardBorder, width: 1),
+          borderSide: const BorderSide(
+            color: ValimaiColors.cardBorder,
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -536,4 +542,3 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     );
   }
 }
-

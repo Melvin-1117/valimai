@@ -67,9 +67,12 @@ class UserProfile {
       currentWeight: currentWeight ?? this.currentWeight,
       height: height ?? this.height,
       age: age ?? this.age,
-      targetWeight: clearTargetWeight ? null : (targetWeight ?? this.targetWeight),
+      targetWeight: clearTargetWeight
+          ? null
+          : (targetWeight ?? this.targetWeight),
       avatarPath: avatarPath ?? this.avatarPath,
-      isOnboardingCompleted: isOnboardingCompleted ?? this.isOnboardingCompleted,
+      isOnboardingCompleted:
+          isOnboardingCompleted ?? this.isOnboardingCompleted,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -109,4 +112,3 @@ class UserProfile {
     );
   }
 }
-

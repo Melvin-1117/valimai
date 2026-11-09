@@ -70,8 +70,7 @@ class CompletedWorkoutSession {
       workoutSnapshot?.exerciseCount ?? exerciseCount ?? 0;
 
   /// Completed sets count
-  int get calculatedTotalSets =>
-      workoutSnapshot?.totalSets ?? totalSets ?? 0;
+  int get calculatedTotalSets => workoutSnapshot?.totalSets ?? totalSets ?? 0;
 
   /// Total repetitions sum across all completed sets
   int get calculatedTotalReps {
@@ -96,7 +95,9 @@ class CompletedWorkoutSession {
         (sum, ex) =>
             sum +
             ex.effectiveSetConfigs.fold<double>(
-                0.0, (sSum, s) => sSum + (s.weightKg * s.reps)),
+              0.0,
+              (sSum, s) => sSum + (s.weightKg * s.reps),
+            ),
       );
     }
     return 0.0;
@@ -121,7 +122,8 @@ class CompletedWorkoutSession {
     final completedAt = DateTime.parse(json['completedAt'] as String);
     final routineId = json['routineId'] as String;
     return CompletedWorkoutSession(
-      id: json['id'] as String? ??
+      id:
+          json['id'] as String? ??
           'sess_${completedAt.millisecondsSinceEpoch}_$routineId',
       routineId: routineId,
       completedAt: completedAt,
@@ -161,6 +163,7 @@ class WorkoutRecommendation {
   bool get hasWorkout => routine != null && !isRestDay && !isSkipped;
 
   bool get isScheduled => source == RecommendationSource.scheduled;
-  bool get isRotation => source == RecommendationSource.rotation || source == RecommendationSource.initial;
+  bool get isRotation =>
+      source == RecommendationSource.rotation ||
+      source == RecommendationSource.initial;
 }
-

@@ -28,11 +28,7 @@ class ExerciseSetConfig {
     required this.weightKg,
   });
 
-  ExerciseSetConfig copyWith({
-    int? setNumber,
-    int? reps,
-    double? weightKg,
-  }) {
+  ExerciseSetConfig copyWith({int? setNumber, int? reps, double? weightKg}) {
     return ExerciseSetConfig(
       setNumber: setNumber ?? this.setNumber,
       reps: reps ?? this.reps,
@@ -41,11 +37,7 @@ class ExerciseSetConfig {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'setNumber': setNumber,
-      'reps': reps,
-      'weightKg': weightKg,
-    };
+    return {'setNumber': setNumber, 'reps': reps, 'weightKg': weightKg};
   }
 
   factory ExerciseSetConfig.fromJson(Map<String, dynamic> json) {
@@ -93,11 +85,8 @@ class WorkoutExercise {
     final count = sets > 0 ? sets : 1;
     return List.generate(
       count,
-      (i) => ExerciseSetConfig(
-        setNumber: i + 1,
-        reps: reps,
-        weightKg: weightKg,
-      ),
+      (i) =>
+          ExerciseSetConfig(setNumber: i + 1, reps: reps, weightKg: weightKg),
     );
   }
 
@@ -115,11 +104,13 @@ class WorkoutExercise {
     List<String>? secondaryMuscles,
   }) {
     final effectiveSets = setConfigs ?? this.setConfigs;
-    final int resolvedSets = sets ??
-        (effectiveSets.isNotEmpty ? effectiveSets.length : this.sets);
-    final int resolvedReps = reps ??
+    final int resolvedSets =
+        sets ?? (effectiveSets.isNotEmpty ? effectiveSets.length : this.sets);
+    final int resolvedReps =
+        reps ??
         (effectiveSets.isNotEmpty ? effectiveSets.first.reps : this.reps);
-    final double resolvedWeight = weightKg ??
+    final double resolvedWeight =
+        weightKg ??
         (effectiveSets.isNotEmpty
             ? effectiveSets.first.weightKg
             : this.weightKg);
@@ -148,8 +139,7 @@ class WorkoutExercise {
       'targetMuscle': targetMuscle,
       'sets': activeSets.length,
       'reps': activeSets.isNotEmpty ? activeSets.first.reps : reps,
-      'weightKg':
-          activeSets.isNotEmpty ? activeSets.first.weightKg : weightKg,
+      'weightKg': activeSets.isNotEmpty ? activeSets.first.weightKg : weightKg,
       'order': order,
       'equipment': equipment,
       'secondaryMuscles': secondaryMuscles,
@@ -158,12 +148,14 @@ class WorkoutExercise {
   }
 
   factory WorkoutExercise.fromJson(Map<String, dynamic> json) {
-    final setsList = (json['setConfigs'] as List<dynamic>?)
+    final setsList =
+        (json['setConfigs'] as List<dynamic>?)
             ?.map((e) => ExerciseSetConfig.fromJson(e as Map<String, dynamic>))
             .toList() ??
         <ExerciseSetConfig>[];
 
-    final secondaries = (json['secondaryMuscles'] as List<dynamic>?)
+    final secondaries =
+        (json['secondaryMuscles'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         <String>[];
@@ -173,7 +165,8 @@ class WorkoutExercise {
     final legacyWeight = (json['weightKg'] as num?)?.toDouble() ?? 20.0;
 
     return WorkoutExercise(
-      id: json['id'] as String? ??
+      id:
+          json['id'] as String? ??
           'ex_${DateTime.now().millisecondsSinceEpoch}',
       exerciseId: json['exerciseId'] as String?,
       name: json['name'] as String? ?? 'Exercise',
@@ -242,7 +235,8 @@ class Workout {
   factory Workout.fromJson(Map<String, dynamic> json) {
     final list = json['exercises'] as List<dynamic>? ?? [];
     return Workout(
-      id: json['id'] as String? ??
+      id:
+          json['id'] as String? ??
           'workout_${DateTime.now().millisecondsSinceEpoch}',
       name: json['name'] as String? ?? 'Workout',
       targetMuscleGroups: json['targetMuscleGroups'] as String? ?? 'Full Body',
@@ -316,8 +310,7 @@ class DaySchedule {
       date: DateTime(date.year, date.month, date.day),
       type: type,
       workoutId: json['workoutId'] as String?,
-      customWorkout:
-          customJson != null ? Workout.fromJson(customJson) : null,
+      customWorkout: customJson != null ? Workout.fromJson(customJson) : null,
       isCompleted: json['isCompleted'] as bool? ?? false,
       completedAt: json['completedAt'] != null
           ? DateTime.tryParse(json['completedAt'] as String)

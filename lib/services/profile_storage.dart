@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import '../models/user_profile.dart';
 import 'storage_helper.dart';
 
@@ -57,4 +58,3 @@ class LocalProfileStorage implements IProfileStorage {
     }
   }
 }
-

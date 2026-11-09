@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/profile_controller.dart';
 import '../theme/app_theme.dart';
 
@@ -62,11 +63,7 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Center(
-                  child: Icon(
-                    Icons.bolt,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.bolt, color: Colors.white, size: 20),
                 ),
               ),
               const SizedBox(width: 10),
@@ -125,7 +122,8 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
                 child: ListenableBuilder(
                   listenable: ProfileController.instance,
                   builder: (context, _) {
-                    final initials = ProfileController.instance.profile?.initials ?? 'V';
+                    final initials =
+                        ProfileController.instance.profile?.initials ?? 'V';
                     return Container(
                       width: 32,
                       height: 32,

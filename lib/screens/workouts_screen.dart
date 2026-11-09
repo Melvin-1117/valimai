@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/exercise.dart';
 import '../models/routine.dart';
 import '../models/workout.dart';
@@ -52,8 +53,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     } else if (_selectedCategoryIndex > 1) {
       final category = _categories[_selectedCategoryIndex].toLowerCase();
       result = result.where((r) {
-        return r.targetMuscleGroups
-            .any((m) => m.toLowerCase().contains(category));
+        return r.targetMuscleGroups.any(
+          (m) => m.toLowerCase().contains(category),
+        );
       }).toList();
     }
 
@@ -65,312 +67,335 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     final descController = TextEditingController();
     final selectedMuscles = <String>{};
 
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: ValimaiColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (modalContext, setModalState) {
-            final bottomPadding = MediaQuery.of(modalContext).viewInsets.bottom;
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: bottomPadding + 20,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'CREATE WORKOUT ROUTINE',
-                          style: TextStyle(
+    try {
+      final result = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: ValimaiColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (ctx) {
+          return StatefulBuilder(
+            builder: (modalContext, setModalState) {
+              final bottomPadding = MediaQuery.of(modalContext)
+                  .viewInsets
+                  .bottom;
+              return Padding(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 20,
+                  bottom: bottomPadding + 20,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'CREATE WORKOUT ROUTINE',
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              color: ValimaiColors.onSurface,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: ValimaiColors.secondary,
+                            ),
+                            onPressed: () =>
+                                Navigator.of(modalContext).pop(false),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Routine Name
+                      const Text(
+                        'ROUTINE NAME *',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: ValimaiColors.secondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: nameController,
+                        autofocus: true,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ValimaiColors.onSurface,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. Workout E – Arms & Core',
+                          hintStyle: const TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
-                            color: ValimaiColors.onSurface,
+                            fontSize: 13,
+                            color: ValimaiColors.secondary,
+                          ),
+                          filled: true,
+                          fillColor: ValimaiColors.surfaceContainerLow,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: ValimaiColors.cardBorder,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: ValimaiColors.primaryContainer,
+                              width: 1.5,
+                            ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close,
-                              color: ValimaiColors.secondary),
-                          onPressed: () => Navigator.of(modalContext).pop(false),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
+                      ),
+                      const SizedBox(height: 14),
 
-                    // Routine Name
-                    const Text(
-                      'ROUTINE NAME *',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: ValimaiColors.secondary,
+                      // Description
+                      const Text(
+                        'OPTIONAL DESCRIPTION',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: ValimaiColors.secondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: nameController,
-                      autofocus: true,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ValimaiColors.onSurface,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Workout E – Arms & Core',
-                        hintStyle: const TextStyle(
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: descController,
+                        style: const TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 13,
-                          color: ValimaiColors.secondary,
+                          color: ValimaiColors.onSurface,
                         ),
-                        filled: true,
-                        fillColor: ValimaiColors.surfaceContainerLow,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              color: ValimaiColors.cardBorder),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                            color: ValimaiColors.primaryContainer,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Description
-                    const Text(
-                      'OPTIONAL DESCRIPTION',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: ValimaiColors.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: descController,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 13,
-                        color: ValimaiColors.onSurface,
-                      ),
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Bicep peak hypertrophy, triceps, and abdominal bracing',
-                        hintStyle: const TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 12,
-                          color: ValimaiColors.secondary,
-                        ),
-                        filled: true,
-                        fillColor: ValimaiColors.surfaceContainerLow,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                              color: ValimaiColors.cardBorder),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(
-                            color: ValimaiColors.primaryContainer,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Target Muscle Groups
-                    const Text(
-                      'TARGET MUSCLE GROUPS',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: ValimaiColors.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: MuscleGroupCategories.all.map((muscle) {
-                        final isSelected = selectedMuscles.contains(muscle);
-                        return FilterChip(
-                          label: Text(muscle),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setModalState(() {
-                              if (selected) {
-                                selectedMuscles.add(muscle);
-                              } else {
-                                selectedMuscles.remove(muscle);
-                              }
-                            });
-                          },
-                          labelStyle: TextStyle(
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          hintText: 'e.g. Bicep peak hypertrophy, triceps, and abdominal bracing',
+                          hintStyle: const TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 11,
-                            fontWeight: isSelected
-                                ? FontWeight.w800
-                                : FontWeight.w600,
-                            color: isSelected
-                                ? Colors.white
-                                : ValimaiColors.secondary,
+                            fontSize: 12,
+                            color: ValimaiColors.secondary,
                           ),
-                          backgroundColor: ValimaiColors.surfaceContainerLow,
-                          selectedColor: ValimaiColors.primaryContainer,
-                          checkmarkColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(
-                              color: isSelected
-                                  ? ValimaiColors.primaryContainer
-                                  : ValimaiColors.cardBorder,
+                          filled: true,
+                          fillColor: ValimaiColors.surfaceContainerLow,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: ValimaiColors.cardBorder,
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: ValimaiColors.primaryContainer,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
 
-                    // Action buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () async {
-                              final name = nameController.text.trim();
-                              if (name.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter a routine name.'),
-                                    backgroundColor: Colors.redAccent,
-                                  ),
-                                );
-                                return;
-                              }
-
-                              final newRoutine =
-                                  await RoutineController.instance.createRoutine(
-                                name: name,
-                                description: descController.text.trim(),
-                                targetMuscleGroups: selectedMuscles.toList(),
-                              );
-
-                              if (context.mounted) {
-                                Navigator.of(modalContext).pop(true);
-                                if (newRoutine != null) {
-                                  _openRoutineEditor(newRoutine);
+                      // Target Muscle Groups
+                      const Text(
+                        'TARGET MUSCLE GROUPS',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: ValimaiColors.secondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: MuscleGroupCategories.all.map((muscle) {
+                          final isSelected = selectedMuscles.contains(muscle);
+                          return FilterChip(
+                            label: Text(muscle),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setModalState(() {
+                                if (selected) {
+                                  selectedMuscles.add(muscle);
+                                } else {
+                                  selectedMuscles.remove(muscle);
                                 }
-                              }
+                              });
                             },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: ValimaiColors.onSurface,
-                              side: const BorderSide(
-                                  color: ValimaiColors.cardBorder),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                            labelStyle: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 11,
+                              fontWeight: isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                              color: isSelected
+                                  ? Colors.white
+                                  : ValimaiColors.secondary,
+                            ),
+                            backgroundColor: ValimaiColors.surfaceContainerLow,
+                            selectedColor: ValimaiColors.primaryContainer,
+                            checkmarkColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? ValimaiColors.primaryContainer
+                                    : ValimaiColors.cardBorder,
                               ),
                             ),
-                            child: const Text(
-                              '+ ADD EXERCISES',
-                              style: TextStyle(
-                                fontFamily: 'Montserrat',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Action buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                final name = nameController.text.trim();
+                                if (name.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please enter a routine name.',
+                                      ),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                final newRoutine = await RoutineController
+                                    .instance
+                                    .createRoutine(
+                                      name: name,
+                                      description: descController.text.trim(),
+                                      targetMuscleGroups: selectedMuscles
+                                          .toList(),
+                                    );
+
+                                if (context.mounted) {
+                                  Navigator.of(modalContext).pop(true);
+                                  if (newRoutine != null) {
+                                    _openRoutineEditor(newRoutine);
+                                  }
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: ValimaiColors.onSurface,
+                                side: const BorderSide(
+                                  color: ValimaiColors.cardBorder,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                '+ ADD EXERCISES',
+                                style: TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              final name = nameController.text.trim();
-                              if (name.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter a routine name.'),
-                                    backgroundColor: Colors.redAccent,
-                                  ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                final name = nameController.text.trim();
+                                if (name.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Please enter a routine name.',
+                                      ),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                await RoutineController.instance.createRoutine(
+                                  name: name,
+                                  description: descController.text.trim(),
+                                  targetMuscleGroups: selectedMuscles.toList(),
                                 );
-                                return;
-                              }
 
-                              await RoutineController.instance.createRoutine(
-                                name: name,
-                                description: descController.text.trim(),
-                                targetMuscleGroups: selectedMuscles.toList(),
-                              );
-
-                              if (context.mounted) {
-                                Navigator.of(modalContext).pop(true);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ValimaiColors.primaryContainer,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                if (context.mounted) {
+                                  Navigator.of(modalContext).pop(true);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: ValimaiColors.primaryContainer,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
-                            ),
-                            child: const Text(
-                              'CREATE ROUTINE',
-                              style: TextStyle(
-                                fontFamily: 'Montserrat',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.8,
+                              child: const Text(
+                                'CREATE ROUTINE',
+                                style: TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.8,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Routine created successfully!'),
-          backgroundColor: ValimaiColors.primaryContainer,
-          duration: Duration(seconds: 2),
-        ),
+              );
+            },
+          );
+        },
       );
+
+      if (result == true && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Routine created successfully!'),
+            backgroundColor: ValimaiColors.primaryContainer,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      nameController.dispose();
+      descController.dispose();
     }
   }
 
@@ -384,8 +409,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           customSubtitle: routine.name.toUpperCase(),
           onSave: (updated) async {
             final updatedRoutine = routine.updateFromWorkout(updated);
-            return await RoutineController.instance
-                .updateRoutine(updatedRoutine);
+            return await RoutineController.instance.updateRoutine(
+              updatedRoutine,
+            );
           },
         ),
       ),
@@ -401,170 +427,180 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     final descController = TextEditingController(text: routine.description);
     final selectedMuscles = Set<String>.from(routine.targetMuscleGroups);
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (dialogCtx, setDialogState) {
-            return AlertDialog(
-              backgroundColor: ValimaiColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: ValimaiColors.cardBorder),
-              ),
-              title: const Text(
-                'RENAME ROUTINE',
-                style: TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                  color: ValimaiColors.onSurface,
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return StatefulBuilder(
+            builder: (dialogCtx, setDialogState) {
+              return AlertDialog(
+                backgroundColor: ValimaiColors.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: ValimaiColors.cardBorder),
                 ),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'ROUTINE NAME',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: ValimaiColors.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: nameController,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ValimaiColors.onSurface,
-                      ),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: ValimaiColors.surfaceContainerLow,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: ValimaiColors.cardBorder),
+                title: const Text(
+                  'RENAME ROUTINE',
+                  style: TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: ValimaiColors.onSurface,
+                  ),
+                ),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'ROUTINE NAME',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: ValimaiColors.secondary,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'DESCRIPTION',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: ValimaiColors.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: descController,
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 13,
-                        color: ValimaiColors.onSurface,
-                      ),
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: ValimaiColors.surfaceContainerLow,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: ValimaiColors.cardBorder),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: nameController,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ValimaiColors.onSurface,
+                        ),
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: ValimaiColors.surfaceContainerLow,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: ValimaiColors.cardBorder,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'TARGET MUSCLES',
+                      const SizedBox(height: 12),
+                      const Text(
+                        'DESCRIPTION',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: ValimaiColors.secondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: descController,
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 13,
+                          color: ValimaiColors.onSurface,
+                        ),
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: ValimaiColors.surfaceContainerLow,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: ValimaiColors.cardBorder,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'TARGET MUSCLES',
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: ValimaiColors.secondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: MuscleGroupCategories.all.map((m) {
+                          final isSel = selectedMuscles.contains(m);
+                          return FilterChip(
+                            label: Text(
+                              m,
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                            selected: isSel,
+                            onSelected: (val) {
+                              setDialogState(() {
+                                if (val) {
+                                  selectedMuscles.add(m);
+                                } else {
+                                  selectedMuscles.remove(m);
+                                }
+                              });
+                            },
+                            backgroundColor: ValimaiColors.surfaceContainerLow,
+                            selectedColor: ValimaiColors.primaryContainer,
+                            checkmarkColor: Colors.white,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text(
+                      'CANCEL',
                       style: TextStyle(
                         fontFamily: 'Montserrat',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: ValimaiColors.secondary,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: MuscleGroupCategories.all.map((m) {
-                        final isSel = selectedMuscles.contains(m);
-                        return FilterChip(
-                          label: Text(m, style: const TextStyle(fontSize: 10)),
-                          selected: isSel,
-                          onSelected: (val) {
-                            setDialogState(() {
-                              if (val) {
-                                selectedMuscles.add(m);
-                              } else {
-                                selectedMuscles.remove(m);
-                              }
-                            });
-                          },
-                          backgroundColor: ValimaiColors.surfaceContainerLow,
-                          selectedColor: ValimaiColors.primaryContainer,
-                          checkmarkColor: Colors.white,
-                        );
-                      }).toList(),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (nameController.text.trim().isNotEmpty) {
+                        Navigator.of(ctx).pop(true);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ValimaiColors.primaryContainer,
+                      foregroundColor: Colors.white,
                     ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text(
-                    'CANCEL',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontWeight: FontWeight.w700,
-                      color: ValimaiColors.secondary,
+                    child: const Text(
+                      'SAVE',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (nameController.text.trim().isNotEmpty) {
-                      Navigator.of(ctx).pop(true);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ValimaiColors.primaryContainer,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text(
-                    'SAVE',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      await RoutineController.instance.renameRoutine(
-        routine.id,
-        nameController.text.trim(),
-        description: descController.text.trim(),
-        targetMuscleGroups: selectedMuscles.toList(),
+                ],
+              );
+            },
+          );
+        },
       );
+
+      if (confirmed == true) {
+        await RoutineController.instance.renameRoutine(
+          routine.id,
+          nameController.text.trim(),
+          description: descController.text.trim(),
+          targetMuscleGroups: selectedMuscles.toList(),
+        );
+      }
+    } finally {
+      nameController.dispose();
+      descController.dispose();
     }
   }
 
@@ -651,7 +687,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       ),
       builder: (ctx) {
         final exercises = routine.exercises;
-        final rotationLabel = String.fromCharCode(65 + (routine.rotationOrder % 26));
+        final rotationLabel = String.fromCharCode(
+          65 + (routine.rotationOrder % 26),
+        );
 
         return Container(
           padding: const EdgeInsets.all(20),
@@ -667,7 +705,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: ValimaiColors.primaryContainer.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(6),
@@ -684,8 +724,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close,
-                        color: ValimaiColors.secondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: ValimaiColors.secondary,
+                    ),
                     onPressed: () => Navigator.of(ctx).pop(),
                   ),
                 ],
@@ -723,7 +765,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   children: routine.targetMuscleGroups.map((m) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: ValimaiColors.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(6),
@@ -744,8 +788,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
               // Metrics Row
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: ValimaiColors.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(10),
@@ -754,13 +800,19 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildDetailMetric(
-                        'EXERCISES', '${routine.totalExercises}'),
+                      'EXERCISES',
+                      '${routine.totalExercises}',
+                    ),
                     _buildDetailMetric('SETS', '${routine.totalSets}'),
                     _buildDetailMetric(
-                        'EST. TIME', '~${routine.estimatedDurationMinutes}m'),
+                      'EST. TIME',
+                      '~${routine.estimatedDurationMinutes}m',
+                    ),
                     _buildDetailMetric(
-                        'STATUS', routine.isActive ? 'ACTIVE' : 'PAUSED',
-                        isHighlight: routine.isActive),
+                      'STATUS',
+                      routine.isActive ? 'ACTIVE' : 'PAUSED',
+                      isHighlight: routine.isActive,
+                    ),
                   ],
                 ),
               ),
@@ -804,7 +856,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                               color: ValimaiColors.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: ValimaiColors.cardBorder),
+                                color: ValimaiColors.cardBorder,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,9 +868,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                       width: 22,
                                       height: 22,
                                       decoration: BoxDecoration(
-                                        color: ValimaiColors.surfaceContainerHigh,
-                                        borderRadius:
-                                            BorderRadius.circular(4),
+                                        color:
+                                            ValimaiColors.surfaceContainerHigh,
+                                        borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Center(
                                         child: Text(
@@ -826,7 +879,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                             fontFamily: 'Montserrat',
                                             fontSize: 10,
                                             fontWeight: FontWeight.w800,
-                                            color: ValimaiColors.primaryContainer,
+                                            color:
+                                                ValimaiColors.primaryContainer,
                                           ),
                                         ),
                                       ),
@@ -865,12 +919,13 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                         : s.weightKg.toStringAsFixed(1);
                                     return Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 3),
+                                        horizontal: 6,
+                                        vertical: 3,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: ValimaiColors
                                             .surfaceContainerHighest,
-                                        borderRadius:
-                                            BorderRadius.circular(4),
+                                        borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
                                         'S${s.setNumber}: ${s.reps}×${w}kg',
@@ -928,8 +983,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     );
   }
 
-  Widget _buildDetailMetric(String label, String value,
-      {bool isHighlight = false}) {
+  Widget _buildDetailMetric(
+    String label,
+    String value, {
+    bool isHighlight = false,
+  }) {
     return Column(
       children: [
         Text(
@@ -961,10 +1019,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ValimaiColors.background,
-      appBar: const ValimaiAppBar(
-        title: 'Workouts',
-        showSearch: false,
-      ),
+      appBar: const ValimaiAppBar(title: 'Workouts', showSearch: false),
       body: ListenableBuilder(
         listenable: RoutineController.instance,
         builder: (context, _) {
@@ -1039,7 +1094,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1059,7 +1116,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: routines.length,
                     itemBuilder: (context, index) {
-                      return _buildRoutineCard(routines[index], canReorder: false);
+                      return _buildRoutineCard(
+                        routines[index],
+                        canReorder: false,
+                      );
                     },
                   )
                 else
@@ -1069,11 +1129,16 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: routines.length,
                     onReorder: (oldIndex, newIndex) {
-                      RoutineController.instance
-                          .reorderRoutines(oldIndex, newIndex);
+                      RoutineController.instance.reorderRoutines(
+                        oldIndex,
+                        newIndex,
+                      );
                     },
                     itemBuilder: (context, index) {
-                      return _buildRoutineCard(routines[index], canReorder: true);
+                      return _buildRoutineCard(
+                        routines[index],
+                        canReorder: true,
+                      );
                     },
                   ),
 
@@ -1128,8 +1193,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
             _searchQuery.isNotEmpty
                 ? 'No routines match "$_searchQuery"'
                 : (_selectedCategoryIndex == 0
-                    ? 'No workout routines created yet.\nCreate your first routine to start training!'
-                    : 'No routines found in this category.'),
+                      ? 'No workout routines created yet.\nCreate your first routine to start training!'
+                      : 'No routines found in this category.'),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontFamily: 'Montserrat',
@@ -1206,8 +1271,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   _searchQuery = '';
                 });
               },
-              child: const Icon(Icons.close,
-                  size: 16, color: ValimaiColors.secondary),
+              child: const Icon(
+                Icons.close,
+                size: 16,
+                color: ValimaiColors.secondary,
+              ),
             ),
         ],
       ),
@@ -1226,8 +1294,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               onTap: () => setState(() => _selectedCategoryIndex = index),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? ValimaiColors.primaryContainer
@@ -1259,8 +1329,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   }
 
   Widget _buildRoutineCard(WorkoutRoutine routine, {required bool canReorder}) {
-    final rotationLetter =
-        String.fromCharCode(65 + (routine.rotationOrder % 26));
+    final rotationLetter = String.fromCharCode(
+      65 + (routine.rotationOrder % 26),
+    );
     final previewChips = routine.exercises.take(3).map((e) => e.name).toList();
 
     return Container(
@@ -1280,10 +1351,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               left: 0,
               top: 0,
               bottom: 0,
-              child: Container(
-                width: 4,
-                color: ValimaiColors.primaryContainer,
-              ),
+              child: Container(width: 4, color: ValimaiColors.primaryContainer),
             ),
 
           Padding(
@@ -1315,16 +1383,20 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         const SizedBox(width: 8),
                         GestureDetector(
                           onTap: () {
-                            RoutineController.instance
-                                .toggleRoutineActive(routine.id);
+                            RoutineController.instance.toggleRoutineActive(
+                              routine.id,
+                            );
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: routine.isActive
-                                  ? ValimaiColors.primaryContainer
-                                      .withOpacity(0.15)
+                                  ? ValimaiColors.primaryContainer.withOpacity(
+                                      0.15,
+                                    )
                                   : ValimaiColors.surfaceContainerHigh,
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -1364,7 +1436,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                             side: const BorderSide(
-                                color: ValimaiColors.cardBorder),
+                              color: ValimaiColors.cardBorder,
+                            ),
                           ),
                           onSelected: (value) {
                             switch (value) {
@@ -1378,8 +1451,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                 _showRenameDialog(routine);
                                 break;
                               case 'toggle':
-                                RoutineController.instance
-                                    .toggleRoutineActive(routine.id);
+                                RoutineController.instance.toggleRoutineActive(
+                                  routine.id,
+                                );
                                 break;
                               case 'delete':
                                 _showDeleteConfirmation(routine);
@@ -1479,8 +1553,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
                 // Metrics row: Movements, Volume (Sets), Est Time
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: ValimaiColors.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(8),
@@ -1578,7 +1654,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     children: routine.targetMuscleGroups.map((muscle) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: ValimaiColors.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(4),
@@ -1639,7 +1717,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: ValimaiColors.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(6),
@@ -1647,8 +1727,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.visibility_outlined,
-                                size: 13, color: ValimaiColors.secondary),
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 13,
+                              color: ValimaiColors.secondary,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'DETAILS',
@@ -1668,22 +1751,29 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
-                          color: ValimaiColors.primaryContainer.withOpacity(0.14),
+                          color: ValimaiColors.primaryContainer.withOpacity(
+                            0.14,
+                          ),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: ValimaiColors.primaryContainer
-                                .withOpacity(0.35),
+                            color: ValimaiColors.primaryContainer.withOpacity(
+                              0.35,
+                            ),
                             width: 1,
                           ),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.edit,
-                                size: 12,
-                                color: ValimaiColors.primaryContainer),
+                            Icon(
+                              Icons.edit,
+                              size: 12,
+                              color: ValimaiColors.primaryContainer,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'EDIT IN EDITOR',

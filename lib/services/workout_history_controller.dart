@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
+
 import '../models/daily_workout.dart';
 import '../models/workout.dart';
 import '../models/workout_rotation.dart';
@@ -25,7 +27,8 @@ class LocalWorkoutHistoryStorage implements IWorkoutHistoryStorage {
         for (final item in jsonList) {
           try {
             list.add(
-                CompletedWorkoutSession.fromJson(item as Map<String, dynamic>));
+              CompletedWorkoutSession.fromJson(item as Map<String, dynamic>),
+            );
           } catch (e) {
             debugPrint('Failed to parse completed session: $e');
           }
@@ -42,7 +45,9 @@ class LocalWorkoutHistoryStorage implements IWorkoutHistoryStorage {
     try {
       final jsonList = sessions.map((s) => s.toJson()).toList();
       return await StorageHelper.safeWriteString(
-          _fileName, jsonEncode(jsonList));
+        _fileName,
+        jsonEncode(jsonList),
+      );
     } catch (e) {
       debugPrint('Failed to persist history sessions: $e');
       return true; // Preserved in-memory
@@ -64,13 +69,18 @@ class WorkoutHistoryController extends ChangeNotifier {
   final IWorkoutHistoryStorage _storage;
 
   WorkoutHistoryController({IWorkoutHistoryStorage? storage})
-      : _storage = storage ?? LocalWorkoutHistoryStorage();
+    : _storage = storage ?? LocalWorkoutHistoryStorage();
 
   WorkoutHistoryController._internal({IWorkoutHistoryStorage? storage})
-      : _storage = storage ?? LocalWorkoutHistoryStorage();
+    : _storage = storage ?? LocalWorkoutHistoryStorage();
 
   final List<CompletedWorkoutSession> _sessions = [];
+  Set<String> _completedDateKeys = {};
   bool _isInitialized = false;
+
+  void _rebuildDateKeysIndex() {
+    _completedDateKeys = _sessions.map((s) => s.dateKey).toSet();
+  }
 
   bool get isInitialized => _isInitialized;
 
@@ -101,14 +111,22 @@ class WorkoutHistoryController extends ChangeNotifier {
       for (final schedule in schedules.values) {
         if (schedule.isCompleted && schedule.workoutId != null) {
           final dateKey = DaySchedule.dateKey(schedule.date);
-          final alreadyCaptured = _sessions.any((s) =>
-              s.routineId == schedule.workoutId && s.dateKey == dateKey);
+          final alreadyCaptured = _sessions.any(
+            (s) => s.routineId == schedule.workoutId && s.dateKey == dateKey,
+          );
 
           if (!alreadyCaptured) {
-            final completedAt = schedule.completedAt ??
-                DateTime(schedule.date.year, schedule.date.month,
-                    schedule.date.day, 12, 0);
-            final snapshot = schedule.customWorkout ??
+            final completedAt =
+                schedule.completedAt ??
+                DateTime(
+                  schedule.date.year,
+                  schedule.date.month,
+                  schedule.date.day,
+                  12,
+                  0,
+                );
+            final snapshot =
+                schedule.customWorkout ??
                 WorkoutController.instance.getWorkoutForDate(schedule.date);
 
             _sessions.add(
@@ -132,15 +150,16 @@ class WorkoutHistoryController extends ChangeNotifier {
       for (final record in dailyRecords.values) {
         if (record.status == DailyWorkoutStatus.completed &&
             record.selectedRoutineId != null) {
-          final alreadyCaptured = _sessions.any((s) =>
-              s.routineId == record.selectedRoutineId &&
-              s.dateKey == record.localDate);
+          final alreadyCaptured = _sessions.any(
+            (s) =>
+                s.routineId == record.selectedRoutineId &&
+                s.dateKey == record.localDate,
+          );
 
           if (!alreadyCaptured) {
             final completedAt = record.completedAt ?? record.selectedAt;
             final date = DateTime.tryParse(record.localDate) ?? completedAt;
-            final snapshot =
-                WorkoutController.instance.getWorkoutForDate(date);
+            final snapshot = WorkoutController.instance.getWorkoutForDate(date);
 
             _sessions.add(
               CompletedWorkoutSession(
@@ -162,6 +181,7 @@ class WorkoutHistoryController extends ChangeNotifier {
 
     // Sort newest first
     _sessions.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    _rebuildDateKeysIndex();
 
     _isInitialized = true;
     notifyListeners();
@@ -180,27 +200,31 @@ class WorkoutHistoryController extends ChangeNotifier {
     Workout? workoutSnapshot,
     DateTime? completedAt,
   }) async {
-    final effectiveCompletedAt = completedAt ??
-        DateTime(date.year, date.month, date.day, 12, 0);
+    final effectiveCompletedAt =
+        completedAt ?? DateTime(date.year, date.month, date.day, 12, 0);
 
     final session = CompletedWorkoutSession(
       routineId: routineId,
       completedAt: effectiveCompletedAt,
       routineName: routineName,
-      targetMuscleGroups: targetMuscleGroups ?? workoutSnapshot?.targetMuscleGroups,
+      targetMuscleGroups:
+          targetMuscleGroups ?? workoutSnapshot?.targetMuscleGroups,
       workoutSnapshot: workoutSnapshot,
     );
 
     // Replace any previous session on the same date for this routine with the actual performed snapshot
-    _sessions.removeWhere((s) =>
-        s.completedAt.year == effectiveCompletedAt.year &&
-        s.completedAt.month == effectiveCompletedAt.month &&
-        s.completedAt.day == effectiveCompletedAt.day &&
-        (s.routineId == routineId || s.routineName == routineName));
+    _sessions.removeWhere(
+      (s) =>
+          s.completedAt.year == effectiveCompletedAt.year &&
+          s.completedAt.month == effectiveCompletedAt.month &&
+          s.completedAt.day == effectiveCompletedAt.day &&
+          (s.routineId == routineId || s.routineName == routineName),
+    );
 
     // Insert at beginning and sort
     _sessions.insert(0, session);
     _sessions.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    _rebuildDateKeysIndex();
     notifyListeners();
 
     return await _saveSessions();
@@ -208,14 +232,14 @@ class WorkoutHistoryController extends ChangeNotifier {
 
   /// Get completed sessions on a specific calendar date (supports multiple sessions)
   List<CompletedWorkoutSession> getSessionsForDate(DateTime date) {
-    return _sessions.where((s) {
-      return s.completedAt.year == date.year &&
-          s.completedAt.month == date.month &&
-          s.completedAt.day == date.day;
-    }).toList();
+    final key = DaySchedule.dateKey(date);
+    if (!_completedDateKeys.contains(key)) {
+      return const [];
+    }
+    return _sessions.where((s) => s.dateKey == key).toList();
   }
 
-  /// Check whether any workout session was completed on the given date
+  /// Check whether any workout session was completed on the given date (O(1) lookup)
   bool hasCompletedWorkoutOnDate(DateTime date) {
     // Cannot have completed workouts in the future
     final now = DateTime.now();
@@ -223,14 +247,14 @@ class WorkoutHistoryController extends ChangeNotifier {
     final target = DateTime(date.year, date.month, date.day);
     if (target.isAfter(today)) return false;
 
-    return getSessionsForDate(date).isNotEmpty;
+    return _completedDateKeys.contains(DaySchedule.dateKey(target));
   }
 
   /// Check if the date was recorded as a Rest Day
   bool isRestDayOnDate(DateTime date) {
     try {
-      final dailyRecord =
-          DailyWorkoutController.instance.getDailyWorkoutForDate(date);
+      final dailyRecord = DailyWorkoutController.instance
+          .getDailyWorkoutForDate(date);
       if (dailyRecord != null && dailyRecord.isRest) return true;
 
       final schedule = WorkoutController.instance.getDaySchedule(date);
@@ -243,8 +267,8 @@ class WorkoutHistoryController extends ChangeNotifier {
   /// Check if the date was recorded as Skipped
   bool isSkippedOnDate(DateTime date) {
     try {
-      final dailyRecord =
-          DailyWorkoutController.instance.getDailyWorkoutForDate(date);
+      final dailyRecord = DailyWorkoutController.instance
+          .getDailyWorkoutForDate(date);
       return dailyRecord != null && dailyRecord.isSkipped;
     } catch (_) {
       return false;
@@ -263,6 +287,7 @@ class WorkoutHistoryController extends ChangeNotifier {
   /// Delete a session (safe maintenance)
   Future<bool> deleteSession(String sessionId) async {
     _sessions.removeWhere((s) => s.id == sessionId);
+    _rebuildDateKeysIndex();
     notifyListeners();
     return await _saveSessions();
   }
@@ -270,6 +295,7 @@ class WorkoutHistoryController extends ChangeNotifier {
   /// Clear all history sessions (used in resets or tests)
   Future<bool> clearHistory() async {
     _sessions.clear();
+    _completedDateKeys.clear();
     notifyListeners();
     return await _saveSessions();
   }
@@ -278,4 +304,3 @@ class WorkoutHistoryController extends ChangeNotifier {
     return await _storage.saveSessions(_sessions);
   }
 }
-

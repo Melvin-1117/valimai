@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/exercise.dart';
 import '../services/exercise_controller.dart';
 import '../theme/app_theme.dart';
@@ -6,10 +7,7 @@ import '../theme/app_theme.dart';
 class AddExerciseScreen extends StatefulWidget {
   final Set<String> existingExerciseNames;
 
-  const AddExerciseScreen({
-    super.key,
-    this.existingExerciseNames = const {},
-  });
+  const AddExerciseScreen({super.key, this.existingExerciseNames = const {}});
 
   @override
   State<AddExerciseScreen> createState() => _AddExerciseScreenState();
@@ -114,8 +112,11 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
             child: Center(
               child: OutlinedButton.icon(
                 onPressed: _openAddCustomExerciseDialog,
-                icon: const Icon(Icons.add,
-                    size: 14, color: ValimaiColors.primaryContainer),
+                icon: const Icon(
+                  Icons.add,
+                  size: 14,
+                  color: ValimaiColors.primaryContainer,
+                ),
                 label: const Text(
                   'CUSTOM',
                   style: TextStyle(
@@ -131,10 +132,13 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     color: ValimaiColors.primaryContainer.withOpacity(0.5),
                     width: 1,
                   ),
-                  backgroundColor:
-                      ValimaiColors.primaryContainer.withOpacity(0.08),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  backgroundColor: ValimaiColors.primaryContainer.withOpacity(
+                    0.08,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -175,9 +179,7 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               _buildCategorySelector(controller),
 
               // SECTION C: EXERCISE LISTING
-              Expanded(
-                child: _buildExerciseList(exercises),
-              ),
+              Expanded(child: _buildExerciseList(exercises)),
 
               // SECTION D: SELECTED EXERCISES BOTTOM BAR
               if (_selectedExercises.isNotEmpty) _buildBottomBar(),
@@ -287,7 +289,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? ValimaiColors.primaryContainer // #F02D36
+                    ? ValimaiColors
+                          .primaryContainer // #F02D36
                     : ValimaiColors.surface,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
@@ -312,7 +315,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     Icon(
                       MuscleGroupCategories.getIcon(cat),
                       size: 13,
-                      color: isSelected ? Colors.white : ValimaiColors.secondary,
+                      color: isSelected
+                          ? Colors.white
+                          : ValimaiColors.secondary,
                     ),
                     const SizedBox(width: 6),
                   ],
@@ -321,16 +326,21 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: 10,
-                      fontWeight:
-                          isSelected ? FontWeight.w800 : FontWeight.w700,
-                      color: isSelected ? Colors.white : ValimaiColors.secondary,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w700,
+                      color: isSelected
+                          ? Colors.white
+                          : ValimaiColors.secondary,
                       letterSpacing: 0.6,
                     ),
                   ),
                   const SizedBox(width: 5),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.white.withOpacity(0.25)
@@ -343,8 +353,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                         fontFamily: 'Montserrat',
                         fontSize: 9,
                         fontWeight: FontWeight.w800,
-                        color:
-                            isSelected ? Colors.white : ValimaiColors.secondary,
+                        color: isSelected
+                            ? Colors.white
+                            : ValimaiColors.secondary,
                       ),
                     ),
                   ),
@@ -408,8 +419,11 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               const SizedBox(height: 18),
               OutlinedButton.icon(
                 onPressed: _openAddCustomExerciseDialog,
-                icon: const Icon(Icons.add,
-                    size: 16, color: ValimaiColors.primaryContainer),
+                icon: const Icon(
+                  Icons.add,
+                  size: 16,
+                  color: ValimaiColors.primaryContainer,
+                ),
                 label: const Text(
                   'CREATE CUSTOM EXERCISE',
                   style: TextStyle(
@@ -422,7 +436,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(
-                      color: ValimaiColors.primaryContainer, width: 1),
+                    color: ValimaiColors.primaryContainer,
+                    width: 1,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -440,8 +456,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
       itemBuilder: (context, index) {
         final exercise = exercises[index];
         final nameLower = exercise.name.toLowerCase().trim();
-        final bool isAlreadyInWorkout =
-            widget.existingExerciseNames.contains(nameLower);
+        final bool isAlreadyInWorkout = widget.existingExerciseNames.contains(
+          nameLower,
+        );
         final bool isSelected = _selectedExercises.containsKey(exercise.id);
 
         return Container(
@@ -455,8 +472,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
               color: isSelected
                   ? ValimaiColors.primaryContainer
                   : isAlreadyInWorkout
-                      ? ValimaiColors.cardBorder.withOpacity(0.4)
-                      : ValimaiColors.cardBorder,
+                  ? ValimaiColors.cardBorder.withOpacity(0.4)
+                  : ValimaiColors.cardBorder,
               width: isSelected ? 1.5 : 1,
             ),
           ),
@@ -477,24 +494,27 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                       color: isAlreadyInWorkout
                           ? ValimaiColors.surfaceContainerLow
                           : isSelected
-                              ? ValimaiColors.primaryContainer
-                              : Colors.transparent,
+                          ? ValimaiColors.primaryContainer
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
                         color: isAlreadyInWorkout
                             ? ValimaiColors.cardBorder
                             : isSelected
-                                ? ValimaiColors.primaryContainer
-                                : ValimaiColors.secondary,
+                            ? ValimaiColors.primaryContainer
+                            : ValimaiColors.secondary,
                         width: 1.5,
                       ),
                     ),
                     child: isAlreadyInWorkout
-                        ? const Icon(Icons.lock, size: 12, color: ValimaiColors.secondary)
+                        ? const Icon(
+                            Icons.lock,
+                            size: 12,
+                            color: ValimaiColors.secondary,
+                          )
                         : isSelected
-                            ? const Icon(Icons.check,
-                                size: 14, color: Colors.white)
-                            : null,
+                        ? const Icon(Icons.check, size: 14, color: Colors.white)
+                        : null,
                   ),
                   const SizedBox(width: 12),
 
@@ -522,7 +542,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                               const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: ValimaiColors.primaryContainer
                                       .withOpacity(0.15),
@@ -544,7 +566,9 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                               const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: ValimaiColors.surfaceContainerLow,
                                   borderRadius: BorderRadius.circular(4),
@@ -626,12 +650,16 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                   children: _selectedExercises.values.map((ex) {
                     return Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: ValimaiColors.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: ValimaiColors.cardBorder, width: 1),
+                          color: ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -742,8 +770,10 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ValimaiColors.primaryContainer, // #F02D36
                   foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -827,7 +857,8 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
       Navigator.of(context).pop();
     } else {
       setState(() {
-        _error = ExerciseController.instance.lastError ??
+        _error =
+            ExerciseController.instance.lastError ??
             'Failed to save custom exercise.';
       });
     }
@@ -881,8 +912,11 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline,
-                        size: 16, color: ValimaiColors.primaryContainer),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 16,
+                      color: ValimaiColors.primaryContainer,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -932,8 +966,10 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
                   value: _primaryMuscle,
                   dropdownColor: ValimaiColors.surface,
                   isExpanded: true,
-                  icon: const Icon(Icons.expand_more,
-                      color: ValimaiColors.secondary),
+                  icon: const Icon(
+                    Icons.expand_more,
+                    color: ValimaiColors.secondary,
+                  ),
                   style: const TextStyle(
                     fontFamily: 'Montserrat',
                     fontSize: 13,
@@ -974,8 +1010,10 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
                   value: _equipment,
                   dropdownColor: ValimaiColors.surface,
                   isExpanded: true,
-                  icon: const Icon(Icons.expand_more,
-                      color: ValimaiColors.secondary),
+                  icon: const Icon(
+                    Icons.expand_more,
+                    color: ValimaiColors.secondary,
+                  ),
                   style: const TextStyle(
                     fontFamily: 'Montserrat',
                     fontSize: 13,
@@ -983,10 +1021,7 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
                     color: ValimaiColors.onSurface,
                   ),
                   items: EquipmentTypes.all.map((eq) {
-                    return DropdownMenuItem<String>(
-                      value: eq,
-                      child: Text(eq),
-                    );
+                    return DropdownMenuItem<String>(value: eq, child: Text(eq));
                   }).toList(),
                   onChanged: (val) {
                     if (val != null) {
@@ -1009,42 +1044,46 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
               children: MuscleGroupCategories.all
                   .where((c) => c != _primaryMuscle)
                   .map((cat) {
-                final isSelected = _secondaryMuscles.contains(cat);
-                return FilterChip(
-                  label: Text(
-                    cat,
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 11,
-                      fontWeight:
-                          isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? Colors.white : ValimaiColors.secondary,
-                    ),
-                  ),
-                  selected: isSelected,
-                  selectedColor: ValimaiColors.primaryContainer,
-                  backgroundColor: ValimaiColors.surfaceContainerLow,
-                  checkmarkColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    side: BorderSide(
-                      color: isSelected
-                          ? ValimaiColors.primaryContainer
-                          : ValimaiColors.cardBorder,
-                      width: 1,
-                    ),
-                  ),
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        _secondaryMuscles.add(cat);
-                      } else {
-                        _secondaryMuscles.remove(cat);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
+                    final isSelected = _secondaryMuscles.contains(cat);
+                    return FilterChip(
+                      label: Text(
+                        cat,
+                        style: TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 11,
+                          fontWeight: isSelected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white
+                              : ValimaiColors.secondary,
+                        ),
+                      ),
+                      selected: isSelected,
+                      selectedColor: ValimaiColors.primaryContainer,
+                      backgroundColor: ValimaiColors.surfaceContainerLow,
+                      checkmarkColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        side: BorderSide(
+                          color: isSelected
+                              ? ValimaiColors.primaryContainer
+                              : ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
+                      ),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _secondaryMuscles.add(cat);
+                          } else {
+                            _secondaryMuscles.remove(cat);
+                          }
+                        });
+                      },
+                    );
+                  })
+                  .toList(),
             ),
             const SizedBox(height: 24),
 
@@ -1057,8 +1096,8 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ValimaiColors.primaryContainer,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      ValimaiColors.primaryContainer.withOpacity(0.5),
+                  disabledBackgroundColor: ValimaiColors.primaryContainer
+                      .withOpacity(0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1124,10 +1163,11 @@ class _CustomExerciseModalState extends State<_CustomExerciseModal> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide:
-            const BorderSide(color: ValimaiColors.primaryContainer, width: 1.5),
+        borderSide: const BorderSide(
+          color: ValimaiColors.primaryContainer,
+          width: 1.5,
+        ),
       ),
     );
   }
 }
-

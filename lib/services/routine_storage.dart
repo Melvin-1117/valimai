@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import '../models/routine.dart';
 import '../models/workout.dart';
 import 'storage_helper.dart';
@@ -25,8 +26,9 @@ class LocalRoutineStorage implements IRoutineStorage {
       if (content != null && content.isNotEmpty) {
         final List<dynamic> jsonList = jsonDecode(content);
         final loaded = jsonList
-            .map((item) =>
-                WorkoutRoutine.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) => WorkoutRoutine.fromJson(item as Map<String, dynamic>),
+            )
             .toList();
 
         // Sort by rotationOrder
@@ -219,7 +221,8 @@ class LocalRoutineStorage implements IRoutineStorage {
       WorkoutRoutine(
         id: 'routine_c_legs',
         name: 'Workout C – Legs + Shoulders',
-        description: 'Compound leg mechanics paired with lateral deltoid volume',
+        description:
+            'Compound leg mechanics paired with lateral deltoid volume',
         targetMuscleGroups: const ['Quadriceps', 'Hamstrings', 'Shoulders'],
         rotationOrder: 2,
         isActive: true,
@@ -276,7 +279,8 @@ class LocalRoutineStorage implements IRoutineStorage {
       WorkoutRoutine(
         id: 'routine_d_back_delts',
         name: 'Workout D – Back + Rear Delts',
-        description: 'Scapular retractors, upper back thickness, and rear delts',
+        description:
+            'Scapular retractors, upper back thickness, and rear delts',
         targetMuscleGroups: const ['Back', 'Shoulders'],
         rotationOrder: 3,
         isActive: true,

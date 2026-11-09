@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../models/user_profile.dart';
 import 'profile_storage.dart';
 
@@ -22,7 +23,7 @@ class ProfileController extends ChangeNotifier {
   String? _errorMessage;
 
   ProfileController({IProfileStorage? storage})
-      : _storage = storage ?? LocalProfileStorage();
+    : _storage = storage ?? LocalProfileStorage();
 
   UserProfile? get profile => _profile;
   bool get isLoading => _isLoading;
@@ -230,4 +231,3 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
   }
 }
-

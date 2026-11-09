@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../models/daily_workout.dart';
 import '../models/routine.dart';
 import '../models/workout.dart';
@@ -51,8 +52,7 @@ class WorkoutRotationEngine {
         );
       }
 
-      final isCompleted =
-          todayDecision.status == DailyWorkoutStatus.completed;
+      final isCompleted = todayDecision.status == DailyWorkoutStatus.completed;
       final routine = _resolveRoutine(
         todayDecision.selectedRoutineId,
         activeRoutines,
@@ -91,9 +91,9 @@ class WorkoutRotationEngine {
         todaySchedule.type == ScheduledDayType.workout &&
         todaySchedule.workoutId != null) {
       final scheduled = activeRoutines.cast<WorkoutRoutine?>().firstWhere(
-            (r) => r?.id == todaySchedule.workoutId,
-            orElse: () => null,
-          );
+        (r) => r?.id == todaySchedule.workoutId,
+        orElse: () => null,
+      );
       if (scheduled != null) {
         return WorkoutRecommendation(
           routine: scheduled,
@@ -160,8 +160,9 @@ class WorkoutRotationEngine {
     // Iterate through completed sessions to find the most recent valid reference.
     for (final session in sortedHistory) {
       // Case A: The routine exists in the current active routines.
-      final activeIndex =
-          activeRoutines.indexWhere((r) => r.id == session.routineId);
+      final activeIndex = activeRoutines.indexWhere(
+        (r) => r.id == session.routineId,
+      );
       if (activeIndex >= 0) {
         // RULE 5: After a completed workout, advance to the next active routine.
         final nextIndex = (activeIndex + 1) % activeRoutines.length;
@@ -169,8 +170,7 @@ class WorkoutRotationEngine {
       }
 
       // Case B: The routine is inactive, but still in the routine repository.
-      final allIndex =
-          allRoutines.indexWhere((r) => r.id == session.routineId);
+      final allIndex = allRoutines.indexWhere((r) => r.id == session.routineId);
       if (allIndex >= 0) {
         final completedOrder = allRoutines[allIndex].rotationOrder;
         // Find the first active routine with a rotationOrder higher than the inactive one
@@ -235,8 +235,15 @@ class WorkoutRotationEngine {
         if (schedule.isCompleted && schedule.workoutId != null) {
           final dateKey = DaySchedule.dateKey(schedule.date);
           final key = '${schedule.workoutId}_$dateKey';
-          final completedAt = schedule.completedAt ??
-              DateTime(schedule.date.year, schedule.date.month, schedule.date.day, 12, 0);
+          final completedAt =
+              schedule.completedAt ??
+              DateTime(
+                schedule.date.year,
+                schedule.date.month,
+                schedule.date.day,
+                12,
+                0,
+              );
 
           // Only add if not already captured or if newer
           if (!sessionMap.containsKey(key) ||
@@ -263,8 +270,8 @@ class WorkoutRotationEngine {
     final activeRoutines = RoutineController.instance.activeRoutines;
     final allRoutines = RoutineController.instance.allRoutines;
     final completedHistory = getCompletedHistory();
-    final todayDecision =
-        DailyWorkoutController.instance.getDailyWorkoutForDate(date);
+    final todayDecision = DailyWorkoutController.instance
+        .getDailyWorkoutForDate(date);
     final todaySchedule = WorkoutController.instance.getDaySchedule(date);
 
     return computeRecommendation(
@@ -285,11 +292,12 @@ class WorkoutRotationEngine {
 
     // Check calendar schedule
     final schedule = WorkoutController.instance.getDaySchedule(date);
-    if (schedule.type == ScheduledDayType.workout && schedule.workoutId != null) {
+    if (schedule.type == ScheduledDayType.workout &&
+        schedule.workoutId != null) {
       final scheduled = activeRoutines.cast<WorkoutRoutine?>().firstWhere(
-            (r) => r?.id == schedule.workoutId,
-            orElse: () => null,
-          );
+        (r) => r?.id == schedule.workoutId,
+        orElse: () => null,
+      );
       if (scheduled != null) {
         return scheduled;
       }
@@ -329,4 +337,3 @@ class WorkoutRotationEngine {
     }
   }
 }
-

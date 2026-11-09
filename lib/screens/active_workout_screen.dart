@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../models/workout.dart';
 import '../theme/app_theme.dart';
 
@@ -23,7 +25,9 @@ class ActiveWorkoutScreen extends StatefulWidget {
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   late Timer _stopwatchTimer;
-  int _secondsElapsed = 0;
+  final ValueNotifier<int> _secondsElapsedNotifier = ValueNotifier<int>(0);
+
+  int get _secondsElapsed => _secondsElapsedNotifier.value;
 
   // Active exercises in this workout session
   late List<WorkoutExercise> _exercises;
@@ -154,7 +158,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         _currentWeight = defaultConfigs.first.weightKg.toInt();
         _currentReps = defaultConfigs.first.reps;
       } else {
-        _currentWeight = currentEx.weightKg > 0 ? currentEx.weightKg.toInt() : 34;
+        _currentWeight = currentEx.weightKg > 0
+            ? currentEx.weightKg.toInt()
+            : 34;
         _currentReps = currentEx.reps > 0 ? currentEx.reps : 10;
       }
       _currentRpe = 8.5;
@@ -172,9 +178,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   void _startStopwatch() {
     _stopwatchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
-        setState(() {
-          _secondsElapsed++;
-        });
+        _secondsElapsedNotifier.value++;
       }
     });
   }
@@ -211,6 +215,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   @override
   void dispose() {
     _stopwatchTimer.cancel();
+    _secondsElapsedNotifier.dispose();
     super.dispose();
   }
 
@@ -257,8 +262,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               style: TextButton.styleFrom(
                 backgroundColor: ValimaiColors.primaryContainer,
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -345,15 +352,20 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             ],
           ),
           Flexible(
-            child: Text(
-              _formatTime(_secondsElapsed),
-              style: const TextStyle(
-                fontFamily: 'Montserrat',
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.0,
-                color: ValimaiColors.onSurface,
-              ),
+            child: ValueListenableBuilder<int>(
+              valueListenable: _secondsElapsedNotifier,
+              builder: (context, seconds, _) {
+                return Text(
+                  _formatTime(seconds),
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.0,
+                    color: ValimaiColors.onSurface,
+                  ),
+                );
+              },
             ),
           ),
           Container(
@@ -390,8 +402,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   Widget _buildActiveMovementCard() {
     final currentEx = _exercises[_currentExerciseIndex];
-    final displayOrder =
-        (_currentExerciseIndex + 1).toString().padLeft(2, '0');
+    final displayOrder = (_currentExerciseIndex + 1).toString().padLeft(2, '0');
     final totalCount = _exercises.length.toString().padLeft(2, '0');
 
     String subtitle = 'Primary focus: ${currentEx.targetMuscle}';
@@ -419,8 +430,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   runSpacing: 4,
                   children: [
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ValimaiColors.primaryContainer,
                         borderRadius: BorderRadius.circular(4),
@@ -442,7 +455,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             _navigateToExercise(_currentExerciseIndex - 1),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: ValimaiColors.surfaceContainerHigh,
                             borderRadius: BorderRadius.circular(4),
@@ -450,8 +465,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.chevron_left,
-                                  size: 12, color: ValimaiColors.secondary),
+                              Icon(
+                                Icons.chevron_left,
+                                size: 12,
+                                color: ValimaiColors.secondary,
+                              ),
                               Text(
                                 'PREV',
                                 style: TextStyle(
@@ -618,8 +636,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_task,
-                      size: 18, color: ValimaiColors.primaryContainer),
+                  Icon(
+                    Icons.add_task,
+                    size: 18,
+                    color: ValimaiColors.primaryContainer,
+                  ),
                   SizedBox(width: 8),
                   Text(
                     'LOG NEXT SET',
@@ -864,8 +885,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
   Widget _buildNextExercisePreview() {
     final bool hasNext = _currentExerciseIndex < _exercises.length - 1;
-    final WorkoutExercise? nextEx =
-        hasNext ? _exercises[_currentExerciseIndex + 1] : null;
+    final WorkoutExercise? nextEx = hasNext
+        ? _exercises[_currentExerciseIndex + 1]
+        : null;
 
     return GestureDetector(
       onTap: () {
@@ -1001,10 +1023,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
 
     final baseWorkout = widget.workout;
     return Workout(
-      id: baseWorkout?.id ??
-          'workout_${DateTime.now().millisecondsSinceEpoch}',
+      id: baseWorkout?.id ?? 'workout_${DateTime.now().millisecondsSinceEpoch}',
       name: baseWorkout?.name ?? widget.workoutTitle,
-      targetMuscleGroups: baseWorkout?.targetMuscleGroups ??
+      targetMuscleGroups:
+          baseWorkout?.targetMuscleGroups ??
           effectiveExercises.map((e) => e.targetMuscle).toSet().join(' • '),
       estimatedDurationMinutes: (_secondsElapsed / 60).ceil().clamp(1, 300),
       exercises: effectiveExercises,

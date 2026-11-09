@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/workout.dart';
 import '../services/workout_controller.dart';
 import '../widgets/valimai_bottom_nav.dart';
@@ -18,6 +19,30 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeScreen(
+        onStartWorkoutWithData: (w) => _launchLiveWorkout(w, w.name),
+        onStartWorkout: () =>
+            _launchLiveWorkout(null, 'Chest & Triceps Hypertrophy'),
+        onNavigateTab: _onTabSelected,
+      ),
+      WorkoutsScreen(
+        onStartSession: () =>
+            _launchLiveWorkout(null, 'Push Focus: Chest & Triceps'),
+      ),
+      ScheduleScreen(
+        onStartTodaySession: () =>
+            _launchLiveWorkout(null, 'Chest & Triceps Hypertrophy'),
+      ),
+      const HistoryScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   void _onTabSelected(int index) {
     setState(() {
@@ -25,10 +50,15 @@ class _MainShellState extends State<MainShell> {
     });
   }
 
-  void _launchLiveWorkout([Workout? workout, String title = 'Chest & Triceps Hypertrophy']) {
-    final effectiveWorkout = workout ??
-        WorkoutController.instance
-            .getWorkoutForDate(WorkoutController.instance.selectedDate);
+  void _launchLiveWorkout([
+    Workout? workout,
+    String title = 'Chest & Triceps Hypertrophy',
+  ]) {
+    final effectiveWorkout =
+        workout ??
+        WorkoutController.instance.getWorkoutForDate(
+          WorkoutController.instance.selectedDate,
+        );
     final selectedDate = WorkoutController.instance.selectedDate;
 
     Navigator.of(context).push(
@@ -45,10 +75,7 @@ class _MainShellState extends State<MainShell> {
             _onTabSelected(3); // Switch to History tab to see new records
           },
           onFinish: () {
-            WorkoutController.instance.markWorkoutCompleted(
-              selectedDate,
-              true,
-            );
+            WorkoutController.instance.markWorkoutCompleted(selectedDate, true);
             _onTabSelected(3); // Switch to History tab to see new records
           },
         ),
@@ -58,27 +85,8 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> screens = [
-      HomeScreen(
-        onStartWorkoutWithData: (w) => _launchLiveWorkout(w, w.name),
-        onStartWorkout: () => _launchLiveWorkout(null, 'Chest & Triceps Hypertrophy'),
-        onNavigateTab: _onTabSelected,
-      ),
-      WorkoutsScreen(
-        onStartSession: () => _launchLiveWorkout(null, 'Push Focus: Chest & Triceps'),
-      ),
-      ScheduleScreen(
-        onStartTodaySession: () => _launchLiveWorkout(null, 'Chest & Triceps Hypertrophy'),
-      ),
-      const HistoryScreen(),
-      const ProfileScreen(),
-    ];
-
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: ValimaiBottomNav(
         currentIndex: _currentIndex,
         onTap: _onTabSelected,

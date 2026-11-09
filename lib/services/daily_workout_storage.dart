@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import '../models/daily_workout.dart';
 import 'storage_helper.dart';
 
@@ -56,4 +57,3 @@ class LocalDailyWorkoutStorage implements IDailyWorkoutStorage {
     return _cachedRecords![localDate];
   }
 }
-

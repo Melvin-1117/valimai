@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/exercise.dart';
 import '../models/workout.dart';
 import '../services/routine_controller.dart';
@@ -40,8 +41,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.workout.name);
-    _targetMusclesController =
-        TextEditingController(text: widget.workout.targetMuscleGroups);
+    _targetMusclesController = TextEditingController(
+      text: widget.workout.targetMuscleGroups,
+    );
     _searchController = TextEditingController();
     _estimatedDuration = widget.workout.estimatedDurationMinutes;
     // Clone exercises
@@ -71,27 +73,29 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
   }
 
   Future<void> _openAddExerciseScreen() async {
-    final Set<String> existingNames =
-        _exercises.map((e) => e.name.toLowerCase().trim()).toSet();
+    final Set<String> existingNames = _exercises
+        .map((e) => e.name.toLowerCase().trim())
+        .toSet();
 
-    final List<Exercise>? selected =
-        await Navigator.of(context).push<List<Exercise>>(
-      MaterialPageRoute(
-        builder: (_) => AddExerciseScreen(
-          existingExerciseNames: existingNames,
-        ),
-      ),
-    );
+    final List<Exercise>? selected = await Navigator.of(context)
+        .push<List<Exercise>>(
+          MaterialPageRoute(
+            builder: (_) =>
+                AddExerciseScreen(existingExerciseNames: existingNames),
+          ),
+        );
 
     if (selected != null && selected.isNotEmpty) {
       setState(() {
         for (final ex in selected) {
           final exNameLower = ex.name.toLowerCase().trim();
           // Ensure no duplicates
-          if (!_exercises
-              .any((e) => e.name.toLowerCase().trim() == exNameLower)) {
-            final defaultWeight =
-                ex.equipment == EquipmentTypes.bodyweight ? 0.0 : 20.0;
+          if (!_exercises.any(
+            (e) => e.name.toLowerCase().trim() == exNameLower,
+          )) {
+            final defaultWeight = ex.equipment == EquipmentTypes.bodyweight
+                ? 0.0
+                : 20.0;
 
             final defaultSets = List.generate(
               3,
@@ -125,14 +129,13 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
 
   Future<void> _openExerciseConfiguration(int exerciseIndex) async {
     final currentExercise = _exercises[exerciseIndex];
-    final WorkoutExercise? updated =
-        await Navigator.of(context).push<WorkoutExercise>(
-      MaterialPageRoute(
-        builder: (_) => ExerciseConfigurationScreen(
-          workoutExercise: currentExercise,
-        ),
-      ),
-    );
+    final WorkoutExercise? updated = await Navigator.of(context)
+        .push<WorkoutExercise>(
+          MaterialPageRoute(
+            builder: (_) =>
+                ExerciseConfigurationScreen(workoutExercise: currentExercise),
+          ),
+        );
 
     if (updated != null) {
       _updateExercise(exerciseIndex, updated);
@@ -179,19 +182,23 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
       }
     } else if (widget.date != null) {
       try {
-        success = await WorkoutController.instance
-            .updateWorkoutForDate(widget.date!, updatedWorkout);
+        success = await WorkoutController.instance.updateWorkoutForDate(
+          widget.date!,
+          updatedWorkout,
+        );
       } catch (e) {
         debugPrint('Error updating workout for date: $e');
         success = true;
       }
       // If this corresponds to an underlying routine template, update the template so future uses reflect changes
       try {
-        final existing =
-            RoutineController.instance.getRoutineById(widget.workout.id);
+        final existing = RoutineController.instance.getRoutineById(
+          widget.workout.id,
+        );
         if (existing != null) {
-          await RoutineController.instance
-              .updateRoutineFromWorkout(updatedWorkout);
+          await RoutineController.instance.updateRoutineFromWorkout(
+            updatedWorkout,
+          );
         }
       } catch (_) {}
     } else {
@@ -259,7 +266,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         'SEP',
         'OCT',
         'NOV',
-        'DEC'
+        'DEC',
       ];
       dateStr =
           '${months[widget.date!.month]} ${widget.date!.day}, ${widget.date!.year}';
@@ -404,8 +411,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                 ),
                 TextButton.icon(
                   onPressed: _openAddExerciseScreen,
-                  icon: const Icon(Icons.add,
-                      size: 16, color: ValimaiColors.primaryContainer),
+                  icon: const Icon(
+                    Icons.add,
+                    size: 16,
+                    color: ValimaiColors.primaryContainer,
+                  ),
                   label: const Text(
                     'Add Exercise',
                     style: TextStyle(
@@ -416,13 +426,16 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    backgroundColor:
-                        ValimaiColors.primaryContainer.withOpacity(0.12),
+                    backgroundColor: ValimaiColors.primaryContainer.withOpacity(
+                      0.12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                   ),
                 ),
               ],
@@ -465,8 +478,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close,
-                                size: 16, color: ValimaiColors.secondary),
+                            icon: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: ValimaiColors.secondary,
+                            ),
                             onPressed: () {
                               _searchController.clear();
                               setState(() {
@@ -493,8 +509,10 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                   decoration: BoxDecoration(
                     color: ValimaiColors.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: ValimaiColors.cardBorder, width: 1),
+                    border: Border.all(
+                      color: ValimaiColors.cardBorder,
+                      width: 1,
+                    ),
                   ),
                   child: const Center(
                     child: Text(
@@ -515,8 +533,7 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                 decoration: BoxDecoration(
                   color: ValimaiColors.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: ValimaiColors.cardBorder, width: 1),
+                  border: Border.all(color: ValimaiColors.cardBorder, width: 1),
                 ),
                 child: Center(
                   child: Text(
@@ -538,7 +555,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                 itemBuilder: (context, i) {
                   final originalIndex = filtered[i].key;
                   final ex = filtered[i].value;
-                  return _buildExerciseCard(originalIndex, ex, canReorder: false);
+                  return _buildExerciseCard(
+                    originalIndex,
+                    ex,
+                    canReorder: false,
+                  );
                 },
               )
             else
@@ -565,8 +586,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ValimaiColors.primaryContainer,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      ValimaiColors.primaryContainer.withOpacity(0.5),
+                  disabledBackgroundColor: ValimaiColors.primaryContainer
+                      .withOpacity(0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -599,19 +620,24 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
     );
   }
 
-  Widget _buildExerciseCard(int originalIndex, WorkoutExercise ex,
-      {required bool canReorder}) {
+  Widget _buildExerciseCard(
+    int originalIndex,
+    WorkoutExercise ex, {
+    required bool canReorder,
+  }) {
     final sets = ex.effectiveSetConfigs;
     final primaryMuscle = ex.targetMuscle;
     final equipment = ex.equipment ?? EquipmentTypes.barbell;
 
     // Compact summary string of sets (e.g., "10×20kg, 10×25kg, 8×30kg")
-    final setsSummary = sets.map((s) {
-      final wStr = s.weightKg % 1 == 0
-          ? '${s.weightKg.toInt()}'
-          : s.weightKg.toStringAsFixed(1);
-      return '${s.reps}×${wStr}kg';
-    }).join(' • ');
+    final setsSummary = sets
+        .map((s) {
+          final wStr = s.weightKg % 1 == 0
+              ? '${s.weightKg.toInt()}'
+              : s.weightKg.toStringAsFixed(1);
+          return '${s.reps}×${wStr}kg';
+        })
+        .join(' • ');
 
     return Container(
       key: ValueKey(ex.id),
@@ -665,7 +691,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                         color: ValimaiColors.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: ValimaiColors.primaryContainer.withOpacity(0.2),
+                          color: ValimaiColors.primaryContainer.withOpacity(
+                            0.2,
+                          ),
                           width: 1,
                         ),
                       ),
@@ -715,8 +743,10 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                         size: 18,
                       ),
                       onPressed: () => _removeExercise(originalIndex),
-                      constraints:
-                          const BoxConstraints(minWidth: 32, minHeight: 32),
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
                       padding: EdgeInsets.zero,
                     ),
                     if (canReorder) ...[
@@ -741,7 +771,9 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                     // Sets badge
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 3),
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ValimaiColors.primaryContainer.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(4),
@@ -823,22 +855,30 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         ),
         filled: true,
         fillColor: ValimaiColors.surfaceContainerLow,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide:
-              const BorderSide(color: ValimaiColors.cardBorder, width: 1),
+          borderSide: const BorderSide(
+            color: ValimaiColors.cardBorder,
+            width: 1,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide:
-              const BorderSide(color: ValimaiColors.cardBorder, width: 1),
+          borderSide: const BorderSide(
+            color: ValimaiColors.cardBorder,
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(
-              color: ValimaiColors.primaryContainer, width: 1.5),
+            color: ValimaiColors.primaryContainer,
+            width: 1.5,
+          ),
         ),
       ),
     );
@@ -860,8 +900,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: const Icon(Icons.remove,
-                size: 14, color: ValimaiColors.secondary),
+            icon: const Icon(
+              Icons.remove,
+              size: 14,
+              color: ValimaiColors.secondary,
+            ),
             onPressed: onDecrement,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
@@ -879,8 +922,11 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
             ),
           ),
           IconButton(
-            icon:
-                const Icon(Icons.add, size: 14, color: ValimaiColors.secondary),
+            icon: const Icon(
+              Icons.add,
+              size: 14,
+              color: ValimaiColors.secondary,
+            ),
             onPressed: onIncrement,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/workout.dart';
 import '../services/daily_workout_controller.dart';
 import '../services/routine_controller.dart';
@@ -72,13 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _navigateToWorkoutEditor(
-      BuildContext context, DateTime date, Workout workout) async {
+    BuildContext context,
+    DateTime date,
+    Workout workout,
+  ) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => WorkoutEditorScreen(
-          date: date,
-          workout: workout,
-        ),
+        builder: (_) => WorkoutEditorScreen(date: date, workout: workout),
       ),
     );
     if (mounted) {
@@ -156,12 +157,12 @@ class _HomeScreenState extends State<HomeScreen> {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
 
     final isViewingCurrentWeek =
         today.isAfter(firstDay.subtract(const Duration(days: 1))) &&
-            today.isBefore(lastDay.add(const Duration(days: 1)));
+        today.isBefore(lastDay.add(const Duration(days: 1)));
 
     final monthTitle = firstDay.month == lastDay.month
         ? '${months[firstDay.month]} ${firstDay.year}'
@@ -170,13 +171,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final weekRangeSubtitle =
         '${firstDay.day.toString().padLeft(2, '0')} – ${lastDay.day.toString().padLeft(2, '0')} ${months[lastDay.month].substring(0, 3).toUpperCase()}';
 
-    // Calculate weekly microcycle progress
-    final completedWorkouts =
-        weekDays.where((d) => controller.getDaySchedule(d).isCompleted).length;
-    final plannedWorkouts = weekDays
-        .where((d) =>
-            controller.getDaySchedule(d).type == ScheduledDayType.workout)
-        .length;
+    // Calculate weekly microcycle progress in a single pass
+    int completedWorkouts = 0;
+    int plannedWorkouts = 0;
+    for (final d in weekDays) {
+      final schedule = controller.getDaySchedule(d);
+      if (schedule.isCompleted) completedWorkouts++;
+      if (schedule.type == ScheduledDayType.workout) plannedWorkouts++;
+    }
     final targetCount = plannedWorkouts;
     final progressFraction = targetCount > 0
         ? (completedWorkouts / targetCount).clamp(0.0, 1.0)
@@ -216,8 +218,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ValimaiColors.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(6),
@@ -245,14 +249,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: () => controller.jumpToToday(),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color:
-                                ValimaiColors.primaryContainer.withOpacity(0.15),
+                            color: ValimaiColors.primaryContainer.withOpacity(
+                              0.15,
+                            ),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color:
-                                  ValimaiColors.primaryContainer.withOpacity(0.5),
+                              color: ValimaiColors.primaryContainer.withOpacity(
+                                0.5,
+                              ),
                               width: 1,
                             ),
                           ),
@@ -278,8 +286,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         color: ValimaiColors.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: ValimaiColors.cardBorder, width: 1),
+                        border: Border.all(
+                          color: ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
                       ),
                       child: const Center(
                         child: Icon(
@@ -300,8 +310,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         color: ValimaiColors.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: ValimaiColors.cardBorder, width: 1),
+                        border: Border.all(
+                          color: ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
                       ),
                       child: const Center(
                         child: Icon(
@@ -370,10 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      ValimaiColors.primaryContainer,
-                      Color(0xFFFF6B6B),
-                    ],
+                    colors: [ValimaiColors.primaryContainer, Color(0xFFFF6B6B)],
                   ),
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -385,11 +394,13 @@ class _HomeScreenState extends State<HomeScreen> {
           // 7-Day Balanced Row Strip with Split Tags
           Row(
             children: weekDays.map((dayDate) {
-              final isToday = dayDate.year == today.year &&
+              final isToday =
+                  dayDate.year == today.year &&
                   dayDate.month == today.month &&
                   dayDate.day == today.day;
 
-              final isSelected = dayDate.year == controller.selectedDate.year &&
+              final isSelected =
+                  dayDate.year == controller.selectedDate.year &&
                   dayDate.month == controller.selectedDate.month &&
                   dayDate.day == controller.selectedDate.day;
 
@@ -424,11 +435,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final nameUpper = workout.name.toUpperCase();
     final musclesUpper = workout.targetMuscleGroups.toUpperCase();
 
-    if (nameUpper.contains('PUSH') || musclesUpper.contains('PUSH')) return 'PUSH';
-    if (nameUpper.contains('PULL') || musclesUpper.contains('PULL')) return 'PULL';
-    if (nameUpper.contains('LEG') || musclesUpper.contains('LEG')) return 'LEGS';
-    if (nameUpper.contains('CHEST') || musclesUpper.contains('CHEST')) return 'CHEST';
-    if (nameUpper.contains('BACK') || musclesUpper.contains('BACK')) return 'BACK';
+    if (nameUpper.contains('PUSH') || musclesUpper.contains('PUSH'))
+      return 'PUSH';
+    if (nameUpper.contains('PULL') || musclesUpper.contains('PULL'))
+      return 'PULL';
+    if (nameUpper.contains('LEG') || musclesUpper.contains('LEG'))
+      return 'LEGS';
+    if (nameUpper.contains('CHEST') || musclesUpper.contains('CHEST'))
+      return 'CHEST';
+    if (nameUpper.contains('BACK') || musclesUpper.contains('BACK'))
+      return 'BACK';
     if (nameUpper.contains('ARM') ||
         musclesUpper.contains('BICEP') ||
         musclesUpper.contains('TRICEP')) {
@@ -449,8 +465,10 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    final match =
-        RegExp(r'Workout\s+([A-Za-z0-9]+)', caseSensitive: false).firstMatch(workout.name);
+    final match = RegExp(
+      r'Workout\s+([A-Za-z0-9]+)',
+      caseSensitive: false,
+    ).firstMatch(workout.name);
     if (match != null) {
       return match.group(1)!.toUpperCase();
     }
@@ -521,8 +539,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 3),
               // Split Tag inside hero pill
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 1.5,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.28),
                   borderRadius: BorderRadius.circular(4),
@@ -564,8 +584,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               else if (isToday)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(3),
@@ -646,14 +668,13 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 3),
             // Split Tag inside normal pill
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
               decoration: BoxDecoration(
                 color: isToday
                     ? ValimaiColors.primaryContainer.withOpacity(0.18)
                     : isRest
-                        ? ValimaiColors.surfaceContainerHigh.withOpacity(0.4)
-                        : ValimaiColors.surfaceContainerHigh,
+                    ? ValimaiColors.surfaceContainerHigh.withOpacity(0.4)
+                    : ValimaiColors.surfaceContainerHigh,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -665,8 +686,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: isToday
                       ? ValimaiColors.primaryContainer
                       : isRest
-                          ? ValimaiColors.secondary.withOpacity(0.7)
-                          : ValimaiColors.primaryContainer,
+                      ? ValimaiColors.secondary.withOpacity(0.7)
+                      : ValimaiColors.primaryContainer,
                   letterSpacing: 0.3,
                 ),
               ),
@@ -722,9 +743,8 @@ class _HomeScreenState extends State<HomeScreen> {
     required Workout? workout,
   }) {
     final now = DateTime.now();
-    final isToday = date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
+    final isToday =
+        date.year == now.year && date.month == now.month && date.day == now.day;
 
     final weekdays = [
       '',
@@ -734,7 +754,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'THURSDAY',
       'FRIDAY',
       'SATURDAY',
-      'SUNDAY'
+      'SUNDAY',
     ];
     final months = [
       '',
@@ -749,7 +769,7 @@ class _HomeScreenState extends State<HomeScreen> {
       'SEP',
       'OCT',
       'NOV',
-      'DEC'
+      'DEC',
     ];
 
     final headerDateStr =
@@ -828,7 +848,10 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isToday
                       ? ValimaiColors.primaryContainer
@@ -962,7 +985,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: workout.exercises.take(4).map((ex) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: ValimaiColors.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(8),
@@ -1000,7 +1026,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ValimaiColors.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(4),
@@ -1096,7 +1124,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: OutlinedButton.styleFrom(
                 backgroundColor: ValimaiColors.surfaceContainerLow,
                 side: const BorderSide(
-                    color: ValimaiColors.cardBorder, width: 1),
+                  color: ValimaiColors.cardBorder,
+                  width: 1,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -1119,8 +1149,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.sync_alt,
-                    size: 14, color: ValimaiColors.secondary),
+                icon: const Icon(
+                  Icons.sync_alt,
+                  size: 14,
+                  color: ValimaiColors.secondary,
+                ),
                 label: const Text(
                   "CHANGE TODAY'S SELECTION",
                   style: TextStyle(
@@ -1162,15 +1195,21 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: ValimaiColors.surfaceContainerHigh,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.self_improvement,
-                        size: 14, color: ValimaiColors.secondary),
+                    Icon(
+                      Icons.self_improvement,
+                      size: 14,
+                      color: ValimaiColors.secondary,
+                    ),
                     SizedBox(width: 5),
                     Text(
                       'SCHEDULED REST & RECOVERY',
@@ -1297,7 +1336,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: OutlinedButton.styleFrom(
                 backgroundColor: ValimaiColors.surfaceContainerLow,
                 side: const BorderSide(
-                    color: ValimaiColors.cardBorder, width: 1),
+                  color: ValimaiColors.cardBorder,
+                  width: 1,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -1320,8 +1361,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.sync_alt,
-                    size: 14, color: ValimaiColors.secondary),
+                icon: const Icon(
+                  Icons.sync_alt,
+                  size: 14,
+                  color: ValimaiColors.secondary,
+                ),
                 label: const Text(
                   "CHANGE TODAY'S SELECTION",
                   style: TextStyle(
@@ -1454,7 +1498,10 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: ValimaiColors.primaryContainer.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(6),
@@ -1599,7 +1646,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: OutlinedButton.styleFrom(
                 backgroundColor: ValimaiColors.surfaceContainerLow,
                 side: const BorderSide(
-                    color: ValimaiColors.cardBorder, width: 1),
+                  color: ValimaiColors.cardBorder,
+                  width: 1,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -1622,8 +1671,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.sync_alt,
-                    size: 14, color: ValimaiColors.secondary),
+                icon: const Icon(
+                  Icons.sync_alt,
+                  size: 14,
+                  color: ValimaiColors.secondary,
+                ),
                 label: const Text(
                   "CHANGE TODAY'S SELECTION",
                   style: TextStyle(
@@ -1642,8 +1694,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMetricTile(String label, String value, String sub,
-      {bool isAccent = false}) {
+  Widget _buildMetricTile(
+    String label,
+    String value,
+    String sub, {
+    bool isAccent = false,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(

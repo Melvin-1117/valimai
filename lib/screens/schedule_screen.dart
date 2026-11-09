@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/daily_workout.dart';
 import '../models/routine.dart';
 import '../models/workout.dart';
@@ -48,8 +49,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     if (target == today) {
       final schedule = WorkoutController.instance.getDaySchedule(today);
-      final isCompleted = schedule.isCompleted ||
-          WorkoutHistoryController.instance.getSessionsForDate(today).isNotEmpty;
+      final isCompleted =
+          schedule.isCompleted ||
+          WorkoutHistoryController.instance
+              .getSessionsForDate(today)
+              .isNotEmpty;
       return !isCompleted; // Today is editable only if not yet completed
     }
 
@@ -91,7 +95,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       }
       if (daily.status == DailyWorkoutStatus.completed &&
           daily.selectedRoutineId != null) {
-        final r = RoutineController.instance.getRoutineById(daily.selectedRoutineId!);
+        final r = RoutineController.instance.getRoutineById(
+          daily.selectedRoutineId!,
+        );
         return DaySchedule(
           date: norm,
           type: ScheduledDayType.workout,
@@ -102,7 +108,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         );
       }
       if (daily.hasWorkout && daily.selectedRoutineId != null) {
-        final r = RoutineController.instance.getRoutineById(daily.selectedRoutineId!);
+        final r = RoutineController.instance.getRoutineById(
+          daily.selectedRoutineId!,
+        );
         return DaySchedule(
           date: norm,
           type: ScheduledDayType.workout,
@@ -245,11 +253,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _pendingRoutineId = null;
 
       // Ensure selected day is clamped within valid month length
-      final daysInNewMonth =
-          DateTime(_viewingMonth.year, _viewingMonth.month + 1, 0).day;
+      final daysInNewMonth = DateTime(
+        _viewingMonth.year,
+        _viewingMonth.month + 1,
+        0,
+      ).day;
       final clampedDay = _selectedDate.day.clamp(1, daysInNewMonth);
-      _selectedDate =
-          DateTime(_viewingMonth.year, _viewingMonth.month, clampedDay);
+      _selectedDate = DateTime(
+        _viewingMonth.year,
+        _viewingMonth.month,
+        clampedDay,
+      );
     });
   }
 
@@ -264,11 +278,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _pendingType = null;
       _pendingRoutineId = null;
 
-      final daysInNewMonth =
-          DateTime(_viewingMonth.year, _viewingMonth.month + 1, 0).day;
+      final daysInNewMonth = DateTime(
+        _viewingMonth.year,
+        _viewingMonth.month + 1,
+        0,
+      ).day;
       final clampedDay = _selectedDate.day.clamp(1, daysInNewMonth);
-      _selectedDate =
-          DateTime(_viewingMonth.year, _viewingMonth.month, clampedDay);
+      _selectedDate = DateTime(
+        _viewingMonth.year,
+        _viewingMonth.month,
+        clampedDay,
+      );
     });
   }
 
@@ -299,14 +319,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     try {
       if (_pendingType == ScheduledDayType.workout &&
           _pendingRoutineId != null) {
-        success = await WorkoutController.instance
-            .assignRoutineToDate(_selectedDate, _pendingRoutineId!);
+        success = await WorkoutController.instance.assignRoutineToDate(
+          _selectedDate,
+          _pendingRoutineId!,
+        );
       } else if (_pendingType == ScheduledDayType.rest) {
-        success = await WorkoutController.instance
-            .setRestDayForDate(_selectedDate);
+        success = await WorkoutController.instance.setRestDayForDate(
+          _selectedDate,
+        );
       } else if (_pendingType == ScheduledDayType.unassigned) {
-        success = await WorkoutController.instance
-            .clearDateAssignment(_selectedDate);
+        success = await WorkoutController.instance.clearDateAssignment(
+          _selectedDate,
+        );
       }
 
       if (success && mounted) {
@@ -347,8 +371,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final activeRoutines = RoutineController.instance.activeRoutines;
     final saved = _getSavedSchedule(_selectedDate);
     final effectiveType = _pendingType ?? saved.type;
-    final effectiveRoutineId =
-        _pendingType != null ? _pendingRoutineId : saved.workoutId;
+    final effectiveRoutineId = _pendingType != null
+        ? _pendingRoutineId
+        : saved.workoutId;
 
     showModalBottomSheet(
       context: context,
@@ -422,7 +447,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         ),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 12),
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       child: Row(
                         children: [
                           Container(
@@ -499,7 +526,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       color: ValimaiColors.surfaceContainerLow,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: ValimaiColors.cardBorder, width: 1),
+                        color: ValimaiColors.cardBorder,
+                        width: 1,
+                      ),
                     ),
                     child: Column(
                       children: const [
@@ -544,7 +573,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         final routine = activeRoutines[index];
                         final isCurrent =
                             effectiveType == ScheduledDayType.workout &&
-                                effectiveRoutineId == routine.id;
+                            effectiveRoutineId == routine.id;
 
                         final muscles = routine.targetMuscleGroups.isNotEmpty
                             ? routine.targetMuscleGroups.join(', ')
@@ -565,7 +594,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               decoration: BoxDecoration(
                                 color: isCurrent
                                     ? ValimaiColors.primaryContainer
-                                        .withOpacity(0.12)
+                                          .withOpacity(0.12)
                                     : ValimaiColors.surfaceContainerLow,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
@@ -576,7 +605,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 ),
                               ),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 12),
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
                               child: Row(
                                 children: [
                                   Container(
@@ -675,10 +706,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       },
       child: Scaffold(
         backgroundColor: ValimaiColors.background,
-        appBar: const ValimaiAppBar(
-          title: 'Schedule',
-          showSearch: false,
-        ),
+        appBar: const ValimaiAppBar(title: 'Schedule', showSearch: false),
         body: ListenableBuilder(
           listenable: Listenable.merge([
             WorkoutController.instance,
@@ -716,8 +744,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   // ==========================================
   Widget _buildMonthlyCalendar() {
     final now = DateTime.now();
-    final isCurrentMonth = _viewingMonth.year == now.year &&
-        _viewingMonth.month == now.month;
+    final isCurrentMonth =
+        _viewingMonth.year == now.year && _viewingMonth.month == now.month;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -750,10 +778,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       onTap: _goToCurrentMonth,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: ValimaiColors.primaryContainer
-                              .withOpacity(0.18),
+                          color: ValimaiColors.primaryContainer.withOpacity(
+                            0.18,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
@@ -782,7 +813,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         color: ValimaiColors.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: ValimaiColors.cardBorder, width: 1),
+                          color: ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
                       ),
                       child: const Center(
                         child: Icon(
@@ -803,7 +836,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         color: ValimaiColors.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: ValimaiColors.cardBorder, width: 1),
+                          color: ValimaiColors.cardBorder,
+                          width: 1,
+                        ),
                       ),
                       child: const Center(
                         child: Icon(
@@ -880,8 +915,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               if (isSelected && _pendingType != null) {
                 indicatorType = _pendingType!;
               } else {
-                indicatorType =
-                    WorkoutController.instance.getDateScheduleType(cellDate);
+                indicatorType = WorkoutController.instance.getDateScheduleType(
+                  cellDate,
+                );
               }
 
               return Expanded(
@@ -893,24 +929,26 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? ValimaiColors.primaryContainer // Red highlight
+                          ? ValimaiColors
+                                .primaryContainer // Red highlight
                           : isToday
-                              ? ValimaiColors.surfaceContainerHigh
-                              : Colors.transparent,
+                          ? ValimaiColors.surfaceContainerHigh
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(10),
                       border: isToday
                           ? Border.all(
                               color: isSelected
-                                  ? Colors.white // Distinct outline when both today & selected
+                                  ? Colors
+                                        .white // Distinct outline when both today & selected
                                   : ValimaiColors.primaryContainer,
                               width: isSelected ? 2.0 : 1.5,
                             )
                           : isSelected
-                              ? Border.all(
-                                  color: ValimaiColors.primaryContainer,
-                                  width: 1.5,
-                                )
-                              : null,
+                          ? Border.all(
+                              color: ValimaiColors.primaryContainer,
+                              width: 1.5,
+                            )
+                          : null,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -926,11 +964,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             color: isSelected
                                 ? Colors.white
                                 : isToday
-                                    ? Colors.white
-                                    : isPast
-                                        ? ValimaiColors.secondary
-                                            .withOpacity(0.4)
-                                        : ValimaiColors.onSurface,
+                                ? Colors.white
+                                : isPast
+                                ? ValimaiColors.secondary.withOpacity(0.4)
+                                : ValimaiColors.onSurface,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -991,14 +1028,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     final saved = _getSavedSchedule(_selectedDate);
     final effectiveType = _pendingType ?? saved.type;
-    final effectiveRoutineId =
-        _pendingType != null ? _pendingRoutineId : saved.workoutId;
+    final effectiveRoutineId = _pendingType != null
+        ? _pendingRoutineId
+        : saved.workoutId;
 
     WorkoutRoutine? routine;
     if (effectiveType == ScheduledDayType.workout &&
         effectiveRoutineId != null) {
-      routine =
-          RoutineController.instance.getRoutineById(effectiveRoutineId);
+      routine = RoutineController.instance.getRoutineById(effectiveRoutineId);
     }
 
     return Container(
@@ -1037,8 +1074,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               const SizedBox(width: 8),
               if (hasPendingChanges)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: ValimaiColors.primaryContainer.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(6),
@@ -1060,8 +1099,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 )
               else if (isLockedToday)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.18),
                     borderRadius: BorderRadius.circular(6),
@@ -1079,8 +1120,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 )
               else if (isPast)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: ValimaiColors.surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(6),
@@ -1132,8 +1175,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               decoration: BoxDecoration(
                 color: ValimaiColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(10),
-                border:
-                    Border.all(color: ValimaiColors.cardBorder, width: 1),
+                border: Border.all(color: ValimaiColors.cardBorder, width: 1),
               ),
               child: const Center(
                 child: Icon(
@@ -1345,8 +1387,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               decoration: BoxDecoration(
                 color: ValimaiColors.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(10),
-                border:
-                    Border.all(color: ValimaiColors.cardBorder, width: 1),
+                border: Border.all(color: ValimaiColors.cardBorder, width: 1),
               ),
               child: const Center(
                 child: Icon(
@@ -1460,8 +1501,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: ValimaiColors.primaryContainer,
           foregroundColor: Colors.white,
-          disabledBackgroundColor:
-              ValimaiColors.surfaceContainerLow.withOpacity(0.4),
+          disabledBackgroundColor: ValimaiColors.surfaceContainerLow
+              .withOpacity(0.4),
           disabledForegroundColor: ValimaiColors.secondary.withOpacity(0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -1523,7 +1564,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     return '${months[date.month]} ${date.year}';
   }
@@ -1542,7 +1583,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return '${months[date.month]} ${date.day}';
   }
@@ -1556,7 +1597,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       'THURSDAY',
       'FRIDAY',
       'SATURDAY',
-      'SUNDAY'
+      'SUNDAY',
     ];
     const months = [
       '',
@@ -1571,7 +1612,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       'SEP',
       'OCT',
       'NOV',
-      'DEC'
+      'DEC',
     ];
     return '${weekdays[date.weekday]}, ${months[date.month]} ${date.day}, ${date.year}';
   }
