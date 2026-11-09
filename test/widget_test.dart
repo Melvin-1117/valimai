@@ -15,6 +15,7 @@ import 'package:valimai/screens/daily_workout_selection_screen.dart';
 import 'package:valimai/screens/exercise_configuration_screen.dart';
 import 'package:valimai/screens/history_screen.dart';
 import 'package:valimai/screens/home_screen.dart';
+import 'package:valimai/screens/profile_screen.dart';
 import 'package:valimai/screens/schedule_screen.dart';
 import 'package:valimai/screens/workout_editor_screen.dart';
 import 'package:valimai/screens/workouts_screen.dart';
@@ -22,6 +23,7 @@ import 'package:valimai/services/daily_workout_controller.dart';
 import 'package:valimai/services/daily_workout_storage.dart';
 import 'package:valimai/services/exercise_controller.dart';
 import 'package:valimai/services/exercise_storage.dart';
+import 'package:valimai/services/profile_analytics_service.dart';
 import 'package:valimai/services/profile_controller.dart';
 import 'package:valimai/services/profile_storage.dart';
 import 'package:valimai/services/routine_controller.dart';
@@ -2711,6 +2713,297 @@ void main() {
 
       expect(find.text('No workouts recorded yet.'), findsOneWidget);
       expect(find.textContaining('Your workout journey starts here'), findsOneWidget);
+    });
+
+    test('ProfileAnalyticsService computes all-time overview and current streak with rest day continuity', () {
+      final now = DateTime(2026, 11, 9);
+      final schedules = <String, DaySchedule>{
+        '2026-11-08': DaySchedule(date: DateTime(2026, 11, 8), type: ScheduledDayType.rest),
+      };
+
+      final emptyOverview = ProfileAnalyticsService.computeAllTimeOverview(
+        sessions: const [],
+        schedules: const {},
+        referenceDate: now,
+      );
+      expect(emptyOverview.totalWorkouts, 0);
+      expect(emptyOverview.trainingDays, 0);
+      expect(emptyOverview.totalVolumeKg, 0.0);
+      expect(emptyOverview.hasWeightedVolume, false);
+      expect(emptyOverview.currentStreak, 0);
+
+      final sessionNov7A = CompletedWorkoutSession(
+        id: 's1',
+        routineId: 'r1',
+        routineName: 'Push',
+        completedAt: DateTime(2026, 11, 7, 10, 0),
+        workoutSnapshot: const Workout(
+          id: 'w1',
+          name: 'Push',
+          targetMuscleGroups: 'Chest',
+          estimatedDurationMinutes: 45,
+          exercises: [
+            WorkoutExercise(
+              id: 'e1',
+              name: 'Bench Press',
+              targetMuscle: 'Chest',
+              setConfigs: [
+                ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 100),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final sessionNov7B = CompletedWorkoutSession(
+        id: 's2',
+        routineId: 'r2',
+        routineName: 'Arms',
+        completedAt: DateTime(2026, 11, 7, 18, 0),
+        workoutSnapshot: const Workout(
+          id: 'w2',
+          name: 'Arms',
+          targetMuscleGroups: 'Biceps',
+          estimatedDurationMinutes: 30,
+          exercises: [
+            WorkoutExercise(
+              id: 'e2',
+              name: 'Bicep Curl',
+              targetMuscle: 'Biceps',
+              setConfigs: [
+                ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 20),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final sessionNov9 = CompletedWorkoutSession(
+        id: 's3',
+        routineId: 'r1',
+        routineName: 'Push',
+        completedAt: DateTime(2026, 11, 9, 9, 0),
+        workoutSnapshot: const Workout(
+          id: 'w3',
+          name: 'Push',
+          targetMuscleGroups: 'Chest',
+          estimatedDurationMinutes: 45,
+          exercises: [
+            WorkoutExercise(
+              id: 'e1',
+              name: 'Bench Press',
+              targetMuscle: 'Chest',
+              setConfigs: [
+                ExerciseSetConfig(setNumber: 1, reps: 8, weightKg: 110),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final overview = ProfileAnalyticsService.computeAllTimeOverview(
+        sessions: [sessionNov7A, sessionNov7B, sessionNov9],
+        schedules: schedules,
+        referenceDate: now,
+      );
+
+      expect(overview.totalWorkouts, 3);
+      expect(overview.trainingDays, 2);
+      expect(overview.totalVolumeKg, 2080.0);
+      expect(overview.hasWeightedVolume, true);
+      expect(overview.currentStreak, 2);
+    });
+
+    test('ProfileAnalyticsService computes monthly analytics and weekly distribution', () {
+      final sessNov = CompletedWorkoutSession(
+        id: 's1',
+        routineId: 'r1',
+        routineName: 'Nov Workout',
+        completedAt: DateTime(2026, 11, 3, 10, 0),
+        workoutSnapshot: const Workout(
+          id: 'w1',
+          name: 'Nov Workout',
+          targetMuscleGroups: 'Quadriceps',
+          estimatedDurationMinutes: 45,
+          exercises: [
+            WorkoutExercise(
+              id: 'e1',
+              name: 'Squat',
+              targetMuscle: 'Quadriceps',
+              setConfigs: [
+                ExerciseSetConfig(setNumber: 1, reps: 5, weightKg: 100),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final sessOct = CompletedWorkoutSession(
+        id: 's2',
+        routineId: 'r2',
+        routineName: 'Oct Workout',
+        completedAt: DateTime(2026, 10, 25, 10, 0),
+      );
+
+      final monthly = ProfileAnalyticsService.computeMonthlyAnalytics(
+        sessions: [sessNov, sessOct],
+        viewingMonth: DateTime(2026, 11, 1),
+      );
+
+      expect(monthly.totalWorkouts, 1);
+      expect(monthly.trainingDays, 1);
+      expect(monthly.totalVolumeKg, 500.0);
+      expect(monthly.weeklyFrequency.isNotEmpty, true);
+      final w2 = monthly.weeklyFrequency.firstWhere((w) => w.weekLabel == 'W2');
+      expect(w2.workoutCount, 1);
+    });
+
+    test('ProfileAnalyticsService computes muscle distribution and personal records', () {
+      final sess = CompletedWorkoutSession(
+        id: 's1',
+        routineId: 'r1',
+        routineName: 'Upper',
+        completedAt: DateTime(2026, 11, 5),
+        workoutSnapshot: const Workout(
+          id: 'w1',
+          name: 'Upper',
+          targetMuscleGroups: 'Chest • Back',
+          estimatedDurationMinutes: 50,
+          exercises: [
+            WorkoutExercise(
+              id: 'e1',
+              name: 'Barbell Bench Press',
+              targetMuscle: 'Pectorals',
+              setConfigs: [
+                ExerciseSetConfig(setNumber: 1, reps: 10, weightKg: 80),
+                ExerciseSetConfig(setNumber: 2, reps: 5, weightKg: 100),
+              ],
+            ),
+            WorkoutExercise(
+              id: 'e2',
+              name: 'Barbell Row',
+              targetMuscle: 'Back',
+              setConfigs: [
+                ExerciseSetConfig(setNumber: 1, reps: 8, weightKg: 70),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final dist = ProfileAnalyticsService.computeMuscleDistribution(sessions: [sess]);
+      expect(dist.length, 2);
+      expect(dist.first.muscleGroup, 'Chest');
+      expect(dist.first.count, 1);
+      expect(dist.first.percentage, 0.5);
+
+      final prs = ProfileAnalyticsService.computePersonalRecords(sessions: [sess]);
+      expect(prs.length, 2);
+      expect(prs.first.exerciseName, 'Barbell Bench Press');
+      expect(prs.first.maxWeightKg, 100.0);
+      expect(prs.first.repsAtMaxWeight, 5);
+      expect(prs.first.bestSetVolumeKg, 800.0);
+    });
+
+    testWidgets('ProfileScreen renders personal profile and overall analytics with empty states', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await ProfileController.instance.saveProfile(
+        name: 'Alex Mercer',
+        currentWeight: 80.0,
+        height: 180.0,
+        age: 26,
+      );
+
+      await WorkoutHistoryController.instance.clearHistory();
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ProfileScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Profile'), findsOneWidget);
+      expect(find.text('BODY INFORMATION'), findsOneWidget);
+      expect(find.text('CURRENT WEIGHT'), findsOneWidget);
+      expect(find.text('HEIGHT'), findsOneWidget);
+      expect(find.text('AGE'), findsOneWidget);
+      expect(find.text('TARGET WEIGHT'), findsOneWidget);
+
+      expect(find.text('OVERALL ANALYTICS'), findsOneWidget);
+      expect(find.text('ALL-TIME OVERVIEW'), findsOneWidget);
+      expect(find.text('TOTAL WORKOUTS'), findsOneWidget);
+      expect(find.text('TRAINING DAYS'), findsOneWidget);
+      expect(find.text('TOTAL VOLUME'), findsOneWidget);
+      expect(find.text('CURRENT STREAK'), findsOneWidget);
+      expect(find.text('0 DAYS'), findsOneWidget);
+
+      expect(find.text('WEEKLY WORKOUT FREQUENCY'), findsOneWidget);
+      expect(find.text('No workouts recorded in this month.'), findsOneWidget);
+
+      expect(find.text('MUSCLE GROUP DISTRIBUTION'), findsOneWidget);
+      expect(find.text('No muscle groups trained yet.'), findsOneWidget);
+
+      expect(find.text('PERSONAL RECORDS'), findsOneWidget);
+      expect(find.text('No personal records recorded yet.'), findsOneWidget);
+    });
+
+    testWidgets('ProfileScreen renders populated analytics data when sessions exist', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(430, 932));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await ProfileController.instance.saveProfile(
+        name: 'Alex Mercer',
+        currentWeight: 80.0,
+        height: 180.0,
+        age: 26,
+      );
+
+      final testDate = DateTime.now();
+      final workout = Workout(
+        id: 'w_test',
+        name: 'Full Body Power',
+        targetMuscleGroups: 'Chest • Back',
+        estimatedDurationMinutes: 45,
+        exercises: [
+          const WorkoutExercise(
+            id: 'e1',
+            name: 'Overhead Press',
+            targetMuscle: 'Shoulders',
+            setConfigs: [
+              ExerciseSetConfig(setNumber: 1, reps: 5, weightKg: 60.0),
+            ],
+          ),
+        ],
+      );
+
+      await WorkoutHistoryController.instance.recordCompletedSession(
+        date: testDate,
+        routineId: workout.id,
+        routineName: workout.name,
+        targetMuscleGroups: workout.targetMuscleGroups,
+        workoutSnapshot: workout,
+        completedAt: testDate,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ProfileScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('TOTAL WORKOUTS'), findsOneWidget);
+      expect(find.text('1'), findsWidgets);
+      expect(find.text('300 kg'), findsWidgets);
+      expect(find.text('1 DAY'), findsOneWidget);
+
+      expect(find.text('W1'), findsWidgets);
+      expect(find.text('Shoulders'), findsOneWidget);
+      expect(find.text('Overhead Press'), findsOneWidget);
+      expect(find.text('60 KG'), findsOneWidget);
     });
   });
 }
