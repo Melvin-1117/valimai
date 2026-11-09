@@ -206,7 +206,8 @@ class Workout {
   });
 
   /// Total number of planned sets across all exercises
-  int get totalSets => exercises.fold(0, (sum, ex) => sum + ex.sets);
+  int get totalSets =>
+      exercises.fold(0, (sum, ex) => sum + ex.effectiveSetConfigs.length);
 
   /// Total number of exercises
   int get exerciseCount => exercises.length;

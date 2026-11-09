@@ -41,14 +41,9 @@ class LocalWorkoutStorage implements IWorkoutStorage {
       }
     } catch (_) {}
 
-    // Seed default master workouts if not stored yet
-    final defaults = _buildDefaultWorkouts();
-    _cachedWorkouts = defaults;
-    try {
-      final map = defaults.map((k, v) => MapEntry(k, v.toJson()));
-      await StorageHelper.safeWriteString(_workoutsFileName, jsonEncode(map));
-    } catch (_) {}
-    return defaults;
+    // Fresh user state: start with an empty workouts map
+    _cachedWorkouts = <String, Workout>{};
+    return _cachedWorkouts!;
   }
 
   @override
@@ -70,13 +65,9 @@ class LocalWorkoutStorage implements IWorkoutStorage {
       }
     } catch (_) {}
 
-    // Seed default weekly schedule for current week
-    final defaults = _buildDefaultWeekSchedules();
-    _cachedSchedules = defaults;
-    try {
-      await saveAllSchedules(defaults);
-    } catch (_) {}
-    return defaults;
+    // Fresh user state: start with an empty schedule map
+    _cachedSchedules = <String, DaySchedule>{};
+    return _cachedSchedules!;
   }
 
   @override
@@ -137,13 +128,9 @@ class LocalWorkoutStorage implements IWorkoutStorage {
       }
     } catch (_) {}
 
-    // Seed default recurring weekly plan (Mon: Push, Tue: Pull, Wed: Rest, Thu: Legs, Fri: Push, Sat: Pull, Sun: Rest)
-    final defaults = _buildDefaultWeeklyPlan();
-    _cachedWeeklyPlan = defaults;
-    try {
-      await saveWeeklyPlan(defaults);
-    } catch (_) {}
-    return defaults;
+    // Fresh user state: start with an empty weekly plan
+    _cachedWeeklyPlan = <int, WeeklyDayAssignment>{};
+    return _cachedWeeklyPlan!;
   }
 
   @override
@@ -158,7 +145,8 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     }
   }
 
-  Map<int, WeeklyDayAssignment> _buildDefaultWeeklyPlan() {
+  /// Helper for sample testing
+  static Map<int, WeeklyDayAssignment> getDefaultWeeklyPlan() {
     return {
       1: const WeeklyDayAssignment(
         weekday: 1,
@@ -196,7 +184,8 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     };
   }
 
-  Map<String, Workout> _buildDefaultWorkouts() {
+  /// Helper for sample testing
+  static Map<String, Workout> getDefaultWorkouts() {
     return {
       'workout_push': const Workout(
         id: 'workout_push',
@@ -414,7 +403,8 @@ class LocalWorkoutStorage implements IWorkoutStorage {
     };
   }
 
-  Map<String, DaySchedule> _buildDefaultWeekSchedules() {
+  /// Helper for sample testing
+  static Map<String, DaySchedule> getDefaultWeekSchedules() {
     final now = DateTime.now();
     // Monday of current week (DateTime.weekday: 1 = Mon, 7 = Sun)
     final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));

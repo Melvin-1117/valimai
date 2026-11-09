@@ -321,6 +321,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 width: 8,
@@ -330,48 +331,51 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               const Text(
                 'ELAPSED TIME',
                 style: TextStyle(
                   fontFamily: 'Montserrat',
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 1.0,
+                  letterSpacing: 0.6,
                   color: ValimaiColors.secondary,
                 ),
               ),
             ],
           ),
-          Text(
-            _formatTime(_secondsElapsed),
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.5,
-              color: ValimaiColors.onSurface,
+          Flexible(
+            child: Text(
+              _formatTime(_secondsElapsed),
+              style: const TextStyle(
+                fontFamily: 'Montserrat',
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
+                color: ValimaiColors.onSurface,
+              ),
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
               color: ValimaiColors.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.bolt,
-                  size: 12,
+                  size: 11,
                   color: ValimaiColors.primaryContainer,
                 ),
-                SizedBox(width: 4),
+                SizedBox(width: 3),
                 Text(
                   'HEAVY LOAD',
                   style: TextStyle(
                     fontFamily: 'Montserrat',
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: FontWeight.w800,
                     color: ValimaiColors.primaryContainer,
                   ),
@@ -408,58 +412,63 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: ValimaiColors.primaryContainer,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'EXERCISE $displayOrder OF $totalCount',
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: Colors.white,
+              Flexible(
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.primaryContainer,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'EXERCISE $displayOrder OF $totalCount',
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                  ),
-                  if (_currentExerciseIndex > 0) ...[
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () =>
-                          _navigateToExercise(_currentExerciseIndex - 1),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: ValimaiColors.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.chevron_left,
-                                size: 12, color: ValimaiColors.secondary),
-                            Text(
-                              'PREV',
-                              style: TextStyle(
-                                fontFamily: 'Montserrat',
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                                color: ValimaiColors.secondary,
+                    if (_currentExerciseIndex > 0)
+                      GestureDetector(
+                        onTap: () =>
+                            _navigateToExercise(_currentExerciseIndex - 1),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: ValimaiColors.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.chevron_left,
+                                  size: 12, color: ValimaiColors.secondary),
+                              Text(
+                                'PREV',
+                                style: TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: ValimaiColors.secondary,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
                   ],
-                ],
+                ),
               ),
+              const SizedBox(width: 8),
               const Text(
                 'TARGET: RPE 8.5',
                 style: TextStyle(
@@ -882,46 +891,51 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Icon(
-                  hasNext ? Icons.skip_next : Icons.check_circle_outline,
-                  size: 20,
-                  color: hasNext
-                      ? ValimaiColors.primaryContainer
-                      : ValimaiColors.primaryContainer,
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      hasNext ? 'UP NEXT IN SEQUENCE' : 'WORKOUT COMPLETE',
-                      style: TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: hasNext
-                            ? ValimaiColors.secondary
-                            : ValimaiColors.primaryContainer,
-                      ),
+            Expanded(
+              child: Row(
+                children: [
+                  Icon(
+                    hasNext ? Icons.skip_next : Icons.check_circle_outline,
+                    size: 20,
+                    color: ValimaiColors.primaryContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasNext ? 'UP NEXT IN SEQUENCE' : 'WORKOUT COMPLETE',
+                          style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: hasNext
+                                ? ValimaiColors.secondary
+                                : ValimaiColors.primaryContainer,
+                          ),
+                        ),
+                        Text(
+                          hasNext
+                              ? '${nextEx!.name} (${nextEx.effectiveSetConfigs.length} Sets)'
+                              : 'All ${_exercises.length} movements complete',
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: ValimaiColors.onSurface,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      hasNext
-                          ? '${nextEx!.name} (${nextEx.effectiveSetConfigs.length} Sets)'
-                          : 'All ${_exercises.length} movements complete',
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: ValimaiColors.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   hasNext ? 'NEXT' : 'FINISH',

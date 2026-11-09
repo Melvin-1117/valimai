@@ -536,32 +536,37 @@ class DailyAnalyticsScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'S${set.setNumber}',
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: ValimaiColors.secondary,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 22,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'S${set.setNumber}',
+                              style: const TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: ValimaiColors.secondary,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Set ${set.setNumber} — $weightText × ${set.reps} reps',
-                          style: const TextStyle(
-                            fontFamily: 'Montserrat',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: ValimaiColors.onSurface,
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Set ${set.setNumber} — $weightText × ${set.reps} reps',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: ValimaiColors.onSurface,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     Container(
                       width: 20,

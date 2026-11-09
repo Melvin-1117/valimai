@@ -1127,7 +1127,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           Text(
             _searchQuery.isNotEmpty
                 ? 'No routines match "$_searchQuery"'
-                : 'No routines found in this category.',
+                : (_selectedCategoryIndex == 0
+                    ? 'No workout routines created yet.\nCreate your first routine to start training!'
+                    : 'No routines found in this category.'),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontFamily: 'Montserrat',

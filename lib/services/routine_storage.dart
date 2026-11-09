@@ -36,14 +36,9 @@ class LocalRoutineStorage implements IRoutineStorage {
       }
     } catch (_) {}
 
-    // First time launch: seed default canonical routines
-    final defaults = _buildDefaultRoutines();
-    _cachedRoutines = defaults;
-    try {
-      await saveAllRoutines(defaults);
-    } catch (_) {}
-
-    return List<WorkoutRoutine>.from(defaults);
+    // Fresh user state: start with an empty routines list
+    _cachedRoutines = <WorkoutRoutine>[];
+    return <WorkoutRoutine>[];
   }
 
   @override

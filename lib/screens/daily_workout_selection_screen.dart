@@ -228,6 +228,64 @@ class _DailyWorkoutSelectionScreenState
               const SizedBox(height: 28),
             ],
 
+            // 1b. EMPTY ROUTINES STATE (when user has not created any routines yet)
+            if (suggested == null && otherRoutines.isEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  color: ValimaiColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ValimaiColors.cardBorder, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: ValimaiColors.surfaceContainerHigh,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: ValimaiColors.primaryContainer.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.fitness_center_outlined,
+                          size: 22,
+                          color: ValimaiColors.primaryContainer,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'No Workout Routines Created',
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: ValimaiColors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Create custom routines in the Workouts tab to assign workouts to days, or choose recovery below.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 12,
+                        color: ValimaiColors.secondary,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
             // 2. OTHER AVAILABLE ROUTINES
             if (otherRoutines.isNotEmpty) ...[
               const Text(

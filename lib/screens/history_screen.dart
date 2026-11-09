@@ -938,25 +938,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 10),
 
             // Performance Metrics Pills
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
               children: [
                 _buildStatPill(
                   icon: Icons.fitness_center,
                   label: '${session.calculatedExercisesCount} Exercises',
                 ),
-                const SizedBox(width: 8),
                 _buildStatPill(
                   icon: Icons.repeat,
                   label: '${session.calculatedTotalSets} Sets',
                 ),
-                if (session.calculatedVolumeKg > 0) ...[
-                  const SizedBox(width: 8),
+                if (session.calculatedVolumeKg > 0)
                   _buildStatPill(
                     icon: Icons.scale,
                     label: '${session.calculatedVolumeKg.toInt()} kg',
                     highlight: true,
                   ),
-                ],
               ],
             ),
           ],

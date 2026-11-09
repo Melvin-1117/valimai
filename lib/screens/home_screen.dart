@@ -177,8 +177,10 @@ class _HomeScreenState extends State<HomeScreen> {
         .where((d) =>
             controller.getDaySchedule(d).type == ScheduledDayType.workout)
         .length;
-    final targetCount = plannedWorkouts == 0 ? 5 : plannedWorkouts;
-    final progressFraction = (completedWorkouts / targetCount).clamp(0.0, 1.0);
+    final targetCount = plannedWorkouts;
+    final progressFraction = targetCount > 0
+        ? (completedWorkouts / targetCount).clamp(0.0, 1.0)
+        : 0.0;
     final percentComplete = (progressFraction * 100).toInt();
 
     return Container(
@@ -341,7 +343,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               Text(
-                '$completedWorkouts of $targetCount Hit ($percentComplete%)',
+                targetCount == 0
+                    ? '0 of 0 Planned'
+                    : '$completedWorkouts of $targetCount Hit ($percentComplete%)',
                 style: const TextStyle(
                   fontFamily: 'Montserrat',
                   fontSize: 10,

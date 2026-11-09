@@ -3,6 +3,7 @@ import '../services/daily_workout_controller.dart';
 import '../services/exercise_controller.dart';
 import '../services/profile_controller.dart';
 import '../services/routine_controller.dart';
+import '../services/storage_helper.dart';
 import '../services/workout_controller.dart';
 import '../services/workout_history_controller.dart';
 import '../theme/app_theme.dart';
@@ -26,6 +27,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _checkAppEntryFlow() async {
     final startTime = DateTime.now();
+
+    // Controlled one-time development mock data cleanup
+    await StorageHelper.cleanDevMockDataOnce();
 
     // Initialize controllers and load from persistent storage
     await Future.wait([

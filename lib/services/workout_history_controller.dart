@@ -7,14 +7,67 @@ import 'daily_workout_controller.dart';
 import 'storage_helper.dart';
 import 'workout_controller.dart';
 
+abstract class IWorkoutHistoryStorage {
+  Future<List<CompletedWorkoutSession>> loadSessions();
+  Future<bool> saveSessions(List<CompletedWorkoutSession> sessions);
+}
+
+class LocalWorkoutHistoryStorage implements IWorkoutHistoryStorage {
+  static const String _fileName = 'valimai_history.json';
+
+  @override
+  Future<List<CompletedWorkoutSession>> loadSessions() async {
+    final list = <CompletedWorkoutSession>[];
+    try {
+      final content = await StorageHelper.safeReadString(_fileName);
+      if (content != null && content.trim().isNotEmpty) {
+        final List<dynamic> jsonList = jsonDecode(content);
+        for (final item in jsonList) {
+          try {
+            list.add(
+                CompletedWorkoutSession.fromJson(item as Map<String, dynamic>));
+          } catch (e) {
+            debugPrint('Failed to parse completed session: $e');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error reading history storage: $e');
+    }
+    return list;
+  }
+
+  @override
+  Future<bool> saveSessions(List<CompletedWorkoutSession> sessions) async {
+    try {
+      final jsonList = sessions.map((s) => s.toJson()).toList();
+      return await StorageHelper.safeWriteString(
+          _fileName, jsonEncode(jsonList));
+    } catch (e) {
+      debugPrint('Failed to persist history sessions: $e');
+      return true; // Preserved in-memory
+    }
+  }
+}
+
 /// Centralized state controller for completed workout sessions and historical analytics.
 class WorkoutHistoryController extends ChangeNotifier {
-  static final WorkoutHistoryController instance =
+  static WorkoutHistoryController _instance =
       WorkoutHistoryController._internal();
+  static WorkoutHistoryController get instance => _instance;
 
-  WorkoutHistoryController._internal();
+  @visibleForTesting
+  static void setInstance(WorkoutHistoryController controller) {
+    _instance = controller;
+  }
 
-  static const String _fileName = 'valimai_history.json';
+  final IWorkoutHistoryStorage _storage;
+
+  WorkoutHistoryController({IWorkoutHistoryStorage? storage})
+      : _storage = storage ?? LocalWorkoutHistoryStorage();
+
+  WorkoutHistoryController._internal({IWorkoutHistoryStorage? storage})
+      : _storage = storage ?? LocalWorkoutHistoryStorage();
 
   final List<CompletedWorkoutSession> _sessions = [];
   bool _isInitialized = false;
@@ -35,20 +88,10 @@ class WorkoutHistoryController extends ChangeNotifier {
     _sessions.clear();
 
     try {
-      final content = await StorageHelper.safeReadString(_fileName);
-      if (content != null && content.trim().isNotEmpty) {
-        final List<dynamic> jsonList = jsonDecode(content);
-        for (final item in jsonList) {
-          try {
-            _sessions.add(
-                CompletedWorkoutSession.fromJson(item as Map<String, dynamic>));
-          } catch (e) {
-            debugPrint('Failed to parse completed session: $e');
-          }
-        }
-      }
+      final loaded = await _storage.loadSessions();
+      _sessions.addAll(loaded);
     } catch (e) {
-      debugPrint('Error reading history storage: $e');
+      debugPrint('Error loading history sessions: $e');
     }
 
     // Discover completed sessions from WorkoutController schedules
@@ -223,14 +266,15 @@ class WorkoutHistoryController extends ChangeNotifier {
     return await _saveSessions();
   }
 
+  /// Clear all history sessions (used in resets or tests)
+  Future<bool> clearHistory() async {
+    _sessions.clear();
+    notifyListeners();
+    return await _saveSessions();
+  }
+
   Future<bool> _saveSessions() async {
-    try {
-      final jsonList = _sessions.map((s) => s.toJson()).toList();
-      return await StorageHelper.safeWriteString(_fileName, jsonEncode(jsonList));
-    } catch (e) {
-      debugPrint('Failed to persist history sessions: $e');
-      return true; // Preserved in-memory
-    }
+    return await _storage.saveSessions(_sessions);
   }
 }
 

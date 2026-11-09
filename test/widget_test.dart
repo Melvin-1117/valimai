@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:valimai/models/daily_workout.dart';
@@ -26,6 +27,7 @@ import 'package:valimai/services/profile_storage.dart';
 import 'package:valimai/services/routine_controller.dart';
 import 'package:valimai/services/routine_storage.dart';
 import 'package:valimai/services/workout_controller.dart';
+import 'package:valimai/services/storage_helper.dart';
 import 'package:valimai/services/workout_history_controller.dart';
 import 'package:valimai/services/workout_rotation_engine.dart';
 import 'package:valimai/services/workout_storage.dart';
@@ -102,17 +104,6 @@ class MockWorkoutStorage implements IWorkoutStorage {
     );
 
     workouts[pushWorkout.id] = pushWorkout;
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final key = DaySchedule.dateKey(today);
-
-    schedules[key] = DaySchedule(
-      date: today,
-      type: ScheduledDayType.workout,
-      workoutId: pushWorkout.id,
-      isCompleted: false,
-    );
   }
 
   @override
@@ -235,6 +226,21 @@ class MockDailyWorkoutStorage implements IDailyWorkoutStorage {
       records[localDate];
 }
 
+class MockWorkoutHistoryStorage implements IWorkoutHistoryStorage {
+  final List<CompletedWorkoutSession> sessions = [];
+
+  @override
+  Future<List<CompletedWorkoutSession>> loadSessions() async =>
+      List<CompletedWorkoutSession>.from(sessions);
+
+  @override
+  Future<bool> saveSessions(List<CompletedWorkoutSession> newSessions) async {
+    sessions.clear();
+    sessions.addAll(newSessions);
+    return true;
+  }
+}
+
 void main() {
   late MockProfileStorage mockProfileStorage;
   late ProfileController profileController;
@@ -246,6 +252,8 @@ void main() {
   late RoutineController routineController;
   late MockDailyWorkoutStorage mockDailyWorkoutStorage;
   late DailyWorkoutController dailyWorkoutController;
+  late MockWorkoutHistoryStorage mockWorkoutHistoryStorage;
+  late WorkoutHistoryController workoutHistoryController;
 
   setUp(() {
     mockProfileStorage = MockProfileStorage();
@@ -269,7 +277,15 @@ void main() {
         DailyWorkoutController(storage: mockDailyWorkoutStorage);
     DailyWorkoutController.setInstance(dailyWorkoutController);
 
+    mockWorkoutHistoryStorage = MockWorkoutHistoryStorage();
+    workoutHistoryController =
+        WorkoutHistoryController(storage: mockWorkoutHistoryStorage);
+    WorkoutHistoryController.setInstance(workoutHistoryController);
+
     WorkoutRotationEngine.setInstance(WorkoutRotationEngine());
+
+    final tempDir = Directory.systemTemp.createTempSync('valimai_test_');
+    StorageHelper.setStorageDirectory(tempDir);
   });
 
   group('UserProfile Model Tests', () {
@@ -2142,7 +2158,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Finish workout
-      await tester.tap(find.text('FINISH'));
+      await tester.tap(find.text('FINISH').first);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('SAVE TO PERFORMANCE ARCHIVE'));
@@ -2327,7 +2343,7 @@ void main() {
 
       // Section A: 4 Summary Cards
       expect(find.text('EXERCISES'), findsOneWidget);
-      expect(find.text('2'), findsOneWidget);
+      expect(find.text('2'), findsWidgets);
       expect(find.text('TOTAL SETS'), findsOneWidget);
       expect(find.text('3'), findsOneWidget);
       expect(find.text('TOTAL REPS'), findsOneWidget);
@@ -2389,7 +2405,7 @@ void main() {
 
       // Calendar presence & title
       expect(find.text('History'), findsOneWidget);
-      expect(find.text('Completed'), findsOneWidget);
+      expect(find.text('Completed'), findsWidgets);
       expect(find.text('Rest Day'), findsOneWidget);
       expect(find.text('Skipped'), findsOneWidget);
 
@@ -2414,10 +2430,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       // Clear sessions in history controller
-      while (WorkoutHistoryController.instance.allSessions.isNotEmpty) {
-        await WorkoutHistoryController.instance
-            .deleteSession(WorkoutHistoryController.instance.allSessions.first.id);
-      }
+      await WorkoutHistoryController.instance.clearHistory();
 
       await tester.pumpWidget(
         const MaterialApp(
