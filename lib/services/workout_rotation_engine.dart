@@ -104,6 +104,14 @@ class WorkoutRotationEngine {
       }
     }
 
+    if (todaySchedule != null && todaySchedule.type == ScheduledDayType.rest) {
+      return const WorkoutRecommendation(
+        source: RecommendationSource.scheduled,
+        isRestDay: true,
+        reason: 'Rest Day scheduled for today',
+      );
+    }
+
     // 3. RULES 3, 4, 5: If no routine is scheduled, suggest the next routine in the rotation.
     if (activeRoutines.isEmpty) {
       return const WorkoutRecommendation(

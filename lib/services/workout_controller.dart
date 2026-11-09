@@ -5,7 +5,6 @@ import '../models/workout.dart';
 import 'daily_workout_controller.dart';
 import 'routine_controller.dart';
 import 'workout_history_controller.dart';
-import 'workout_rotation_engine.dart';
 import 'workout_storage.dart';
 
 class WorkoutController extends ChangeNotifier {
@@ -288,26 +287,7 @@ class WorkoutController extends ChangeNotifier {
       );
     }
 
-    // 3. PRIORITY 3: Rotation recommendation if no schedule exists
-    try {
-      final suggested =
-          WorkoutRotationEngine.instance.computeNextRoutineInRotation(
-        activeRoutines: RoutineController.instance.activeRoutines,
-        allRoutines: RoutineController.instance.allRoutines,
-        completedHistory: WorkoutRotationEngine.instance.getCompletedHistory(),
-      );
-      if (suggested != null) {
-        return DaySchedule(
-          date: norm,
-          type: ScheduledDayType.workout,
-          workoutId: suggested.id,
-          customWorkout: suggested.toWorkout(),
-          isCompleted: false,
-        );
-      }
-    } catch (_) {}
-
-    // 4. PRIORITY 4: Unassigned
+    // 3. PRIORITY 3: Unassigned (no scheduled routine or rest day)
     return DaySchedule(
       date: norm,
       type: ScheduledDayType.unassigned,
@@ -451,5 +431,147 @@ class WorkoutController extends ChangeNotifier {
       debugPrint('Failed to set day type: $e');
       return false;
     }
+  }
+
+  /// Assign a specific routine to a calendar date
+  Future<bool> assignRoutineToDate(DateTime date, String routineId) async {
+    final norm = DateTime(date.year, date.month, date.day);
+    final key = DaySchedule.dateKey(norm);
+
+    final routine = RoutineController.instance.getRoutineById(routineId);
+    final existing = _schedules[key];
+    final schedule = DaySchedule(
+      date: norm,
+      type: ScheduledDayType.workout,
+      workoutId: routineId,
+      customWorkout: routine?.toWorkout(),
+      isCompleted: existing?.isCompleted ?? false,
+      completedAt: existing?.completedAt,
+    );
+
+    _schedules[key] = schedule;
+    notifyListeners();
+
+    try {
+      return await _storage.saveDaySchedule(schedule);
+    } catch (e) {
+      debugPrint('Failed to assign routine to date: $e');
+      return false;
+    }
+  }
+
+  /// Mark a calendar date as an explicit Rest Day
+  Future<bool> setRestDayForDate(DateTime date) async {
+    final norm = DateTime(date.year, date.month, date.day);
+    final key = DaySchedule.dateKey(norm);
+
+    final existing = _schedules[key];
+    final schedule = DaySchedule(
+      date: norm,
+      type: ScheduledDayType.rest,
+      workoutId: null,
+      customWorkout: null,
+      isCompleted: existing?.isCompleted ?? false,
+      completedAt: existing?.completedAt,
+    );
+
+    _schedules[key] = schedule;
+    notifyListeners();
+
+    try {
+      return await _storage.saveDaySchedule(schedule);
+    } catch (e) {
+      debugPrint('Failed to set rest day for date: $e');
+      return false;
+    }
+  }
+
+  /// Clear any assignment for a calendar date, reverting it to Unassigned
+  Future<bool> clearDateAssignment(DateTime date) async {
+    final norm = DateTime(date.year, date.month, date.day);
+    final key = DaySchedule.dateKey(norm);
+
+    final existing = _schedules[key];
+    final schedule = DaySchedule(
+      date: norm,
+      type: ScheduledDayType.unassigned,
+      workoutId: null,
+      customWorkout: null,
+      isCompleted: existing?.isCompleted ?? false,
+      completedAt: existing?.completedAt,
+    );
+
+    _schedules[key] = schedule;
+    notifyListeners();
+
+    try {
+      return await _storage.saveDaySchedule(schedule);
+    } catch (e) {
+      debugPrint('Failed to clear date assignment: $e');
+      return false;
+    }
+  }
+
+  /// Clean up any future or uncompleted scheduled references when a routine is deleted
+  Future<void> handleRoutineDeleted(String deletedRoutineId) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    bool modified = false;
+
+    final updatedMap = Map<String, DaySchedule>.from(_schedules);
+    for (final entry in updatedMap.entries) {
+      final schedule = entry.value;
+      final isFutureOrUncompletedToday = schedule.date.isAfter(today) ||
+          (schedule.date == today && !schedule.isCompleted);
+
+      if (isFutureOrUncompletedToday && schedule.workoutId == deletedRoutineId) {
+        _schedules[entry.key] = DaySchedule(
+          date: schedule.date,
+          type: ScheduledDayType.unassigned,
+        );
+        modified = true;
+      }
+    }
+
+    for (final entry in _weeklyPlan.entries) {
+      if (entry.value.routineId == deletedRoutineId) {
+        _weeklyPlan[entry.key] = WeeklyDayAssignment(
+          weekday: entry.key,
+          type: ScheduledDayType.unassigned,
+        );
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      notifyListeners();
+      try {
+        await _storage.saveAllSchedules(_schedules);
+        await _storage.saveWeeklyPlan(_weeklyPlan);
+      } catch (e) {
+        debugPrint('Error saving schedules after routine deletion: $e');
+      }
+    }
+  }
+
+  /// Helper to get the schedule type for calendar indicators and panel
+  ScheduledDayType getDateScheduleType(DateTime date) {
+    final norm = DateTime(date.year, date.month, date.day);
+    final key = DaySchedule.dateKey(norm);
+
+    if (_schedules.containsKey(key)) {
+      return _schedules[key]!.type;
+    }
+
+    // Check if recorded in DailyWorkoutController
+    final daily = DailyWorkoutController.instance.getDailyWorkoutForDate(norm);
+    if (daily != null) {
+      if (daily.isRest) return ScheduledDayType.rest;
+      if (daily.hasWorkout || daily.status == DailyWorkoutStatus.completed) {
+        return ScheduledDayType.workout;
+      }
+    }
+
+    return ScheduledDayType.unassigned;
   }
 }

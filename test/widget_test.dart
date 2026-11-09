@@ -1888,11 +1888,23 @@ void main() {
       expect(find.text('Workout B – Lats + Biceps'), findsWidgets);
     });
 
-    testWidgets('ScheduleScreen displays weekly timeline and opens weekly plan manager',
+    testWidgets('ScheduleScreen renders monthly calendar, displays unassigned date state and save button',
         (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       await routineController.initialize();
       await workoutController.initialize();
       await dailyWorkoutController.initialize();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      await workoutController.clearDateAssignment(today);
+      workoutHistoryController.clearHistory();
 
       await tester.pumpWidget(
         const MaterialApp(
@@ -1903,16 +1915,274 @@ void main() {
 
       // Verify Schedule Header
       expect(find.text('Schedule'), findsOneWidget);
-      expect(find.text('MANAGE WEEKLY PLAN'), findsOneWidget);
 
-      // Tap MANAGE WEEKLY PLAN
-      await tester.tap(find.text('MANAGE WEEKLY PLAN'));
+      // Verify Weekday labels
+      expect(find.text('MON'), findsOneWidget);
+      expect(find.text('TUE'), findsOneWidget);
+      expect(find.text('WED'), findsOneWidget);
+      expect(find.text('THU'), findsOneWidget);
+      expect(find.text('FRI'), findsOneWidget);
+      expect(find.text('SAT'), findsOneWidget);
+      expect(find.text('SUN'), findsOneWidget);
+
+      // Unassigned date shows "No workout assigned"
+      expect(find.text('No workout assigned'), findsOneWidget);
+      expect(find.text('ASSIGN WORKOUT'), findsOneWidget);
+
+      // Save button initially shows disabled state
+      expect(find.text('NO PENDING CHANGES'), findsOneWidget);
+    });
+
+    testWidgets('ScheduleScreen assigning routine sets pending state and persists upon tapping Save',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await routineController.initialize();
+      await workoutController.initialize();
+      await dailyWorkoutController.initialize();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final futureDate = today.add(const Duration(days: 3));
+
+      await workoutController.clearDateAssignment(futureDate);
+      await workoutController.clearDateAssignment(today);
+      workoutHistoryController.clearHistory();
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ScheduleScreen(),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      // Verify Weekly plan modal opened
-      expect(find.text('WEEKLY RECURRING SCHEDULE'), findsOneWidget);
-      expect(find.text('MONDAY'), findsOneWidget);
-      expect(find.text('ASSIGN'), findsWidgets);
+      // Select future date in calendar
+      final dayFinder = find.text('${futureDate.day}');
+      expect(dayFinder, findsWidgets);
+      await tester.tap(dayFinder.first);
+      await tester.pumpAndSettle();
+
+      // Tap ASSIGN WORKOUT
+      expect(find.text('ASSIGN WORKOUT'), findsOneWidget);
+      await tester.tap(find.text('ASSIGN WORKOUT'));
+      await tester.pumpAndSettle();
+
+      // Bottom sheet is visible with Rest Day and available routines
+      expect(find.text('Rest Day'), findsOneWidget);
+      expect(find.text('AVAILABLE ROUTINES'), findsOneWidget);
+      expect(find.text('Workout A – Chest + Triceps'), findsOneWidget);
+
+      // Select Routine A
+      await tester.tap(find.text('Workout A – Chest + Triceps'));
+      await tester.pumpAndSettle();
+
+      // Details panel now reflects pending workout and shows PENDING SAVE badge
+      expect(find.text('Workout A – Chest + Triceps'), findsOneWidget);
+      expect(find.text('PENDING SAVE'), findsOneWidget);
+
+      // SAVE SCHEDULE button is now active
+      expect(find.text('SAVE SCHEDULE'), findsOneWidget);
+
+      // Tap SAVE SCHEDULE
+      await tester.tap(find.text('SAVE SCHEDULE'));
+      await tester.pumpAndSettle();
+
+      // Schedule is persisted in controller
+      final savedSchedule = workoutController.getDaySchedule(futureDate);
+      expect(savedSchedule.type, ScheduledDayType.workout);
+      expect(savedSchedule.workoutId, 'routine_a_push');
+
+      // Pending badge disappears
+      expect(find.text('PENDING SAVE'), findsNothing);
+    });
+
+    testWidgets('ScheduleScreen assigning Rest Day and saving persists Rest Day',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await routineController.initialize();
+      await workoutController.initialize();
+      await dailyWorkoutController.initialize();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final futureDate = today.add(const Duration(days: 4));
+
+      await workoutController.clearDateAssignment(futureDate);
+      await workoutController.clearDateAssignment(today);
+      workoutHistoryController.clearHistory();
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ScheduleScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Select futureDate
+      final dayFinder = find.text('${futureDate.day}');
+      await tester.tap(dayFinder.first);
+      await tester.pumpAndSettle();
+
+      // Tap ASSIGN WORKOUT
+      await tester.tap(find.text('ASSIGN WORKOUT'));
+      await tester.pumpAndSettle();
+
+      // Tap Rest Day in bottom sheet
+      await tester.tap(find.text('Rest Day'));
+      await tester.pumpAndSettle();
+
+      // Panel reflects pending Rest Day
+      expect(find.text('PENDING SAVE'), findsOneWidget);
+      expect(find.text('Rest Day'), findsWidgets);
+
+      // Save
+      await tester.tap(find.text('SAVE SCHEDULE'));
+      await tester.pumpAndSettle();
+
+      final saved = workoutController.getDaySchedule(futureDate);
+      expect(saved.type, ScheduledDayType.rest);
+    });
+
+    testWidgets('ScheduleScreen clearing assignment reverts date to unassigned',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await routineController.initialize();
+      await workoutController.initialize();
+      await dailyWorkoutController.initialize();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final futureDate = today.add(const Duration(days: 5));
+
+      // Pre-assign Routine B
+      await workoutController.assignRoutineToDate(futureDate, 'routine_b_pull');
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ScheduleScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Select futureDate
+      final dayFinder = find.text('${futureDate.day}');
+      await tester.tap(dayFinder.first);
+      await tester.pumpAndSettle();
+
+      // Panel displays Workout B and CLEAR button
+      expect(find.text('Workout B – Lats + Biceps'), findsOneWidget);
+      expect(find.text('CLEAR'), findsOneWidget);
+
+      // Tap CLEAR
+      await tester.tap(find.text('CLEAR'));
+      await tester.pumpAndSettle();
+
+      // Panel now shows pending unassigned state
+      expect(find.text('No workout assigned'), findsOneWidget);
+      expect(find.text('PENDING SAVE'), findsOneWidget);
+
+      // Tap SAVE SCHEDULE
+      await tester.tap(find.text('SAVE SCHEDULE'));
+      await tester.pumpAndSettle();
+
+      // Persisted state is unassigned
+      final saved = workoutController.getDaySchedule(futureDate);
+      expect(saved.type, ScheduledDayType.unassigned);
+    });
+
+    testWidgets('ScheduleScreen past dates are strictly read-only',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await routineController.initialize();
+      await workoutController.initialize();
+      await dailyWorkoutController.initialize();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final pastDate = today.subtract(const Duration(days: 2));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: ScheduleScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Select past date
+      final dayFinder = find.text('${pastDate.day}');
+      await tester.tap(dayFinder.first);
+      await tester.pumpAndSettle();
+
+      // Read-only badge is present
+      expect(find.text('PAST // READ ONLY'), findsOneWidget);
+
+      // Editable action buttons are NOT present
+      expect(find.text('ASSIGN WORKOUT'), findsNothing);
+      expect(find.text('CHANGE'), findsNothing);
+      expect(find.text('CLEAR'), findsNothing);
+    });
+
+    test('Routine deletion unassigns future scheduled dates while preserving history',
+        () async {
+      await routineController.initialize();
+      await workoutController.initialize();
+      await workoutHistoryController.initialize();
+
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final futureDate = today.add(const Duration(days: 7));
+      final pastDate = today.subtract(const Duration(days: 5));
+
+      // 1. Assign routine_c_legs to futureDate
+      await workoutController.assignRoutineToDate(futureDate, 'routine_c_legs');
+
+      // 2. Record completed session in history for routine_c_legs on pastDate
+      await workoutHistoryController.recordCompletedSession(
+        date: pastDate,
+        routineId: 'routine_c_legs',
+        routineName: 'Workout C – Quads + Hamstrings',
+      );
+
+      expect(workoutController.getDaySchedule(futureDate).workoutId,
+          'routine_c_legs');
+      expect(workoutHistoryController.totalCompletedCount, greaterThanOrEqualTo(1));
+
+      // 3. Delete routine_c_legs from RoutineController
+      await routineController.deleteRoutine('routine_c_legs');
+
+      // 4. Future schedule is cleanly unassigned
+      final updatedFuture = workoutController.getDaySchedule(futureDate);
+      expect(updatedFuture.type, ScheduledDayType.unassigned);
+      expect(updatedFuture.workoutId, isNull);
+
+      // 5. Past completed history is strictly preserved
+      final pastSessions =
+          workoutHistoryController.getSessionsForDate(pastDate);
+      expect(pastSessions.isNotEmpty, true);
+      expect(pastSessions.first.routineId, 'routine_c_legs');
     });
   });
 

@@ -180,7 +180,8 @@ class WorkoutHistoryController extends ChangeNotifier {
     Workout? workoutSnapshot,
     DateTime? completedAt,
   }) async {
-    final effectiveCompletedAt = completedAt ?? DateTime.now();
+    final effectiveCompletedAt = completedAt ??
+        DateTime(date.year, date.month, date.day, 12, 0);
 
     final session = CompletedWorkoutSession(
       routineId: routineId,

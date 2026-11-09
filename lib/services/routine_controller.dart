@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/routine.dart';
 import '../models/workout.dart';
 import 'routine_storage.dart';
+import 'workout_controller.dart';
 
 class RoutineController extends ChangeNotifier {
   static RoutineController _instance = RoutineController._internal();
@@ -187,6 +188,7 @@ class RoutineController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await WorkoutController.instance.handleRoutineDeleted(id);
       return await _storage.deleteRoutine(id);
     } catch (e) {
       _lastError = 'Failed to delete routine: $e';
