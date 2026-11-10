@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../services/active_workout_session_controller.dart';
 import '../services/daily_workout_controller.dart';
 import '../services/exercise_controller.dart';
 import '../services/profile_controller.dart';
@@ -132,6 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
         RoutineController.instance.initialize(),
         DailyWorkoutController.instance.initialize(),
         WorkoutHistoryController.instance.initialize(),
+        ActiveWorkoutSessionController.instance.initialize(),
       ]);
     } catch (e) {
       debugPrint('Valimai startup initialization error: $e');
@@ -165,7 +167,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     final Widget targetScreen;
     if (ProfileController.instance.isOnboardingCompleted) {
-      if (DailyWorkoutController.instance.hasDecisionForToday()) {
+      if (ActiveWorkoutSessionController.instance.hasActiveSession ||
+          DailyWorkoutController.instance.hasDecisionForToday()) {
         targetScreen = const MainShell();
       } else {
         targetScreen = const DailyWorkoutSelectionScreen();

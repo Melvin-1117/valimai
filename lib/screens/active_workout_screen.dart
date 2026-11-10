@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../models/active_workout_session.dart';
 import '../models/workout.dart';
+import '../services/active_workout_session_controller.dart';
 import '../theme/app_theme.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
@@ -10,6 +12,8 @@ class ActiveWorkoutScreen extends StatefulWidget {
   final Workout? workout;
   final void Function(Workout completedWorkout)? onFinishWithData;
   final VoidCallback? onFinish;
+  final DateTime? targetDate;
+  final ActiveWorkoutSession? initialSession;
 
   const ActiveWorkoutScreen({
     super.key,
@@ -17,6 +21,8 @@ class ActiveWorkoutScreen extends StatefulWidget {
     this.workout,
     this.onFinishWithData,
     this.onFinish,
+    this.targetDate,
+    this.initialSession,
   });
 
   @override
@@ -48,16 +54,50 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   @override
   void initState() {
     super.initState();
-    _startStopwatch();
 
-    // Load exercises from provided workout or fallback to default sequence
-    if (widget.workout != null && widget.workout!.exercises.isNotEmpty) {
-      _exercises = List<WorkoutExercise>.from(widget.workout!.exercises);
+    final activeCtrl = ActiveWorkoutSessionController.instance;
+    final ActiveWorkoutSession? existing = widget.initialSession;
+
+    if (existing != null) {
+      _exercises = List<WorkoutExercise>.from(existing.exercises);
+      _currentExerciseIndex = existing.currentExerciseIndex.clamp(
+        0,
+        _exercises.isNotEmpty ? _exercises.length - 1 : 0,
+      );
+      _currentWeight = existing.currentWeight;
+      _currentReps = existing.currentReps;
+      _currentRpe = existing.currentRpe;
+      _loggedSetsPerExercise.clear();
+      _loggedSetsPerExercise.addAll(existing.toLoggedSetsMap());
+      _secondsElapsedNotifier.value = existing.secondsElapsed;
     } else {
-      _exercises = _buildDefaultExercises();
+      if (widget.workout != null && widget.workout!.exercises.isNotEmpty) {
+        _exercises = List<WorkoutExercise>.from(widget.workout!.exercises);
+      } else {
+        _exercises = _buildDefaultExercises();
+      }
+      _loadExerciseInputs(_currentExerciseIndex);
+
+      final effectiveWorkout =
+          widget.workout ??
+          Workout(
+            id: 'workout_${DateTime.now().millisecondsSinceEpoch}',
+            name: widget.workoutTitle,
+            targetMuscleGroups: _exercises
+                .map((e) => e.targetMuscle)
+                .toSet()
+                .join(' • '),
+            estimatedDurationMinutes: 45,
+            exercises: _exercises,
+          );
+
+      activeCtrl.startOrResumeSession(
+        workout: effectiveWorkout,
+        targetDate: widget.targetDate ?? DateTime.now(),
+      );
     }
 
-    _loadExerciseInputs(_currentExerciseIndex);
+    _startStopwatch();
   }
 
   List<WorkoutExercise> _buildDefaultExercises() {

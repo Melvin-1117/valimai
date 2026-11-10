@@ -91,7 +91,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ValimaiColors.background,
-      appBar: const ValimaiAppBar(title: 'Home'),
+      appBar: ValimaiAppBar(
+        title: 'Home',
+        onProfileTap: () => widget.onNavigateTab?.call(4),
+      ),
       body: ListenableBuilder(
         listenable: Listenable.merge([
           WorkoutController.instance,
