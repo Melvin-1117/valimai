@@ -288,6 +288,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
           children: [
             Text(
               widget.customTitle ?? 'WORKOUT EDITOR',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 14,
@@ -301,6 +303,8 @@ class _WorkoutEditorScreenState extends State<WorkoutEditorScreen> {
                   (widget.date != null
                       ? 'ASSIGNED FOR $dateStr'
                       : 'CUSTOM ROUTINE'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 10,

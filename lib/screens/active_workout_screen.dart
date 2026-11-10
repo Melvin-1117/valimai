@@ -245,6 +245,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
             ),
             Text(
               widget.workoutTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 fontFamily: 'Montserrat',
                 fontSize: 16,
@@ -501,6 +503,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           const SizedBox(height: 10),
           Text(
             currentEx.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 20,
@@ -511,6 +515,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           const SizedBox(height: 4),
           Text(
             subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 12,
@@ -803,51 +809,60 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          color: ValimaiColors.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${set['set']}',
-                            style: const TextStyle(
-                              fontFamily: 'Montserrat',
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: ValimaiColors.secondary,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: ValimaiColors.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${set['set']}',
+                              style: const TextStyle(
+                                fontFamily: 'Montserrat',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: ValimaiColors.secondary,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        '${set['weight']} kg × ${set['reps']} reps',
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: isCompleted
-                              ? ValimaiColors.onSurface
-                              : ValimaiColors.secondary,
-                          decoration: isCompleted ? TextDecoration.none : null,
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            '${set['weight']} kg × ${set['reps']} reps',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: isCompleted
+                                  ? ValimaiColors.onSurface
+                                  : ValimaiColors.secondary,
+                              decoration: isCompleted
+                                  ? TextDecoration.none
+                                  : null,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'RPE ${set['rpe']}',
-                        style: const TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 11,
-                          color: ValimaiColors.secondary,
+                        const SizedBox(width: 8),
+                        Text(
+                          'RPE ${set['rpe']}',
+                          style: const TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 11,
+                            color: ValimaiColors.secondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => _toggleSetCompletion(index),
                     child: Container(

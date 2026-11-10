@@ -1531,6 +1531,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 // Routine Title
                 Text(
                   routine.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Montserrat',
                     fontSize: 15,
@@ -1542,6 +1544,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   const SizedBox(height: 3),
                   Text(
                     routine.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: 11,
@@ -1695,6 +1699,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                           const SizedBox(width: 4),
                           Text(
                             chip,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 10,

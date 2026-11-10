@@ -18,8 +18,11 @@ import 'package:valimai/screens/history_screen.dart';
 import 'package:valimai/screens/home_screen.dart';
 import 'package:valimai/screens/profile_screen.dart';
 import 'package:valimai/screens/schedule_screen.dart';
+import 'package:valimai/screens/splash_screen.dart';
 import 'package:valimai/screens/workout_editor_screen.dart';
 import 'package:valimai/screens/workouts_screen.dart';
+import 'package:valimai/widgets/valimai_app_bar.dart';
+import 'package:valimai/widgets/valimai_brand.dart';
 import 'package:valimai/services/daily_workout_controller.dart';
 import 'package:valimai/services/daily_workout_storage.dart';
 import 'package:valimai/services/exercise_controller.dart';
@@ -3192,7 +3195,10 @@ void main() {
 
       // Overwrite test (verifies atomic rename over existing file)
       const updatedContent = '{"status":"updated","value":100}';
-      final updateSuccess = await StorageHelper.safeWriteString(fileName, updatedContent);
+      final updateSuccess = await StorageHelper.safeWriteString(
+        fileName,
+        updatedContent,
+      );
       expect(updateSuccess, true);
 
       final readUpdated = await StorageHelper.safeReadString(fileName);
@@ -3201,34 +3207,142 @@ void main() {
       await StorageHelper.safeDeleteFile(fileName);
     });
 
-    test('WorkoutHistoryController maintains O(1) date key index accurately', () async {
-      await WorkoutHistoryController.instance.clearHistory();
+    test(
+      'WorkoutHistoryController maintains O(1) date key index accurately',
+      () async {
+        await WorkoutHistoryController.instance.clearHistory();
 
-      final today = DateTime.now();
-      expect(WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(today), false);
-      expect(WorkoutHistoryController.instance.getSessionsForDate(today), isEmpty);
+        final today = DateTime.now();
+        expect(
+          WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(today),
+          false,
+        );
+        expect(
+          WorkoutHistoryController.instance.getSessionsForDate(today),
+          isEmpty,
+        );
 
-      final completedDate = DateTime(2026, 11, 5, 10, 0);
-      await WorkoutHistoryController.instance.recordCompletedSession(
-        date: completedDate,
-        routineId: 'r_idx',
-        routineName: 'Indexing Test',
-        completedAt: completedDate,
+        final completedDate = DateTime(2026, 11, 5, 10, 0);
+        await WorkoutHistoryController.instance.recordCompletedSession(
+          date: completedDate,
+          routineId: 'r_idx',
+          routineName: 'Indexing Test',
+          completedAt: completedDate,
+        );
+
+        expect(
+          WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(
+            completedDate,
+          ),
+          true,
+        );
+        expect(
+          WorkoutHistoryController.instance
+              .getSessionsForDate(completedDate)
+              .length,
+          1,
+        );
+
+        // Other dates return false/empty immediately
+        final otherDate = DateTime(2026, 11, 6);
+        expect(
+          WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(
+            otherDate,
+          ),
+          false,
+        );
+        expect(
+          WorkoutHistoryController.instance.getSessionsForDate(otherDate),
+          isEmpty,
+        );
+
+        // Deleting session cleans up index
+        final session = WorkoutHistoryController.instance
+            .getSessionsForDate(completedDate)
+            .first;
+        await WorkoutHistoryController.instance.deleteSession(session.id);
+        expect(
+          WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(
+            completedDate,
+          ),
+          false,
+        );
+        expect(
+          WorkoutHistoryController.instance.getSessionsForDate(completedDate),
+          isEmpty,
+        );
+      },
+    );
+
+    testWidgets('ValimaiBrandEmblem renders with custom size and glow', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: Center(child: ValimaiBrandEmblem(size: 40, showGlow: true)),
+          ),
+        ),
       );
 
-      expect(WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(completedDate), true);
-      expect(WorkoutHistoryController.instance.getSessionsForDate(completedDate).length, 1);
+      expect(find.byType(ValimaiBrandEmblem), findsOneWidget);
+      final emblem = tester.widget<ValimaiBrandEmblem>(
+        find.byType(ValimaiBrandEmblem),
+      );
+      expect(emblem.size, 40);
+      expect(emblem.showGlow, true);
+    });
 
-      // Other dates return false/empty immediately
-      final otherDate = DateTime(2026, 11, 6);
-      expect(WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(otherDate), false);
-      expect(WorkoutHistoryController.instance.getSessionsForDate(otherDate), isEmpty);
+    testWidgets(
+      'ValimaiBrandWordmark renders with custom height and alignment',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: ValimaiBrandWordmark(
+                  height: 20,
+                  alignment: Alignment.center,
+                ),
+              ),
+            ),
+          ),
+        );
 
-      // Deleting session cleans up index
-      final session = WorkoutHistoryController.instance.getSessionsForDate(completedDate).first;
-      await WorkoutHistoryController.instance.deleteSession(session.id);
-      expect(WorkoutHistoryController.instance.hasCompletedWorkoutOnDate(completedDate), false);
-      expect(WorkoutHistoryController.instance.getSessionsForDate(completedDate), isEmpty);
+        expect(find.byType(ValimaiBrandWordmark), findsOneWidget);
+        final wordmark = tester.widget<ValimaiBrandWordmark>(
+          find.byType(ValimaiBrandWordmark),
+        );
+        expect(wordmark.height, 20);
+        expect(wordmark.alignment, Alignment.center);
+      },
+    );
+
+    testWidgets(
+      'ValimaiAppBar displays ValimaiBrandEmblem and ValimaiBrandWordmark alongside title',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              appBar: ValimaiAppBar(title: 'HOME'),
+              body: SizedBox.shrink(),
+            ),
+          ),
+        );
+
+        expect(find.byType(ValimaiBrandEmblem), findsOneWidget);
+        expect(find.byType(ValimaiBrandWordmark), findsOneWidget);
+        expect(find.text('HOME'), findsOneWidget);
+      },
+    );
+
+    testWidgets('SplashScreen builds and presents branding elements', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: SplashScreen()));
+
+      expect(find.byType(SplashScreen), findsOneWidget);
+      expect(find.text('PRECISION ATHLETIC TERMINAL'), findsOneWidget);
     });
   });
 }

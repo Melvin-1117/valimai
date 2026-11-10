@@ -1289,6 +1289,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 children: [
                   Text(
                     title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: 15,
@@ -1299,6 +1301,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   const SizedBox(height: 3),
                   Text(
                     '$exerciseCount Exercises · $muscles',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
                       fontSize: 11,

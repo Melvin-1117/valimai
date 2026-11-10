@@ -5,6 +5,7 @@ import '../models/routine.dart';
 import '../services/daily_workout_controller.dart';
 import '../services/routine_controller.dart';
 import '../theme/app_theme.dart';
+import '../widgets/valimai_brand.dart';
 import 'main_shell.dart';
 
 class DailyWorkoutSelectionScreen extends StatefulWidget {
@@ -146,16 +147,10 @@ class _DailyWorkoutSelectionScreenState
                 ),
                 onPressed: () => Navigator.of(context).pop(),
               )
-            : Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: ValimaiColors.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.bolt, size: 18, color: Colors.white),
-                  ),
+            : const Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Center(
+                  child: ValimaiBrandEmblem(size: 28, showGlow: true),
                 ),
               ),
         actions: [

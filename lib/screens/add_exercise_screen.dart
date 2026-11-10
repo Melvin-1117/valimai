@@ -528,6 +528,8 @@ class _AddExerciseScreenState extends State<AddExerciseScreen> {
                             Expanded(
                               child: Text(
                                 exercise.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontFamily: 'Montserrat',
                                   fontSize: 14,

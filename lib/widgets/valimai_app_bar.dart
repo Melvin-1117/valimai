@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/profile_controller.dart';
 import '../theme/app_theme.dart';
+import 'valimai_brand.dart';
 
 class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -49,74 +50,89 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
         children: [
           // Logo & Title
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Kinetic Emblem
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [ValimaiColors.primaryContainer, Color(0xFFC0001D)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Center(
-                  child: Icon(Icons.bolt, color: Colors.white, size: 20),
-                ),
-              ),
+              // Valimai Brand Emblem
+              const ValimaiBrandEmblem(size: 38, showGlow: true),
               const SizedBox(width: 10),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'VALIMAI',
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5,
-                      color: ValimaiColors.primaryContainer,
-                    ),
+              // Valimai Metallic Wordmark
+              const ValimaiBrandWordmark(height: 20),
+              const SizedBox(width: 10),
+              // Section Badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3.5,
+                ),
+                decoration: BoxDecoration(
+                  color: ValimaiColors.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: ValimaiColors.cardBorder,
+                    width: 0.8,
                   ),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: ValimaiColors.onSurface,
-                      height: 1.1,
-                    ),
+                ),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: ValimaiColors.secondaryLight,
+                    height: 1.1,
                   ),
-                ],
+                ),
               ),
             ],
           ),
 
           // Actions
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (showSearch)
-                IconButton(
-                  icon: const Icon(
-                    Icons.search,
-                    color: ValimaiColors.secondaryLight,
-                    size: 22,
+                Container(
+                  width: 36,
+                  height: 36,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ValimaiColors.surfaceContainerHigh,
+                    border: Border.all(
+                      color: ValimaiColors.cardBorder,
+                      width: 1,
+                    ),
                   ),
-                  onPressed: onSearchTap,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.search,
+                      color: ValimaiColors.secondaryLight,
+                      size: 18,
+                    ),
+                    onPressed: onSearchTap,
+                  ),
                 ),
-              IconButton(
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: ValimaiColors.secondaryLight,
-                  size: 22,
+              Container(
+                width: 36,
+                height: 36,
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: ValimaiColors.surfaceContainerHigh,
+                  border: Border.all(color: ValimaiColors.cardBorder, width: 1),
                 ),
-                onPressed: onNotificationTap,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.notifications_outlined,
+                    color: ValimaiColors.secondaryLight,
+                    size: 18,
+                  ),
+                  onPressed: onNotificationTap,
+                ),
               ),
-              const SizedBox(width: 4),
               GestureDetector(
                 onTap: onProfileTap,
                 child: ListenableBuilder(
@@ -125,8 +141,8 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
                     final initials =
                         ProfileController.instance.profile?.initials ?? 'V';
                     return Container(
-                      width: 32,
-                      height: 32,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: ValimaiColors.surfaceContainerHigh,
@@ -140,7 +156,7 @@ class ValimaiAppBar extends StatelessWidget implements PreferredSizeWidget {
                           initials,
                           style: const TextStyle(
                             fontFamily: 'Montserrat',
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),

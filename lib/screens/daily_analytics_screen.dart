@@ -325,14 +325,18 @@ class DailyAnalyticsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'Montserrat',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.0,
-                  color: ValimaiColors.secondary,
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Montserrat',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.0,
+                    color: ValimaiColors.secondary,
+                  ),
                 ),
               ),
               Icon(
@@ -347,6 +351,8 @@ class DailyAnalyticsScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 22,
@@ -359,6 +365,8 @@ class DailyAnalyticsScreen extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 11,
@@ -479,6 +487,8 @@ class DailyAnalyticsScreen extends StatelessWidget {
                   children: [
                     Text(
                       exercise.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 15,
@@ -489,6 +499,8 @@ class DailyAnalyticsScreen extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       exercise.targetMuscle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: 'Montserrat',
                         fontSize: 12,

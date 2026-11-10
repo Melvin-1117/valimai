@@ -549,6 +549,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Text(
                   splitTag,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontFamily: 'Montserrat',
                     fontSize: 8.5,
@@ -679,6 +681,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Text(
                 splitTag,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontFamily: 'Montserrat',
                   fontSize: 8.5,
@@ -899,6 +903,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Workout Name
           Text(
             workout.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 20,
@@ -1015,6 +1021,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ex.weightKg > 0
                                 ? '${ex.targetMuscle} • ${ex.weightKg} kg × ${ex.reps}'
                                 : '${ex.targetMuscle} • Bodyweight × ${ex.reps}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontFamily: 'Montserrat',
                               fontSize: 10,
@@ -1711,6 +1719,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 9,
@@ -1722,6 +1732,8 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 2),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Montserrat',
               fontSize: 14,

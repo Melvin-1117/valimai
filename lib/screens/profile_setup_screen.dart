@@ -5,6 +5,7 @@ import '../models/user_profile.dart';
 import '../services/daily_workout_controller.dart';
 import '../services/profile_controller.dart';
 import '../theme/app_theme.dart';
+import '../widgets/valimai_brand.dart';
 import 'daily_workout_selection_screen.dart';
 import 'main_shell.dart';
 
@@ -121,28 +122,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: ValimaiColors.primaryContainer,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x3DF02D36),
-                                blurRadius: 16,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.bolt,
-                              color: Colors.white,
-                              size: 26,
-                            ),
-                          ),
-                        ),
+                        const ValimaiBrandEmblem(size: 48, showGlow: true),
                         const SizedBox(height: 18),
                         const Text(
                           'Profile Setup',

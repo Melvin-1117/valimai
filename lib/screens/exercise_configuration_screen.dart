@@ -362,6 +362,8 @@ class _ExerciseConfigurationScreenState
                       children: [
                         Text(
                           widget.workoutExercise.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: 'Montserrat',
                             fontSize: 16,

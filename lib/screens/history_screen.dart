@@ -944,6 +944,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     children: [
                       Text(
                         session.routineName ?? 'Completed Workout',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 16,
@@ -956,6 +958,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const SizedBox(height: 4),
                         Text(
                           session.targetMuscleGroups!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: 'Montserrat',
                             fontSize: 12,
