@@ -49,10 +49,7 @@ class LocalProfileStorage implements IProfileStorage {
   Future<void> clearProfile() async {
     _cachedProfile = null;
     try {
-      final file = await StorageHelper.getStorageFile(_fileName);
-      if (await file.exists()) {
-        await file.delete();
-      }
+      await StorageHelper.safeDeleteFile(_fileName);
     } catch (e) {
       // Ignore deletion errors
     }
