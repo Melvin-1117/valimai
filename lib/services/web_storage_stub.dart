@@ -3,3 +3,4 @@ class WebStorageBridge {
   static void setItem(String key, String value) {}
   static void removeItem(String key) {}
 }
+
